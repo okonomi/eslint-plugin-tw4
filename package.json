@@ -20,7 +20,7 @@
     "build": "tsup src/index.ts --format cjs,esm --dts --out-dir dist --clean",
     "lint": "biome check",
     "lint-fix": "biome check --write --unsafe",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "vitest run"
   },
   "keywords": [],
   "author": "okonomi <okonomi@oknm.jp>",
@@ -31,7 +31,9 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
+    "eslint-vitest-rule-tester": "^2.2.0",
     "tsup": "^8.5.0",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.3"
   }
 }
