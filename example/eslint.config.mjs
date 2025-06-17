@@ -14,5 +14,21 @@ export default defineConfig([
     rules: {
       "tw4/enforces-shorthand": "error",
     }
+  },
+  {
+    files: ["**/*.jsx"],
+    languageOptions: {
+      parserOptions: {
+        ecmaFeatures: {
+          jsx: true,
+        },
+      },
+    },
+    plugins: {
+      tw4,
+    },
+    rules: {
+      "tw4/enforces-shorthand": "error",
+    }
   }
 ])

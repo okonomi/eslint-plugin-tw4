@@ -1,0 +1,7 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`enforces-shorthand > should report invalid identifiers 1`] = `
+"
+      <div className="w-1 h-1" />
+    "
+`;

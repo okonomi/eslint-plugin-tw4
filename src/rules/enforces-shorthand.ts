@@ -18,6 +18,26 @@ export default createRule({
   },
   defaultOptions: [],
   create(context) {
-    return {}
+    return {
+      JSXAttribute(node) {
+        if (node.name.name !== "className" || !node.value) {
+          return
+        }
+
+        // string literal
+        if (
+          node.value.type === "Literal" &&
+          typeof node.value.value === "string"
+        ) {
+          const value = node.value.value
+          if (value === "w-1 h-1") {
+            context.report({
+              node: node.value,
+              messageId: "useShorthand",
+            })
+          }
+        }
+      },
+    }
   },
 })
