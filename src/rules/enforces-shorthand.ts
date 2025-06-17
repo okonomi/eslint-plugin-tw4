@@ -30,7 +30,7 @@ export default createRule({
           typeof node.value.value === "string"
         ) {
           const value = node.value.value
-          if (value === "w-1 h-1") {
+          if (value.includes("w-1") && value.includes("h-1")) {
             context.report({
               node: node.value,
               messageId: "useShorthand",

@@ -5,3 +5,9 @@ exports[`enforces-shorthand > size shorthand > should report invalid identifiers
         <div className="w-1 h-1" />
       "
 `;
+
+exports[`enforces-shorthand > size shorthand > when another class is in between 1`] = `
+"
+      <div className="w-1 block h-1" />
+      "
+`;
