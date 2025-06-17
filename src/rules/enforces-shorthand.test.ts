@@ -18,24 +18,23 @@ describe("enforces-shorthand", () => {
     },
   })
 
-  it("should not report valid identifiers", async () => {
-    const code = `
-      <div className="size-1" />
-    `
-    const { result } = await valid({ code })
-
-    expect(result.messages).toHaveLength(0)
-  })
-
-  it("should report invalid identifiers", async () => {
-    const code = `
-      <div className="w-1 h-1" />
-    `
-    const { result } = await invalid({
-      code,
-      errors: [{ messageId: "useShorthand" }],
+  describe("size shorthand", () => {
+    it("should not report valid identifiers", async () => {
+      const code = `
+        <div className="size-1" />
+      `
+      const { result } = await valid({ code })
+      expect(result.messages).toHaveLength(0)
     })
-
-    expect(result.output).toMatchSnapshot()
+    it("should report invalid identifiers", async () => {
+      const code = `
+        <div className="w-1 h-1" />
+      `
+      const { result } = await invalid({
+        code,
+        errors: [{ messageId: "useShorthand" }],
+      })
+      expect(result.output).toMatchSnapshot()
+    })
   })
 })
