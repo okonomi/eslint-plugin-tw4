@@ -18,6 +18,8 @@
   },
   "scripts": {
     "build": "tsup src/index.ts --format cjs,esm --dts --out-dir dist --clean",
+    "lint": "biome check",
+    "lint-fix": "biome check --write --unsafe",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -28,6 +30,7 @@
     "@typescript-eslint/utils": "^8.34.1"
   },
   "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
     "tsup": "^8.5.0",
     "typescript": "^5.8.3"
   }

@@ -1,7 +1,7 @@
 import { ESLintUtils } from "@typescript-eslint/utils"
 
 const createRule = ESLintUtils.RuleCreator(
-  name => `https://example.com/rule/${name}`,
+  (name) => `https://example.com/rule/${name}`,
 )
 
 export default createRule({
@@ -18,7 +18,6 @@ export default createRule({
   },
   defaultOptions: [],
   create(context) {
-    return {
-    }
+    return {}
   },
 })
