@@ -53,6 +53,9 @@ describe("enforces-shorthand", () => {
         errors: [{ messageId: "useShorthand" }],
       })
       expect(result.output).toMatchSnapshot()
+      expect(result.output).toEqual(dedent`
+        <div className="size-1 block" />
+      `)
     })
     it("when size is 2", async () => {
       const code = dedent`
