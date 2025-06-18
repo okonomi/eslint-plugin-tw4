@@ -30,13 +30,22 @@ export default createRule({
           typeof node.value.value === "string"
         ) {
           const value = node.value.value
-          const w = value.match(/w-(\d+)/)
-          const h = value.match(/h-(\d+)/)
-          if (w && h && w[1] === h[1]) {
-            context.report({
-              node: node.value,
-              messageId: "useShorthand",
-            })
+          // ペアごとにチェック
+          const pairs = [
+            { w: /w-([^ ]+)/, h: /h-([^ ]+)/, shorthand: "size-" },
+            { w: /min-w-([^ ]+)/, h: /min-h-([^ ]+)/, shorthand: "min-size-" },
+            { w: /max-w-([^ ]+)/, h: /max-h-([^ ]+)/, shorthand: "max-size-" },
+          ]
+          for (const { w, h } of pairs) {
+            const wMatch = value.match(w)
+            const hMatch = value.match(h)
+            if (wMatch && hMatch && wMatch[1] === hMatch[1]) {
+              context.report({
+                node: node.value,
+                messageId: "useShorthand",
+              })
+              break
+            }
           }
         }
       },

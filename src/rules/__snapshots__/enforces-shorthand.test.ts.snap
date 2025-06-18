@@ -6,4 +6,6 @@ exports[`enforces-shorthand > size shorthand > when another class is in between 
 
 exports[`enforces-shorthand > size shorthand > when size is 2 1`] = `"<div className="w-2 h-2" />"`;
 
+exports[`enforces-shorthand > size shorthand > when size is non-numeric 1`] = `"<div className="w-auto h-auto" />"`;
+
 exports[`enforces-shorthand > size shorthand > when width and height are different 1`] = `"<div className="w-1 h-2" />"`;

@@ -64,5 +64,15 @@ describe("enforces-shorthand", () => {
       })
       expect(result.output).toMatchSnapshot()
     })
+    it("when size is non-numeric", async () => {
+      const code = dedent`
+        <div className="w-auto h-auto" />
+      `
+      const { result } = await invalid({
+        code,
+        errors: [{ messageId: "useShorthand" }],
+      })
+      expect(result.output).toMatchSnapshot()
+    })
   })
 })
