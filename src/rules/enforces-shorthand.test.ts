@@ -27,6 +27,13 @@ describe("enforces-shorthand", () => {
       const { result } = await valid({ code })
       expect(result.messages).toHaveLength(0)
     })
+    it("when width and height are different", async () => {
+      const code = dedent`
+        <div className="w-1 h-2" />
+      `
+      const { result } = await valid({ code })
+      expect(result.output).toMatchSnapshot()
+    })
     it("should report invalid identifiers", async () => {
       const code = dedent`
         <div className="w-1 h-1" />

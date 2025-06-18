@@ -30,9 +30,9 @@ export default createRule({
           typeof node.value.value === "string"
         ) {
           const value = node.value.value
-          const wMatch = /w-\d+/.test(value)
-          const hMatch = /h-\d+/.test(value)
-          if (wMatch && hMatch) {
+          const w = value.match(/w-(\d+)/)
+          const h = value.match(/h-(\d+)/)
+          if (w && h && w[1] === h[1]) {
             context.report({
               node: node.value,
               messageId: "useShorthand",
