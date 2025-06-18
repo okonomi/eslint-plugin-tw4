@@ -1,3 +1,4 @@
+import dedent from "dedent"
 import { createRuleTester } from "eslint-vitest-rule-tester"
 import { describe, expect, it } from "vitest"
 
@@ -20,14 +21,14 @@ describe("enforces-shorthand", () => {
 
   describe("size shorthand", () => {
     it("should not report valid identifiers", async () => {
-      const code = `
+      const code = dedent`
         <div className="size-1" />
       `
       const { result } = await valid({ code })
       expect(result.messages).toHaveLength(0)
     })
     it("should report invalid identifiers", async () => {
-      const code = `
+      const code = dedent`
         <div className="w-1 h-1" />
       `
       const { result } = await invalid({
@@ -37,7 +38,7 @@ describe("enforces-shorthand", () => {
       expect(result.output).toMatchSnapshot()
     })
     it("when another class is in between", async () => {
-      const code = `
+      const code = dedent`
         <div className="w-1 block h-1" />
       `
       const { result } = await invalid({
@@ -47,7 +48,7 @@ describe("enforces-shorthand", () => {
       expect(result.output).toMatchSnapshot()
     })
     it("when size is 2", async () => {
-      const code = `
+      const code = dedent`
         <div className="w-2 h-2" />
       `
       const { result } = await invalid({
