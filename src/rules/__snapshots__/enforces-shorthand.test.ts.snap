@@ -11,3 +11,9 @@ exports[`enforces-shorthand > size shorthand > when another class is in between 
       <div className="w-1 block h-1" />
       "
 `;
+
+exports[`enforces-shorthand > size shorthand > when size is 2 1`] = `
+"
+        <div className="w-2 h-2" />
+      "
+`;

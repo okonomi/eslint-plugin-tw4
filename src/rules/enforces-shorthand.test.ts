@@ -38,7 +38,17 @@ describe("enforces-shorthand", () => {
     })
     it("when another class is in between", async () => {
       const code = `
-      <div className="w-1 block h-1" />
+        <div className="w-1 block h-1" />
+      `
+      const { result } = await invalid({
+        code,
+        errors: [{ messageId: "useShorthand" }],
+      })
+      expect(result.output).toMatchSnapshot()
+    })
+    it("when size is 2", async () => {
+      const code = `
+        <div className="w-2 h-2" />
       `
       const { result } = await invalid({
         code,
