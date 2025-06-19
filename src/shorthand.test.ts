@@ -12,6 +12,7 @@ describe("shorthand", () => {
       ["w-fit h-fit", "size-fit"],
       ["w-[100px] h-[100px]", "size-[100px]"],
       ["w-(--var) h-(--var)", "size-(--var)"],
+      ["lg:w-1 lg:h-1", "lg:size-1"],
     ])('should convert "%s" to "%s"', (input, expected) => {
       expect(shorthand(input)).toBe(expected)
     })
