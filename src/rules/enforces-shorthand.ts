@@ -14,7 +14,8 @@ export default createRule({
     },
     fixable: "code",
     messages: {
-      useShorthand: "Use shorthand",
+      useShorthand:
+        'Use shorthand "{{shorthand}}" instead of class names "{{classnames}}".',
     },
     schema: [],
   },
@@ -36,6 +37,11 @@ export default createRule({
             context.report({
               node: node.value,
               messageId: "useShorthand",
+              // TODO: implement
+              data: {
+                shorthand: "size-1",
+                classnames: "w-1 h-1",
+              },
               fix(fixer) {
                 return fixer.replaceText(node, `className="${classString}"`)
               },
