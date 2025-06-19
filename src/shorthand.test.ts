@@ -10,8 +10,8 @@ describe("shorthand", () => {
       ["w-full h-full", "size-full"],
       ["w-dvh h-dvh", "size-dvh"],
       ["w-fit h-fit", "size-fit"],
-      // ["w-[100px] h-[100px]", "size-[100px]"],
-      // ["w-(--var) h-(--var)", "size-(--var)"],
+      ["w-[100px] h-[100px]", "size-[100px]"],
+      ["w-(--var) h-(--var)", "size-(--var)"],
     ])('should convert "%s" to "%s"', (input, expected) => {
       expect(shorthand(input)).toBe(expected)
     })

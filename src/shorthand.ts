@@ -8,17 +8,13 @@ export function shorthand(value: string) {
     const wMatch = value.match(w)
     const hMatch = value.match(h)
     if (wMatch && hMatch && wMatch[1] === hMatch[1]) {
-      // w-とh-の両方を削除し、shorthandを先頭に追加
-      const newValue = value
-        .replace(new RegExp(`\\b${wMatch[0]}\\b`), "")
-        .replace(new RegExp(`\\b${hMatch[0]}\\b`), "")
-        .replace(/\s+/g, " ")
-        .trim()
-      const classString = newValue
-        ? `${shorthand}${wMatch[1]} ${newValue}`
-        : `${shorthand}${wMatch[1]}`
-
-      return classString
+      // スペースで分割して、該当するクラスを除外し、shorthandを追加
+      const classes = value.split(/\s+/).filter(Boolean)
+      const filteredClasses = classes.filter(
+        (cls) => cls !== wMatch[0] && cls !== hMatch[0],
+      )
+      const result = [`${shorthand}${wMatch[1]}`, ...filteredClasses].join(" ")
+      return result
     }
   }
 
