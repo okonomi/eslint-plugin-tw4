@@ -1,4 +1,5 @@
 import { ESLintUtils } from "@typescript-eslint/utils"
+import { shorthand } from "../shorthand"
 
 const createRule = ESLintUtils.RuleCreator(
   (name) => `https://example.com/rule/${name}`,
@@ -30,36 +31,15 @@ export default createRule({
           node.value.type === "Literal" &&
           typeof node.value.value === "string"
         ) {
-          const value = node.value.value
-          // ペアごとにチェック
-          const pairs = [
-            { w: /w-([^ ]+)/, h: /h-([^ ]+)/, shorthand: "size-" },
-            { w: /min-w-([^ ]+)/, h: /min-h-([^ ]+)/, shorthand: "min-size-" },
-            { w: /max-w-([^ ]+)/, h: /max-h-([^ ]+)/, shorthand: "max-size-" },
-          ]
-          for (const { w, h, shorthand } of pairs) {
-            const wMatch = value.match(w)
-            const hMatch = value.match(h)
-            if (wMatch && hMatch && wMatch[1] === hMatch[1]) {
-              context.report({
-                node: node.value,
-                messageId: "useShorthand",
-                fix(fixer) {
-                  // w-とh-の両方を削除し、shorthandを先頭に追加
-                  const newValue = value
-                    .replace(new RegExp(`\\b${wMatch[0]}\\b`), "")
-                    .replace(new RegExp(`\\b${hMatch[0]}\\b`), "")
-                    .replace(/\s+/g, " ")
-                    .trim()
-                  const classString = newValue
-                    ? `${shorthand}${wMatch[1]} ${newValue}`
-                    : `${shorthand}${wMatch[1]}`
-
-                  return fixer.replaceText(node, `className="${classString}"`)
-                },
-              })
-              break
-            }
+          const classString = shorthand(node.value.value)
+          if (classString !== node.value.value) {
+            context.report({
+              node: node.value,
+              messageId: "useShorthand",
+              fix(fixer) {
+                return fixer.replaceText(node, `className="${classString}"`)
+              },
+            })
           }
         }
       },
