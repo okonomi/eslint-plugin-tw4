@@ -10,11 +10,19 @@ export function shorthand(value: string) {
     if (wMatch && hMatch && wMatch[1] === hMatch[1]) {
       // スペースで分割して、該当するクラスを除外し、shorthandを追加
       const classes = value.split(/\s+/).filter(Boolean)
+      const wIndex = classes.indexOf(wMatch[0])
+      const hIndex = classes.indexOf(hMatch[0])
+      const firstIndex = Math.min(wIndex, hIndex)
+
+      // w-とh-を除外
       const filteredClasses = classes.filter(
         (cls) => cls !== wMatch[0] && cls !== hMatch[0],
       )
-      const result = [`${shorthand}${wMatch[1]}`, ...filteredClasses].join(" ")
-      return result
+
+      // 最初に出現した位置にshorthandを挿入
+      filteredClasses.splice(firstIndex, 0, `${shorthand}${wMatch[1]}`)
+
+      return filteredClasses.join(" ")
     }
   }
 

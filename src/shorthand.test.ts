@@ -19,8 +19,9 @@ describe("shorthand", () => {
   describe("another class is in between", () => {
     it.each([
       ["w-1 block h-1", "size-1 block"],
-      // ["block w-1 h-1", "block size-1"],
+      ["block w-1 h-1", "block size-1"],
       ["w-1 h-1 block", "size-1 block"],
+      ["black w-1 bg-white h-1 mt-1", "black size-1 bg-white mt-1"],
     ])('should convert "%s" to "%s"', (input, expected) => {
       expect(shorthand(input)).toBe(expected)
     })
