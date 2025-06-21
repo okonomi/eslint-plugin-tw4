@@ -18,6 +18,30 @@ export function applyShorthand(value: string) {
     const isNegative = baseClass.startsWith("-")
     const cleanClass = isNegative ? baseClass.substring(1) : baseClass
 
+    // Handle border-spacing classes (border-spacing-x-, border-spacing-y-)
+    if (cleanClass.startsWith("border-spacing-")) {
+      const spacingPart = cleanClass.substring(15) // Remove "border-spacing-"
+
+      // Check for directional border-spacing (border-spacing-x-, border-spacing-y-)
+      const directionMatch = spacingPart.match(/^([xy])-(.+)$/)
+      if (directionMatch) {
+        return {
+          type: `border-spacing-${directionMatch[1]}`,
+          value: directionMatch[2],
+          isNegative,
+          category: "misc",
+        }
+      }
+
+      // Non-directional border-spacing
+      return {
+        type: "border-spacing",
+        value: spacingPart,
+        isNegative,
+        category: "misc",
+      }
+    }
+
     // Handle border classes (border-t-1, border-t-red-500, etc.)
     if (cleanClass.startsWith("border-")) {
       const borderPart = cleanClass.substring(7) // Remove "border-"
@@ -239,6 +263,54 @@ export function applyShorthand(value: string) {
           isNegative,
           category: "transform",
         }
+      }
+    }
+
+    // Handle overflow classes (overflow-x-, overflow-y-)
+    if (cleanClass.startsWith("overflow-")) {
+      const overflowPart = cleanClass.substring(9) // Remove "overflow-"
+
+      // Check for directional overflow (overflow-x-, overflow-y-)
+      const directionMatch = overflowPart.match(/^([xy])-(.+)$/)
+      if (directionMatch) {
+        return {
+          type: `overflow-${directionMatch[1]}`,
+          value: directionMatch[2],
+          isNegative,
+          category: "misc",
+        }
+      }
+
+      // Non-directional overflow
+      return {
+        type: "overflow",
+        value: overflowPart,
+        isNegative,
+        category: "misc",
+      }
+    }
+
+    // Handle overscroll classes (overscroll-x-, overscroll-y-)
+    if (cleanClass.startsWith("overscroll-")) {
+      const overscrollPart = cleanClass.substring(11) // Remove "overscroll-"
+
+      // Check for directional overscroll (overscroll-x-, overscroll-y-)
+      const directionMatch = overscrollPart.match(/^([xy])-(.+)$/)
+      if (directionMatch) {
+        return {
+          type: `overscroll-${directionMatch[1]}`,
+          value: directionMatch[2],
+          isNegative,
+          category: "misc",
+        }
+      }
+
+      // Non-directional overscroll
+      return {
+        type: "overscroll",
+        value: overscrollPart,
+        isNegative,
+        category: "misc",
       }
     }
 
@@ -855,6 +927,114 @@ export function applyShorthand(value: string) {
             shorthand: shorthandClass,
           }
         }
+      }
+    }
+  }
+
+  // Check overflow patterns
+  const overflowPatterns = [
+    {
+      patterns: [["overflow-x", "overflow-y"]],
+      shorthand: "overflow",
+    },
+  ]
+
+  for (const { patterns, shorthand } of overflowPatterns) {
+    const result = findMatchingClasses(patterns)
+    if (result) {
+      const { matchedClasses, commonPrefix, commonValue, commonNegative } =
+        result
+
+      // Create shorthand class
+      const negativePrefix = commonNegative ? "-" : ""
+      const shorthandClass = `${commonPrefix}${negativePrefix}${shorthand}-${commonValue}`
+
+      // Remove matched classes and add shorthand
+      const filteredClasses = classes.filter(
+        (cls) => !matchedClasses.includes(cls),
+      )
+      const firstIndex = Math.min(
+        ...matchedClasses.map((cls) => classes.indexOf(cls)),
+      )
+      filteredClasses.splice(firstIndex, 0, shorthandClass)
+
+      return {
+        applied: true,
+        value: filteredClasses.join(" "),
+        classnames: matchedClasses.join(" "),
+        shorthand: shorthandClass,
+      }
+    }
+  }
+
+  // Check overscroll patterns
+  const overscrollPatterns = [
+    {
+      patterns: [["overscroll-x", "overscroll-y"]],
+      shorthand: "overscroll",
+    },
+  ]
+
+  for (const { patterns, shorthand } of overscrollPatterns) {
+    const result = findMatchingClasses(patterns)
+    if (result) {
+      const { matchedClasses, commonPrefix, commonValue, commonNegative } =
+        result
+
+      // Create shorthand class
+      const negativePrefix = commonNegative ? "-" : ""
+      const shorthandClass = `${commonPrefix}${negativePrefix}${shorthand}-${commonValue}`
+
+      // Remove matched classes and add shorthand
+      const filteredClasses = classes.filter(
+        (cls) => !matchedClasses.includes(cls),
+      )
+      const firstIndex = Math.min(
+        ...matchedClasses.map((cls) => classes.indexOf(cls)),
+      )
+      filteredClasses.splice(firstIndex, 0, shorthandClass)
+
+      return {
+        applied: true,
+        value: filteredClasses.join(" "),
+        classnames: matchedClasses.join(" "),
+        shorthand: shorthandClass,
+      }
+    }
+  }
+
+  // Check border-spacing patterns
+  const borderSpacingPatterns = [
+    {
+      patterns: [["border-spacing-x", "border-spacing-y"]],
+      shorthand: "border-spacing",
+    },
+  ]
+
+  for (const { patterns, shorthand } of borderSpacingPatterns) {
+    const result = findMatchingClasses(patterns)
+    if (result) {
+      const { matchedClasses, commonPrefix, commonValue, commonNegative } =
+        result
+
+      // Create shorthand class
+      const negativePrefix = commonNegative ? "-" : ""
+      const shorthandClass = `${commonPrefix}${negativePrefix}${shorthand}-${commonValue}`
+
+      // Remove matched classes and add shorthand
+      const filteredClasses = classes.filter(
+        (cls) => !matchedClasses.includes(cls),
+      )
+      const firstIndex = Math.min(
+        ...matchedClasses.map((cls) => classes.indexOf(cls)),
+      )
+      filteredClasses.splice(firstIndex, 0, shorthandClass)
+
+      return {
+        applied: true,
+        value: filteredClasses.join(" "),
+        classnames: matchedClasses.join(" "),
+        shorthand: shorthandClass,
       }
     }
   }

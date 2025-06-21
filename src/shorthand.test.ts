@@ -325,11 +325,6 @@ describe("shorthand", () => {
       })
     })
 
-    describe.skip("gap combinations", () => {
-      // gap は既に実装済みなのでスキップ
-      // gap-x + gap-y → gap は layout セクションで実装済み
-    })
-
     describe.skip("order patterns", () => {
       // order-* は単一プロパティなのでショートハンドなし
     })
@@ -383,11 +378,28 @@ describe("shorthand", () => {
     // TODO: タイポグラフィ関連のショートハンドを実装
   })
   describe("misc", () => {
-    it.each([["overflow-hidden text-ellipsis whitespace-nowrap", "truncate"]])(
-      '"%s" to "%s"',
-      (input, expected) => {
-        expect(applyShorthand(input).value).toBe(expected)
-      },
-    )
+    it.each([
+      ["overflow-hidden text-ellipsis whitespace-nowrap", "truncate"],
+
+      // overflow patterns
+      ["overflow-x-auto overflow-y-auto", "overflow-auto"],
+      ["overflow-x-clip overflow-y-clip", "overflow-clip"],
+      ["overflow-x-hidden overflow-y-hidden", "overflow-hidden"],
+      ["overflow-x-scroll overflow-y-scroll", "overflow-scroll"],
+      ["overflow-x-visible overflow-y-visible", "overflow-visible"],
+
+      // overscroll patterns
+      ["overscroll-x-auto overscroll-y-auto", "overscroll-auto"],
+      ["overscroll-x-contain overscroll-y-contain", "overscroll-contain"],
+      ["overscroll-x-none overscroll-y-none", "overscroll-none"],
+
+      // border-spacing patterns
+      ["border-spacing-x-1 border-spacing-y-1", "border-spacing-1"],
+      ["border-spacing-x-2 border-spacing-y-2", "border-spacing-2"],
+      ["border-spacing-x-px border-spacing-y-px", "border-spacing-px"],
+      ["border-spacing-x-0 border-spacing-y-0", "border-spacing-0"],
+    ])('"%s" to "%s"', (input, expected) => {
+      expect(applyShorthand(input).value).toBe(expected)
+    })
   })
 })
