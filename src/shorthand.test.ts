@@ -56,24 +56,29 @@ describe("shorthand", () => {
     },
   )
   describe("spacing", () => {
-    it.each([
-      ["px-1 py-1", "p-1"],
+    describe("padding", () => {
+      it.each([["px-1 py-1", "p-1"]])('"%s" to "%s"', (input, expected) =>
+        expect(applyShorthand(input).value).toBe(expected),
+      )
+    })
+    describe("margin", () => {
+      it.each([
+        ["mt-1 mb-1", "my-1"],
+        ["ms-1 me-1", "mx-1"],
+        ["ml-1 mr-1", "mx-1"],
+        ["mx-1 my-1", "m-1"],
+        ["mt-1 mb-1 mr-1 ml-1", "m-1"],
+        ["mt-1 mb-1 ms-1 me-1", "m-1"],
 
-      ["mt-1 mb-1", "my-1"],
-      ["ms-1 me-1", "mx-1"],
-      ["ml-1 mr-1", "mx-1"],
-      ["mx-1 my-1", "m-1"],
-      ["mt-1 mb-1 mr-1 ml-1", "m-1"],
-      ["mt-1 mb-1 ms-1 me-1", "m-1"],
-
-      ["-mt-1 -mb-1", "-my-1"],
-      ["-ms-1 -me-1", "-mx-1"],
-      ["-ml-1 -mr-1", "-mx-1"],
-      ["-mx-1 -my-1", "-m-1"],
-      ["-mt-1 -mb-1 -mr-1 -ml-1", "-m-1"],
-      ["-mt-1 -mb-1 -ms-1 -me-1", "-m-1"],
-    ])('"%s" to "%s"', (input, expected) => {
-      expect(applyShorthand(input).value).toBe(expected)
+        ["-mt-1 -mb-1", "-my-1"],
+        ["-ms-1 -me-1", "-mx-1"],
+        ["-ml-1 -mr-1", "-mx-1"],
+        ["-mx-1 -my-1", "-m-1"],
+        ["-mt-1 -mb-1 -mr-1 -ml-1", "-m-1"],
+        ["-mt-1 -mb-1 -ms-1 -me-1", "-m-1"],
+      ])('"%s" to "%s"', (input, expected) => {
+        expect(applyShorthand(input).value).toBe(expected)
+      })
     })
   })
   describe.skip("border", () => {
