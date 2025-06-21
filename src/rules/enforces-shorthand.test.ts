@@ -93,6 +93,14 @@ describe("enforces-shorthand", () => {
           output: `<div className="size-auto" />`,
           errors: [generateError(["w-auto", "h-auto"], "size-auto")],
         },
+        {
+          code: `<div className="w-1 h-1 mt-1 mb-1" />`,
+          output: `<div className="size-1 my-1" />`,
+          errors: [
+            generateError(["mt-1", "mb-1"], "my-1"),
+            generateError(["w-1", "h-1"], "size-1"),
+          ],
+        },
       ])(
         "should report invalid code: $code",
         async ({ code, output, errors }) => {

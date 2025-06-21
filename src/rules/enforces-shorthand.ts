@@ -1,5 +1,5 @@
 import { ESLintUtils } from "@typescript-eslint/utils"
-import { applyShorthand } from "../shorthand"
+import { findAllShorthands } from "../shorthand"
 
 const createRule = ESLintUtils.RuleCreator(
   (name) => `https://example.com/rule/${name}`,
@@ -32,19 +32,22 @@ export default createRule({
           node.value.type === "Literal" &&
           typeof node.value.value === "string"
         ) {
-          const result = applyShorthand(node.value.value)
+          const result = findAllShorthands(node.value.value)
           if (result.applied) {
-            context.report({
-              node: node.value,
-              messageId: "useShorthand",
-              data: {
-                shorthand: result.shorthand,
-                classnames: result.classnames,
-              },
-              fix(fixer) {
-                return fixer.replaceText(node, `className="${result.value}"`)
-              },
-            })
+            // Report each transformation as a separate error
+            for (const transformation of result.transformations) {
+              context.report({
+                node: node.value,
+                messageId: "useShorthand",
+                data: {
+                  shorthand: transformation.shorthand,
+                  classnames: transformation.classnames,
+                },
+                fix(fixer) {
+                  return fixer.replaceText(node, `className="${result.value}"`)
+                },
+              })
+            }
           }
         }
       },

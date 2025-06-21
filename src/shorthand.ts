@@ -1120,3 +1120,33 @@ export function applyShorthand(value: string) {
     value,
   }
 }
+
+export function findAllShorthands(value: string) {
+  const transformations: Array<{
+    classnames: string
+    shorthand: string
+  }> = []
+
+  let currentValue = value
+  let hasChanges = true
+
+  // Keep applying shorthand transformations until no more are found
+  while (hasChanges) {
+    const result = applyShorthand(currentValue)
+    if (result.applied && result.classnames && result.shorthand) {
+      transformations.push({
+        classnames: result.classnames,
+        shorthand: result.shorthand,
+      })
+      currentValue = result.value
+    } else {
+      hasChanges = false
+    }
+  }
+
+  return {
+    applied: transformations.length > 0,
+    value: currentValue,
+    transformations,
+  }
+}
