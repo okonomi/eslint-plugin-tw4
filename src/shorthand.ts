@@ -1,4 +1,4 @@
-export function shorthand(value: string) {
+export function applyShorthand(value: string) {
   // w-とh-のペアのみ対応
   const wMatch = value.match(/((?:[^:\s]*:)?w-[^ ]+)/)
   const hMatch = value.match(/((?:[^:\s]*:)?h-[^ ]+)/)
@@ -32,9 +32,17 @@ export function shorthand(value: string) {
       // 最初に出現した位置にshorthandを挿入
       filteredClasses.splice(firstIndex, 0, `${wPrefix}size-${wValue}`)
 
-      return filteredClasses.join(" ")
+      return {
+        applied: true,
+        value: filteredClasses.join(" "),
+        classnames: `${wClass} ${hClass}`,
+        shorthand: `${wPrefix}size-${wValue}`,
+      }
     }
   }
 
-  return value
+  return {
+    applied: false,
+    value,
+  }
 }

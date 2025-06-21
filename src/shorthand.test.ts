@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { shorthand } from "./shorthand"
+import { applyShorthand } from "./shorthand"
 
 describe("shorthand", () => {
   describe("simple cases", () => {
@@ -14,23 +14,51 @@ describe("shorthand", () => {
       ["w-(--var) h-(--var)", "size-(--var)"],
       ["lg:w-1 lg:h-1", "lg:size-1"],
     ])('should convert "%s" to "%s"', (input, expected) => {
-      expect(shorthand(input)).toBe(expected)
+      expect(applyShorthand(input).value).toBe(expected)
     })
   })
   describe("another class is in between", () => {
     it.each([
-      ["w-1 block h-1", "size-1 block"],
-      ["block w-1 h-1", "block size-1"],
-      ["w-1 h-1 block", "size-1 block"],
-      ["black w-1 bg-white h-1 mt-1", "black size-1 bg-white mt-1"],
-    ])('should convert "%s" to "%s"', (input, expected) => {
-      expect(shorthand(input)).toBe(expected)
-    })
+      {
+        input: "w-1 block h-1",
+        expected: "size-1 block",
+        classnames: "w-1 h-1",
+        shorthand: "size-1",
+      },
+      {
+        input: "block w-1 h-1",
+        expected: "block size-1",
+        classnames: "w-1 h-1",
+        shorthand: "size-1",
+      },
+      {
+        input: "w-1 h-1 block",
+        expected: "size-1 block",
+        classnames: "w-1 h-1",
+        shorthand: "size-1",
+      },
+      {
+        input: "black w-1 bg-white h-1 mt-1",
+        expected: "black size-1 bg-white mt-1",
+        classnames: "w-1 h-1",
+        shorthand: "size-1",
+      },
+    ])(
+      'should convert "%s" to "%s"',
+      ({ input, expected, classnames, shorthand }) => {
+        expect(applyShorthand(input)).toStrictEqual({
+          applied: true,
+          value: expected,
+          classnames,
+          shorthand,
+        })
+      },
+    )
   })
   it.each([["w-1 h-2", "w-1 h-2"]])(
     "should return %s as is",
     (input, expected) => {
-      expect(shorthand(input)).toBe(expected)
+      expect(applyShorthand(input).value).toBe(expected)
     },
   )
 })
