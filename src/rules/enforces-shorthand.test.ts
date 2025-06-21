@@ -32,9 +32,41 @@ describe("enforces-shorthand", () => {
   describe("sizing", () => {
     describe("valid", () => {
       it.each([
-        { code: `<div className="size-1" />` },
-        { code: `<div className="w-1 h-2" />` },
-      ])("should not report valid code: $code", async ({ code }) => {
+        `<div className="size-1" />`,
+        `<div className="w-1 h-2" />`,
+        // `<div class="overflow-x-auto overflow-y-scroll" />`,
+        // `<div class="overscroll-x-auto overscroll-y-none" />`,
+        // `<div class="mt-0 mr-1 mb-3 ml-4" />`,
+        // `<div class="top-[0] right-[50%] bottom-[10px] left-[var(--some-value)]" />`,
+        // `<div class="top-[0] right-0 bottom-0 left-[0]" />`,
+        // `<div class="grid gap-x-8 gap-y-4 grid-cols-3" />`,
+        // `<img class="scale-x-75 -scale-y-75" />`,
+        // `<div class="px-16 pt-48 pb-16" />`,
+        `<div className="py-2.5 md:py-3 pl-2.5 md:pl-4 font-medium uppercase" />`,
+        "<div className />",
+        // `
+        //       <div className={"px-0 py-[0]"}>skipClassAttribute</div>
+        //       `,
+        //           options: skipClassAttributeOptions,
+        //         },
+        // `<div class="group/name:rounded-r-full rounded-l-full" />`,
+        // `<div class="overflow-hidden text-ellipsis hover:whitespace-nowrap" />`,
+        // `<div class="overflow-hidden text-ellipsis !whitespace-nowrap" />`,
+        "<div className={`absolute inset-y-0 left-0 w-1/3 rounded-[inherit] shadow-lg ${className}`} />",
+        "<div className={'w-screen h-screen'} />",
+        //         {
+        //           code: `<div class="h-custom w-custom">Incomplete config should not use size-*</div>`,
+        //           options: incompleteCustomWidthHeightOptions,
+        //         },
+        //         {
+        //           code: `<div class="h-custom w-custom">Ambiguous cannot size-*</div>`,
+        //           options: ambiguousOptions,
+        //         },
+        //         {
+        //           code: `<div class="h-custom w-custom">h-custom & w-custom don't exist... no size-*</div>`,
+        //           options: customSizeOnlyOptions,
+        //         },
+      ])("should not report valid code: $code", async (code) => {
         const { result } = await valid({ code })
         expect(result.output).toEqual(code)
       })
