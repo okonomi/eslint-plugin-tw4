@@ -55,9 +55,21 @@ describe("shorthand", () => {
       expect(applyShorthand(input).value).toBe(expected)
     },
   )
-  describe("spacing", () => {})
-  describe("border", () => {})
-  describe("layout", () => {})
+  describe("spacing", () => {
+    it.each([
+      ["mx-1 my-1", "m-1"],
+      ["px-1 py-1", "p-1"],
+      ["mt-1 mb-1 mr-1 ml-1", "m-1"],
+    ])('"%s" to "%s"', (input, expected) => {
+      expect(applyShorthand(input).value).toBe(expected)
+    })
+  })
+  describe.skip("border", () => {
+    // TODO: ボーダー関連のショートハンドを実装
+  })
+  describe.skip("layout", () => {
+    // TODO: レイアウト関連のショートハンドを実装
+  })
   describe("sizing", () => {
     it.each([
       ["w-1 h-1", "size-1"],
@@ -71,8 +83,16 @@ describe("shorthand", () => {
       expect(applyShorthand(input).value).toBe(expected)
     })
   })
-  describe("grid & flexbox", () => {})
-  describe("transform", () => {})
-  describe("typography", () => {})
-  describe("misc", () => {})
+  describe.skip("grid & flexbox", () => {
+    // TODO: グリッド・フレックスボックス関連のショートハンドを実装
+  })
+  describe.skip("transform", () => {
+    // TODO: トランスフォーム関連のショートハンドを実装
+  })
+  describe.skip("typography", () => {
+    // TODO: タイポグラフィ関連のショートハンドを実装
+  })
+  describe.skip("misc", () => {
+    // TODO: その他のショートハンドを実装
+  })
 })
