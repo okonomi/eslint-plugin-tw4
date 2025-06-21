@@ -322,8 +322,44 @@ describe("shorthand", () => {
       // flex-1, flex-auto, flex-none, flex-initial は既にショートハンド形式
     })
   })
-  describe.skip("transform", () => {
-    // TODO: トランスフォーム関連のショートハンドを実装
+  describe("transform", () => {
+    describe("translate", () => {
+      it.each([
+        // Same values to shorthand
+        ["translate-x-4 translate-y-4", "translate-4"],
+        
+        // Negative values
+        ["-translate-x-4 -translate-y-4", "-translate-4"],
+        
+        // Fractional values
+        ["translate-x-1/2 translate-y-1/2", "translate-1/2"],
+        ["translate-x-full translate-y-full", "translate-full"],
+        ["translate-x-px translate-y-px", "translate-px"],
+      ])('"%s" to "%s"', (input, expected) => {
+        expect(applyShorthand(input).value).toBe(expected)
+      })
+    })
+
+    describe("scale", () => {
+      it.each([
+        // Same values to shorthand
+        ["scale-x-100 scale-y-100", "scale-100"],
+      ])('"%s" to "%s"', (input, expected) => {
+        expect(applyShorthand(input).value).toBe(expected)
+      })
+    })
+
+    describe("skew", () => {
+      it.each([
+        // Same values to shorthand
+        ["skew-x-12 skew-y-12", "skew-12"],
+        
+        // Negative values
+        ["-skew-x-6 -skew-y-6", "-skew-6"],
+      ])('"%s" to "%s"', (input, expected) => {
+        expect(applyShorthand(input).value).toBe(expected)
+      })
+    })
   })
   describe.skip("typography", () => {
     // TODO: タイポグラフィ関連のショートハンドを実装

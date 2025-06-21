@@ -219,6 +219,29 @@ export function applyShorthand(value: string) {
       }
     }
 
+    // Handle transform classes (translate, scale, skew)
+    if (
+      cleanClass.startsWith("translate-") ||
+      cleanClass.startsWith("scale-") ||
+      cleanClass.startsWith("skew-")
+    ) {
+      const transformMatch = cleanClass.match(
+        /^(translate|scale|skew)-([xy])-(.+)$/,
+      )
+      if (transformMatch) {
+        const transformType = transformMatch[1] // translate, scale, skew
+        const direction = transformMatch[2] // x, y
+        const value = transformMatch[3] // 4, 110, 12, etc.
+
+        return {
+          type: `${transformType}-${direction}`,
+          value: value,
+          isNegative,
+          category: "transform",
+        }
+      }
+    }
+
     // Original logic for other classes
     const dashIndex = cleanClass.indexOf("-")
     if (dashIndex === -1) return null
@@ -743,6 +766,96 @@ export function applyShorthand(value: string) {
       value: filteredClasses.join(" "),
       classnames: matchedClasses.join(" "),
       shorthand: shorthandClass,
+    }
+  }
+
+  // Transform shortcuts (translate, scale, skew)
+  const transformTypes = ["translate", "scale", "skew"]
+  for (const transformType of transformTypes) {
+    const result = findMatchingClasses([
+      [`${transformType}-x`, `${transformType}-y`],
+    ])
+    if (result) {
+      const { matchedClasses, commonPrefix, commonValue, commonNegative } =
+        result
+
+      // Helper to convert transform values
+      function convertTransformValue(type: string, value: string): string {
+        switch (type) {
+          case "translate":
+            // Convert spacing values to rem/px
+            if (value === "0") return "0"
+            if (value === "px") return "1px"
+            if (value === "full") return "100%"
+            if (value.includes("/")) {
+              const [num, denom] = value.split("/")
+              return `${(Number.parseFloat(num) / Number.parseFloat(denom)) * 100}%`
+            }
+            return `${Number.parseFloat(value) * 0.25}rem`
+          case "scale":
+            // Convert scale values (100 = 1, 110 = 1.1, etc.)
+            return (Number.parseFloat(value) / 100).toString()
+          case "skew":
+            // Skew values remain as degrees
+            return `${value}deg`
+          default:
+            return value
+        }
+      }
+
+      // Get individual x and y values
+      const xClass = matchedClasses.find(
+        (cls) =>
+          parseBaseClass(parseClass(cls).baseClass)?.type ===
+          `${transformType}-x`,
+      )
+      const yClass = matchedClasses.find(
+        (cls) =>
+          parseBaseClass(parseClass(cls).baseClass)?.type ===
+          `${transformType}-y`,
+      )
+
+      if (xClass && yClass) {
+        const xParsed = parseBaseClass(parseClass(xClass).baseClass)
+        const yParsed = parseBaseClass(parseClass(yClass).baseClass)
+
+        if (xParsed && yParsed) {
+          const xValue = convertTransformValue(transformType, xParsed.value)
+          const yValue = convertTransformValue(transformType, yParsed.value)
+
+          let shorthandClass: string
+
+          if (
+            xParsed.value === yParsed.value &&
+            xParsed.isNegative === yParsed.isNegative
+          ) {
+            // Same values: use simple shorthand
+            const negativePrefix = commonNegative ? "-" : ""
+            shorthandClass = `${negativePrefix}${transformType}-${commonValue}`
+          } else {
+            // Different values: use custom property
+            const xNegativePrefix = xParsed.isNegative ? "-" : ""
+            const yNegativePrefix = yParsed.isNegative ? "-" : ""
+            shorthandClass = `${transformType}-[${xNegativePrefix}${xValue}_${yNegativePrefix}${yValue}]`
+          }
+
+          // Remove matched classes and add shorthand
+          const filteredClasses = classes.filter(
+            (cls) => !matchedClasses.includes(cls),
+          )
+          const firstIndex = Math.min(
+            ...matchedClasses.map((cls) => classes.indexOf(cls)),
+          )
+          filteredClasses.splice(firstIndex, 0, shorthandClass)
+
+          return {
+            applied: true,
+            value: filteredClasses.join(" "),
+            classnames: matchedClasses.join(" "),
+            shorthand: shorthandClass,
+          }
+        }
+      }
     }
   }
 
