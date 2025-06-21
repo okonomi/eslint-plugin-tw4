@@ -364,7 +364,12 @@ describe("shorthand", () => {
   describe.skip("typography", () => {
     // TODO: タイポグラフィ関連のショートハンドを実装
   })
-  describe.skip("misc", () => {
-    // TODO: その他のショートハンドを実装
+  describe("misc", () => {
+    it.each([["overflow-hidden text-ellipsis whitespace-nowrap", "truncate"]])(
+      '"%s" to "%s"',
+      (input, expected) => {
+        expect(applyShorthand(input).value).toBe(expected)
+      },
+    )
   })
 })

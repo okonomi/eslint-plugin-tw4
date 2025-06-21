@@ -859,6 +859,82 @@ export function applyShorthand(value: string) {
     }
   }
 
+  // Check misc patterns (like truncate)
+  const miscPatterns = [
+    {
+      patterns: [["overflow-hidden", "text-ellipsis", "whitespace-nowrap"]],
+      shorthand: "truncate",
+    },
+  ]
+
+  for (const { patterns, shorthand } of miscPatterns) {
+    let matches: { [key: string]: string } = {}
+    let matchedClasses: string[] = []
+    let commonPrefix = ""
+
+    for (const pattern of patterns) {
+      const currentMatches: { [key: string]: string } = {}
+      const currentMatchedClasses: string[] = []
+      let currentCommonPrefix = ""
+
+      for (const expectedType of pattern) {
+        let found = false
+
+        for (const className of classes) {
+          const parsed = parseClass(className)
+
+          // Check for exact match with expected type
+          if (parsed.baseClass === expectedType) {
+            if (!currentCommonPrefix) {
+              currentCommonPrefix = parsed.prefix
+            } else if (currentCommonPrefix !== parsed.prefix) {
+              found = false
+              break
+            }
+
+            currentMatches[expectedType] = ""
+            currentMatchedClasses.push(className)
+            found = true
+            break
+          }
+        }
+
+        if (!found) {
+          break
+        }
+      }
+
+      // If all expected classes in this pattern were found
+      if (Object.keys(currentMatches).length === pattern.length) {
+        matches = currentMatches
+        matchedClasses = currentMatchedClasses
+        commonPrefix = currentCommonPrefix
+        break
+      }
+    }
+
+    if (matchedClasses.length > 0) {
+      // Create shorthand class
+      const shorthandClass = `${commonPrefix}${shorthand}`
+
+      // Remove matched classes and add shorthand
+      const filteredClasses = classes.filter(
+        (cls) => !matchedClasses.includes(cls),
+      )
+      const firstIndex = Math.min(
+        ...matchedClasses.map((cls) => classes.indexOf(cls)),
+      )
+      filteredClasses.splice(firstIndex, 0, shorthandClass)
+
+      return {
+        applied: true,
+        value: filteredClasses.join(" "),
+        classnames: matchedClasses.join(" "),
+        shorthand: shorthandClass,
+      }
+    }
+  }
+
   return {
     applied: false,
     value,
