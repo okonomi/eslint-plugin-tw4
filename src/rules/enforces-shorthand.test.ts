@@ -19,63 +19,107 @@ describe("enforces-shorthand", () => {
     },
   })
 
-  describe("size shorthand", () => {
-    it("should not report valid identifiers", async () => {
-      const code = dedent`
-        <div className="size-1" />
-      `
-      const { result } = await valid({ code })
-      expect(result.messages).toHaveLength(0)
-    })
-    it("when width and height are different", async () => {
-      const code = dedent`
-        <div className="w-1 h-2" />
-      `
-      const { result } = await valid({ code })
-      expect(result.output).toMatchSnapshot()
-    })
-    it("should report invalid identifiers", async () => {
-      const code = dedent`
-        <div className="w-1 h-1" />
-      `
-      const { result } = await invalid({
-        code,
-        errors: [{ messageId: "useShorthand" }],
+  describe("sizing", () => {
+    describe("valid", () => {
+      it.each([
+        {
+          code: dedent`
+              <div className="size-1" />
+            `,
+        },
+        {
+          code: dedent`
+              <div className="w-1 h-2" />
+            `,
+        },
+      ])("should not report valid code: $code", async ({ code }) => {
+        const { result } = await valid({ code })
+        expect(result.output).toEqual(code)
       })
-      expect(result.output).toMatchSnapshot()
     })
-    it("when another class is in between", async () => {
-      const code = dedent`
-        <div className="w-1 block h-1" />
-      `
-      const { result } = await invalid({
-        code,
-        errors: [{ messageId: "useShorthand" }],
-      })
-      expect(result.output).toMatchSnapshot()
-      expect(result.output).toEqual(dedent`
-        <div className="size-1 block" />
-      `)
-    })
-    it("when size is 2", async () => {
-      const code = dedent`
-        <div className="w-2 h-2" />
-      `
-      const { result } = await invalid({
-        code,
-        errors: [{ messageId: "useShorthand" }],
-      })
-      expect(result.output).toMatchSnapshot()
-    })
-    it("when size is non-numeric", async () => {
-      const code = dedent`
-        <div className="w-auto h-auto" />
-      `
-      const { result } = await invalid({
-        code,
-        errors: [{ messageId: "useShorthand" }],
-      })
-      expect(result.output).toMatchSnapshot()
+    describe("invalid", () => {
+      it.each([
+        {
+          code: dedent`
+              <div className="w-1 h-1" />
+            `,
+          output: dedent`
+              <div className="size-1" />
+            `,
+          errors: [
+            {
+              messageId: "useShorthand",
+              data: {
+                shorthand: "size-1",
+                classnames: "w-1 h-1",
+              },
+            },
+          ],
+          message: 'Use shorthand "size-1" instead of class names "w-1 h-1".',
+        },
+        {
+          code: dedent`
+              <div className="w-1 block h-1" />
+            `,
+          output: dedent`
+              <div className="size-1 block" />
+            `,
+          errors: [
+            {
+              messageId: "useShorthand",
+              data: {
+                shorthand: "size-1",
+                classnames: "w-1 h-1",
+              },
+            },
+          ],
+          message: 'Use shorthand "size-1" instead of class names "w-1 h-1".',
+        },
+        {
+          code: dedent`
+            <div className="w-2 h-2" />
+            `,
+          output: dedent`
+              <div className="size-2" />
+            `,
+          errors: [
+            {
+              messageId: "useShorthand",
+              data: {
+                shorthand: "size-2",
+                classnames: "w-2 h-2",
+              },
+            },
+          ],
+          message: 'Use shorthand "size-2" instead of class names "w-2 h-2".',
+        },
+        {
+          code: dedent`
+            <div className="w-auto h-auto" />
+            `,
+          output: dedent`
+              <div className="size-auto" />
+            `,
+          errors: [
+            {
+              messageId: "useShorthand",
+              data: {
+                shorthand: "size-auto",
+                classnames: "w-auto h-auto",
+              },
+            },
+          ],
+          message:
+            'Use shorthand "size-auto" instead of class names "w-auto h-auto".',
+        },
+      ])(
+        "should report invalid code: $code",
+        async ({ code, output, errors, message }) => {
+          const { result } = await invalid({ code, output, errors })
+          expect(result.output).toEqual(output)
+          expect(result.messages[0].message).toEqual(message)
+        },
+      )
     })
   })
 })
