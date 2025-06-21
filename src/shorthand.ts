@@ -18,7 +18,66 @@ export function applyShorthand(value: string) {
     const isNegative = baseClass.startsWith("-")
     const cleanClass = isNegative ? baseClass.substring(1) : baseClass
 
-    // Extract type and value (e.g., "w-1" -> type: "w", value: "1")
+    // Handle border classes (border-t-1, border-t-red-500, etc.)
+    if (cleanClass.startsWith("border-")) {
+      const borderPart = cleanClass.substring(7) // Remove "border-"
+
+      // Check for directional border (border-t-, border-l-, etc.)
+      const directionMatch = borderPart.match(/^([tlbr]|[xy]|s|e)-(.+)$/)
+      if (directionMatch) {
+        return {
+          type: `border-${directionMatch[1]}`,
+          value: directionMatch[2],
+          isNegative,
+          category: "border-width-color",
+        }
+      }
+
+      // Non-directional border (border-1, border-red-500, etc.)
+      return {
+        type: "border",
+        value: borderPart,
+        isNegative,
+        category: "border-width-color",
+      }
+    }
+
+    // Handle rounded classes
+    if (cleanClass.startsWith("rounded-")) {
+      const roundedPart = cleanClass.substring(8) // Remove "rounded-"
+
+      // Check for corner-specific rounded (rounded-tl-, rounded-tr-, etc.)
+      const cornerMatch = roundedPart.match(/^(tl|tr|bl|br|ss|se|es|ee)-(.+)$/)
+      if (cornerMatch) {
+        return {
+          type: `rounded-${cornerMatch[1]}`,
+          value: cornerMatch[2],
+          isNegative,
+          category: "border-radius",
+        }
+      }
+
+      // Check for side-specific rounded (rounded-t-, rounded-l-, etc.)
+      const sideMatch = roundedPart.match(/^([tlbr]|s|e)-(.+)$/)
+      if (sideMatch) {
+        return {
+          type: `rounded-${sideMatch[1]}`,
+          value: sideMatch[2],
+          isNegative,
+          category: "border-radius",
+        }
+      }
+
+      // Non-directional rounded (rounded-md, rounded-lg, etc.)
+      return {
+        type: "rounded",
+        value: roundedPart,
+        isNegative,
+        category: "border-radius",
+      }
+    }
+
+    // Original logic for other classes
     const dashIndex = cleanClass.indexOf("-")
     if (dashIndex === -1) return null
 
@@ -137,8 +196,140 @@ export function applyShorthand(value: string) {
     },
   ]
 
+  // Define border patterns
+  const borderPatterns = [
+    // 4-way border patterns (highest priority)
+    {
+      patterns: [
+        ["border-t", "border-b", "border-l", "border-r"],
+        ["border-t", "border-b", "border-s", "border-e"],
+      ],
+      shorthand: "border",
+    },
+    // 2-way border patterns
+    {
+      patterns: [["border-x", "border-y"]],
+      shorthand: "border",
+    },
+    {
+      patterns: [["border-t", "border-b"]],
+      shorthand: "border-y",
+    },
+    {
+      patterns: [
+        ["border-l", "border-r"],
+        ["border-s", "border-e"],
+      ],
+      shorthand: "border-x",
+    },
+  ]
+
+  // Define border radius patterns
+  const borderRadiusPatterns = [
+    // 4-corner to full
+    {
+      patterns: [
+        ["rounded-tl", "rounded-tr", "rounded-bl", "rounded-br"],
+        ["rounded-ss", "rounded-se", "rounded-es", "rounded-ee"],
+      ],
+      shorthand: "rounded",
+    },
+    // Side pairs to full
+    {
+      patterns: [
+        ["rounded-t", "rounded-b"],
+        ["rounded-l", "rounded-r"],
+        ["rounded-s", "rounded-e"],
+      ],
+      shorthand: "rounded",
+    },
+    // Corner pairs to sides
+    {
+      patterns: [["rounded-tl", "rounded-tr"]],
+      shorthand: "rounded-t",
+    },
+    {
+      patterns: [["rounded-bl", "rounded-br"]],
+      shorthand: "rounded-b",
+    },
+    {
+      patterns: [["rounded-tl", "rounded-bl"]],
+      shorthand: "rounded-l",
+    },
+    {
+      patterns: [["rounded-tr", "rounded-br"]],
+      shorthand: "rounded-r",
+    },
+    {
+      patterns: [["rounded-ss", "rounded-se"]],
+      shorthand: "rounded-s",
+    },
+    {
+      patterns: [["rounded-es", "rounded-ee"]],
+      shorthand: "rounded-e",
+    },
+  ]
+
   // Check spacing patterns
   for (const { patterns, shorthand } of spacingPatterns) {
+    const result = findMatchingClasses(patterns)
+    if (result) {
+      const { matchedClasses, commonPrefix, commonValue, commonNegative } =
+        result
+
+      // Create shorthand class
+      const negativePrefix = commonNegative ? "-" : ""
+      const shorthandClass = `${commonPrefix}${negativePrefix}${shorthand}-${commonValue}`
+
+      // Remove matched classes and add shorthand
+      const filteredClasses = classes.filter(
+        (cls) => !matchedClasses.includes(cls),
+      )
+      const firstIndex = Math.min(
+        ...matchedClasses.map((cls) => classes.indexOf(cls)),
+      )
+      filteredClasses.splice(firstIndex, 0, shorthandClass)
+
+      return {
+        applied: true,
+        value: filteredClasses.join(" "),
+        classnames: matchedClasses.join(" "),
+        shorthand: shorthandClass,
+      }
+    }
+  }
+
+  // Check border patterns
+  for (const { patterns, shorthand } of borderPatterns) {
+    const result = findMatchingClasses(patterns)
+    if (result) {
+      const { matchedClasses, commonPrefix, commonValue, commonNegative } =
+        result
+
+      // Create shorthand class
+      const negativePrefix = commonNegative ? "-" : ""
+      const shorthandClass = `${commonPrefix}${negativePrefix}${shorthand}-${commonValue}`
+
+      // Remove matched classes and add shorthand
+      const filteredClasses = classes.filter(
+        (cls) => !matchedClasses.includes(cls),
+      )
+      const firstIndex = Math.min(
+        ...matchedClasses.map((cls) => classes.indexOf(cls)),
+      )
+      filteredClasses.splice(firstIndex, 0, shorthandClass)
+
+      return {
+        applied: true,
+        value: filteredClasses.join(" "),
+        classnames: matchedClasses.join(" "),
+        shorthand: shorthandClass,
+      }
+    }
+  }
+
+  // Check border radius patterns
+  for (const { patterns, shorthand } of borderRadiusPatterns) {
     const result = findMatchingClasses(patterns)
     if (result) {
       const { matchedClasses, commonPrefix, commonValue, commonNegative } =

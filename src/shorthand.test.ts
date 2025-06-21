@@ -88,8 +88,75 @@ describe("shorthand", () => {
       })
     })
   })
-  describe.skip("border", () => {
-    // TODO: ボーダー関連のショートハンドを実装
+  describe("border", () => {
+    describe("border width", () => {
+      it.each([
+        // 2-way patterns
+        ["border-t-1 border-b-1", "border-y-1"],
+        ["border-l-1 border-r-1", "border-x-1"],
+        ["border-s-1 border-e-1", "border-x-1"],
+        ["border-x-1 border-y-1", "border-1"],
+        
+        // 4-way patterns
+        ["border-t-1 border-b-1 border-l-1 border-r-1", "border-1"],
+        ["border-t-1 border-b-1 border-s-1 border-e-1", "border-1"],
+        
+        // Different values
+        ["border-t-2 border-b-2", "border-y-2"],
+        ["border-l-4 border-r-4", "border-x-4"],
+        ["border-x-0 border-y-0", "border-0"],
+      ])('"%s" to "%s"', (input, expected) => {
+        expect(applyShorthand(input).value).toBe(expected)
+      })
+    })
+    
+    describe("border color", () => {
+      it.each([
+        // 2-way patterns
+        ["border-t-red-500 border-b-red-500", "border-y-red-500"],
+        ["border-l-blue-300 border-r-blue-300", "border-x-blue-300"],
+        ["border-s-green-400 border-e-green-400", "border-x-green-400"],
+        ["border-x-gray-200 border-y-gray-200", "border-gray-200"],
+        
+        // 4-way patterns
+        ["border-t-black border-b-black border-l-black border-r-black", "border-black"],
+        ["border-t-white border-b-white border-s-white border-e-white", "border-white"],
+        
+        // With transparency
+        ["border-t-red-500/50 border-b-red-500/50", "border-y-red-500/50"],
+        ["border-x-blue-300/25 border-y-blue-300/25", "border-blue-300/25"],
+      ])('"%s" to "%s"', (input, expected) => {
+        expect(applyShorthand(input).value).toBe(expected)
+      })
+    })
+    
+    describe("border radius", () => {
+      it.each([
+        // Corner pairs to sides
+        ["rounded-tl-md rounded-tr-md", "rounded-t-md"],
+        ["rounded-bl-md rounded-br-md", "rounded-b-md"],
+        ["rounded-tl-md rounded-bl-md", "rounded-l-md"],
+        ["rounded-tr-md rounded-br-md", "rounded-r-md"],
+        ["rounded-ss-md rounded-se-md", "rounded-s-md"],
+        ["rounded-es-md rounded-ee-md", "rounded-e-md"],
+        
+        // Side pairs to full
+        ["rounded-t-md rounded-b-md", "rounded-md"],
+        ["rounded-l-md rounded-r-md", "rounded-md"],
+        ["rounded-s-md rounded-e-md", "rounded-md"],
+        
+        // 4-corner to full
+        ["rounded-tl-lg rounded-tr-lg rounded-bl-lg rounded-br-lg", "rounded-lg"],
+        ["rounded-ss-sm rounded-se-sm rounded-es-sm rounded-ee-sm", "rounded-sm"],
+        
+        // Different sizes
+        ["rounded-tl-full rounded-tr-full", "rounded-t-full"],
+        ["rounded-t-none rounded-b-none", "rounded-none"],
+        ["rounded-l-xl rounded-r-xl", "rounded-xl"],
+      ])('"%s" to "%s"', (input, expected) => {
+        expect(applyShorthand(input).value).toBe(expected)
+      })
+    })
   })
   describe.skip("layout", () => {
     // TODO: レイアウト関連のショートハンドを実装
