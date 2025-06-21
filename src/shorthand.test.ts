@@ -96,11 +96,11 @@ describe("shorthand", () => {
         ["border-l-1 border-r-1", "border-x-1"],
         ["border-s-1 border-e-1", "border-x-1"],
         ["border-x-1 border-y-1", "border-1"],
-        
+
         // 4-way patterns
         ["border-t-1 border-b-1 border-l-1 border-r-1", "border-1"],
         ["border-t-1 border-b-1 border-s-1 border-e-1", "border-1"],
-        
+
         // Different values
         ["border-t-2 border-b-2", "border-y-2"],
         ["border-l-4 border-r-4", "border-x-4"],
@@ -109,7 +109,7 @@ describe("shorthand", () => {
         expect(applyShorthand(input).value).toBe(expected)
       })
     })
-    
+
     describe("border color", () => {
       it.each([
         // 2-way patterns
@@ -117,11 +117,17 @@ describe("shorthand", () => {
         ["border-l-blue-300 border-r-blue-300", "border-x-blue-300"],
         ["border-s-green-400 border-e-green-400", "border-x-green-400"],
         ["border-x-gray-200 border-y-gray-200", "border-gray-200"],
-        
+
         // 4-way patterns
-        ["border-t-black border-b-black border-l-black border-r-black", "border-black"],
-        ["border-t-white border-b-white border-s-white border-e-white", "border-white"],
-        
+        [
+          "border-t-black border-b-black border-l-black border-r-black",
+          "border-black",
+        ],
+        [
+          "border-t-white border-b-white border-s-white border-e-white",
+          "border-white",
+        ],
+
         // With transparency
         ["border-t-red-500/50 border-b-red-500/50", "border-y-red-500/50"],
         ["border-x-blue-300/25 border-y-blue-300/25", "border-blue-300/25"],
@@ -129,7 +135,7 @@ describe("shorthand", () => {
         expect(applyShorthand(input).value).toBe(expected)
       })
     })
-    
+
     describe("border radius", () => {
       it.each([
         // Corner pairs to sides
@@ -139,16 +145,22 @@ describe("shorthand", () => {
         ["rounded-tr-md rounded-br-md", "rounded-r-md"],
         ["rounded-ss-md rounded-se-md", "rounded-s-md"],
         ["rounded-es-md rounded-ee-md", "rounded-e-md"],
-        
+
         // Side pairs to full
         ["rounded-t-md rounded-b-md", "rounded-md"],
         ["rounded-l-md rounded-r-md", "rounded-md"],
         ["rounded-s-md rounded-e-md", "rounded-md"],
-        
+
         // 4-corner to full
-        ["rounded-tl-lg rounded-tr-lg rounded-bl-lg rounded-br-lg", "rounded-lg"],
-        ["rounded-ss-sm rounded-se-sm rounded-es-sm rounded-ee-sm", "rounded-sm"],
-        
+        [
+          "rounded-tl-lg rounded-tr-lg rounded-bl-lg rounded-br-lg",
+          "rounded-lg",
+        ],
+        [
+          "rounded-ss-sm rounded-se-sm rounded-es-sm rounded-ee-sm",
+          "rounded-sm",
+        ],
+
         // Different sizes
         ["rounded-tl-full rounded-tr-full", "rounded-t-full"],
         ["rounded-t-none rounded-b-none", "rounded-none"],
@@ -166,23 +178,23 @@ describe("shorthand", () => {
         ["left-1 right-1", "inset-x-1"],
         ["start-1 end-1", "inset-x-1"],
         ["inset-x-1 inset-y-1", "inset-1"],
-        
+
         // 4-way patterns
         ["top-1 bottom-1 left-1 right-1", "inset-1"],
         ["top-1 bottom-1 start-1 end-1", "inset-1"],
-        
+
         // Different values
         ["top-auto bottom-auto", "inset-y-auto"],
         ["left-0 right-0", "inset-x-0"],
         ["start-px end-px", "inset-x-px"],
         ["inset-x-full inset-y-full", "inset-full"],
-        
+
         // Negative values
         ["-top-1 -bottom-1", "-inset-y-1"],
         ["-left-2 -right-2", "-inset-x-2"],
         ["-start-4 -end-4", "-inset-x-4"],
         ["-inset-x-1 -inset-y-1", "-inset-1"],
-        
+
         // Fractional values
         ["top-1/2 bottom-1/2", "inset-y-1/2"],
         ["left-1/3 right-1/3", "inset-x-1/3"],
@@ -191,7 +203,7 @@ describe("shorthand", () => {
         expect(applyShorthand(input).value).toBe(expected)
       })
     })
-    
+
     describe("scroll margin", () => {
       it.each([
         // 2-way patterns
@@ -199,11 +211,11 @@ describe("shorthand", () => {
         ["scroll-ml-1 scroll-mr-1", "scroll-mx-1"],
         ["scroll-ms-1 scroll-me-1", "scroll-mx-1"],
         ["scroll-mx-1 scroll-my-1", "scroll-m-1"],
-        
+
         // 4-way patterns
         ["scroll-mt-1 scroll-mb-1 scroll-ml-1 scroll-mr-1", "scroll-m-1"],
         ["scroll-mt-1 scroll-mb-1 scroll-ms-1 scroll-me-1", "scroll-m-1"],
-        
+
         // Different values
         ["scroll-mt-4 scroll-mb-4", "scroll-my-4"],
         ["scroll-ml-auto scroll-mr-auto", "scroll-mx-auto"],
@@ -212,7 +224,7 @@ describe("shorthand", () => {
         expect(applyShorthand(input).value).toBe(expected)
       })
     })
-    
+
     describe("scroll padding", () => {
       it.each([
         // 2-way patterns
@@ -220,11 +232,11 @@ describe("shorthand", () => {
         ["scroll-pl-1 scroll-pr-1", "scroll-px-1"],
         ["scroll-ps-1 scroll-pe-1", "scroll-px-1"],
         ["scroll-px-1 scroll-py-1", "scroll-p-1"],
-        
+
         // 4-way patterns
         ["scroll-pt-1 scroll-pb-1 scroll-pl-1 scroll-pr-1", "scroll-p-1"],
         ["scroll-pt-1 scroll-pb-1 scroll-ps-1 scroll-pe-1", "scroll-p-1"],
-        
+
         // Different values
         ["scroll-pt-8 scroll-pb-8", "scroll-py-8"],
         ["scroll-pl-0 scroll-pr-0", "scroll-px-0"],
@@ -233,7 +245,7 @@ describe("shorthand", () => {
         expect(applyShorthand(input).value).toBe(expected)
       })
     })
-    
+
     describe("gap", () => {
       it.each([
         // 2-way gap patterns
@@ -278,22 +290,28 @@ describe("shorthand", () => {
         expect(applyShorthand(input).value).toBe(expected)
       })
     })
-    
+
     describe("place content", () => {
       it.each([
         // place-content は justify-content + align-content のショートハンド
         ["justify-content-center align-content-center", "place-content-center"],
         ["justify-content-start align-content-start", "place-content-start"],
         ["justify-content-end align-content-end", "place-content-end"],
-        ["justify-content-between align-content-between", "place-content-between"],
+        [
+          "justify-content-between align-content-between",
+          "place-content-between",
+        ],
         ["justify-content-around align-content-around", "place-content-around"],
         ["justify-content-evenly align-content-evenly", "place-content-evenly"],
-        ["justify-content-stretch align-content-stretch", "place-content-stretch"],
+        [
+          "justify-content-stretch align-content-stretch",
+          "place-content-stretch",
+        ],
       ])('"%s" to "%s"', (input, expected) => {
         expect(applyShorthand(input).value).toBe(expected)
       })
     })
-    
+
     describe("place self", () => {
       it.each([
         // place-self は justify-self + align-self のショートハンド
@@ -306,16 +324,16 @@ describe("shorthand", () => {
         expect(applyShorthand(input).value).toBe(expected)
       })
     })
-    
+
     describe.skip("gap combinations", () => {
       // gap は既に実装済みなのでスキップ
       // gap-x + gap-y → gap は layout セクションで実装済み
     })
-    
+
     describe.skip("order patterns", () => {
       // order-* は単一プロパティなのでショートハンドなし
     })
-    
+
     describe.skip("flex patterns", () => {
       // flex-grow, flex-shrink, flex-basis の組み合わせ
       // 実際にはTailwindではこれらは個別のユーティリティのため、ショートハンドにはならない
@@ -327,10 +345,10 @@ describe("shorthand", () => {
       it.each([
         // Same values to shorthand
         ["translate-x-4 translate-y-4", "translate-4"],
-        
+
         // Negative values
         ["-translate-x-4 -translate-y-4", "-translate-4"],
-        
+
         // Fractional values
         ["translate-x-1/2 translate-y-1/2", "translate-1/2"],
         ["translate-x-full translate-y-full", "translate-full"],
@@ -353,7 +371,7 @@ describe("shorthand", () => {
       it.each([
         // Same values to shorthand
         ["skew-x-12 skew-y-12", "skew-12"],
-        
+
         // Negative values
         ["-skew-x-6 -skew-y-6", "-skew-6"],
       ])('"%s" to "%s"', (input, expected) => {
