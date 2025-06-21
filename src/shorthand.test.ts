@@ -265,8 +265,62 @@ describe("shorthand", () => {
       expect(applyShorthand(input).value).toBe(expected)
     })
   })
-  describe.skip("grid & flexbox", () => {
-    // TODO: グリッド・フレックスボックス関連のショートハンドを実装
+  describe("grid & flexbox", () => {
+    describe("place items", () => {
+      it.each([
+        // place-items は justify-items + align-items のショートハンド
+        ["justify-items-center align-items-center", "place-items-center"],
+        ["justify-items-start align-items-start", "place-items-start"],
+        ["justify-items-end align-items-end", "place-items-end"],
+        ["justify-items-stretch align-items-stretch", "place-items-stretch"],
+        ["justify-items-baseline align-items-baseline", "place-items-baseline"],
+      ])('"%s" to "%s"', (input, expected) => {
+        expect(applyShorthand(input).value).toBe(expected)
+      })
+    })
+    
+    describe("place content", () => {
+      it.each([
+        // place-content は justify-content + align-content のショートハンド
+        ["justify-content-center align-content-center", "place-content-center"],
+        ["justify-content-start align-content-start", "place-content-start"],
+        ["justify-content-end align-content-end", "place-content-end"],
+        ["justify-content-between align-content-between", "place-content-between"],
+        ["justify-content-around align-content-around", "place-content-around"],
+        ["justify-content-evenly align-content-evenly", "place-content-evenly"],
+        ["justify-content-stretch align-content-stretch", "place-content-stretch"],
+      ])('"%s" to "%s"', (input, expected) => {
+        expect(applyShorthand(input).value).toBe(expected)
+      })
+    })
+    
+    describe("place self", () => {
+      it.each([
+        // place-self は justify-self + align-self のショートハンド
+        ["justify-self-center align-self-center", "place-self-center"],
+        ["justify-self-start align-self-start", "place-self-start"],
+        ["justify-self-end align-self-end", "place-self-end"],
+        ["justify-self-stretch align-self-stretch", "place-self-stretch"],
+        ["justify-self-auto align-self-auto", "place-self-auto"],
+      ])('"%s" to "%s"', (input, expected) => {
+        expect(applyShorthand(input).value).toBe(expected)
+      })
+    })
+    
+    describe.skip("gap combinations", () => {
+      // gap は既に実装済みなのでスキップ
+      // gap-x + gap-y → gap は layout セクションで実装済み
+    })
+    
+    describe.skip("order patterns", () => {
+      // order-* は単一プロパティなのでショートハンドなし
+    })
+    
+    describe.skip("flex patterns", () => {
+      // flex-grow, flex-shrink, flex-basis の組み合わせ
+      // 実際にはTailwindではこれらは個別のユーティリティのため、ショートハンドにはならない
+      // flex-1, flex-auto, flex-none, flex-initial は既にショートハンド形式
+    })
   })
   describe.skip("transform", () => {
     // TODO: トランスフォーム関連のショートハンドを実装

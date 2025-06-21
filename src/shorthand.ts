@@ -198,6 +198,27 @@ export function applyShorthand(value: string) {
       }
     }
 
+    // Handle grid & flexbox classes (justify-*, align-*)
+    if (cleanClass.startsWith("justify-") || cleanClass.startsWith("align-")) {
+      const isJustify = cleanClass.startsWith("justify-")
+      const prefix = isJustify ? "justify-" : "align-"
+      const rest = cleanClass.substring(prefix.length)
+
+      // Parse grid/flexbox property types: items, content, self
+      const typeMatch = rest.match(/^(items|content|self)-(.+)$/)
+      if (typeMatch) {
+        const propertyType = typeMatch[1] // items, content, self
+        const propertyValue = typeMatch[2] // center, start, end, etc.
+
+        return {
+          type: `${prefix}${propertyType}`,
+          value: propertyValue,
+          isNegative,
+          category: "grid-flexbox",
+        }
+      }
+    }
+
     // Original logic for other classes
     const dashIndex = cleanClass.indexOf("-")
     if (dashIndex === -1) return null
@@ -476,6 +497,25 @@ export function applyShorthand(value: string) {
     },
   ]
 
+  // Define grid & flexbox patterns
+  const gridFlexboxPatterns = [
+    // Place items patterns (justify-items + align-items → place-items)
+    {
+      patterns: [["justify-items", "align-items"]],
+      shorthand: "place-items",
+    },
+    // Place content patterns (justify-content + align-content → place-content)
+    {
+      patterns: [["justify-content", "align-content"]],
+      shorthand: "place-content",
+    },
+    // Place self patterns (justify-self + align-self → place-self)
+    {
+      patterns: [["justify-self", "align-self"]],
+      shorthand: "place-self",
+    },
+  ]
+
   // Check spacing patterns
   for (const { patterns, shorthand } of spacingPatterns) {
     const result = findMatchingClasses(patterns)
@@ -563,6 +603,35 @@ export function applyShorthand(value: string) {
     }
   }
 
+  // Check grid & flexbox patterns
+  for (const { patterns, shorthand } of gridFlexboxPatterns) {
+    const result = findMatchingClasses(patterns)
+    if (result) {
+      const { matchedClasses, commonPrefix, commonValue, commonNegative } =
+        result
+
+      // Create shorthand class
+      const negativePrefix = commonNegative ? "-" : ""
+      const shorthandClass = `${commonPrefix}${negativePrefix}${shorthand}-${commonValue}`
+
+      // Remove matched classes and add shorthand
+      const filteredClasses = classes.filter(
+        (cls) => !matchedClasses.includes(cls),
+      )
+      const firstIndex = Math.min(
+        ...matchedClasses.map((cls) => classes.indexOf(cls)),
+      )
+      filteredClasses.splice(firstIndex, 0, shorthandClass)
+
+      return {
+        applied: true,
+        value: filteredClasses.join(" "),
+        classnames: matchedClasses.join(" "),
+        shorthand: shorthandClass,
+      }
+    }
+  }
+
   // Check layout patterns
   for (const { patterns, shorthand } of layoutPatterns) {
     const result = findMatchingClasses(patterns)
@@ -594,6 +663,35 @@ export function applyShorthand(value: string) {
 
   // Check gap patterns
   for (const { patterns, shorthand } of gapPatterns) {
+    const result = findMatchingClasses(patterns)
+    if (result) {
+      const { matchedClasses, commonPrefix, commonValue, commonNegative } =
+        result
+
+      // Create shorthand class
+      const negativePrefix = commonNegative ? "-" : ""
+      const shorthandClass = `${commonPrefix}${negativePrefix}${shorthand}-${commonValue}`
+
+      // Remove matched classes and add shorthand
+      const filteredClasses = classes.filter(
+        (cls) => !matchedClasses.includes(cls),
+      )
+      const firstIndex = Math.min(
+        ...matchedClasses.map((cls) => classes.indexOf(cls)),
+      )
+      filteredClasses.splice(firstIndex, 0, shorthandClass)
+
+      return {
+        applied: true,
+        value: filteredClasses.join(" "),
+        classnames: matchedClasses.join(" "),
+        shorthand: shorthandClass,
+      }
+    }
+  }
+
+  // Check grid & flexbox patterns
+  for (const { patterns, shorthand } of gridFlexboxPatterns) {
     const result = findMatchingClasses(patterns)
     if (result) {
       const { matchedClasses, commonPrefix, commonValue, commonNegative } =
