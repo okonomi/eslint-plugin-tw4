@@ -57,7 +57,14 @@ describe("shorthand", () => {
   )
   describe("spacing", () => {
     describe("padding", () => {
-      it.each([["px-1 py-1", "p-1"]])('"%s" to "%s"', (input, expected) =>
+      it.each([
+        ["pt-1 pb-1", "py-1"],
+        ["ps-1 pe-1", "px-1"],
+        ["pl-1 pr-1", "px-1"],
+        ["px-1 py-1", "p-1"],
+        ["pt-1 pb-1 pr-1 pl-1", "p-1"],
+        ["pt-1 pb-1 ps-1 pe-1", "p-1"],
+      ])('"%s" to "%s"', (input, expected) =>
         expect(applyShorthand(input).value).toBe(expected),
       )
     })
