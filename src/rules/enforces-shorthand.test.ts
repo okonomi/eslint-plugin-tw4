@@ -22,16 +22,8 @@ describe("enforces-shorthand", () => {
   describe("sizing", () => {
     describe("valid", () => {
       it.each([
-        {
-          code: dedent`
-              <div className="size-1" />
-            `,
-        },
-        {
-          code: dedent`
-              <div className="w-1 h-2" />
-            `,
-        },
+        { code: `<div className="size-1" />` },
+        { code: `<div className="w-1 h-2" />` },
       ])("should not report valid code: $code", async ({ code }) => {
         const { result } = await valid({ code })
         expect(result.output).toEqual(code)
@@ -40,12 +32,8 @@ describe("enforces-shorthand", () => {
     describe("invalid", () => {
       it.each([
         {
-          code: dedent`
-              <div className="w-1 h-1" />
-            `,
-          output: dedent`
-              <div className="size-1" />
-            `,
+          code: `<div className="w-1 h-1" />`,
+          output: `<div className="size-1" />`,
           errors: [
             {
               messageId: "useShorthand",
@@ -58,12 +46,8 @@ describe("enforces-shorthand", () => {
           message: 'Use shorthand "size-1" instead of class names "w-1 h-1".',
         },
         {
-          code: dedent`
-              <div className="w-1 block h-1" />
-            `,
-          output: dedent`
-              <div className="size-1 block" />
-            `,
+          code: `<div className="w-1 block h-1" />`,
+          output: `<div className="size-1 block" />`,
           errors: [
             {
               messageId: "useShorthand",
@@ -76,12 +60,8 @@ describe("enforces-shorthand", () => {
           message: 'Use shorthand "size-1" instead of class names "w-1 h-1".',
         },
         {
-          code: dedent`
-            <div className="w-2 h-2" />
-            `,
-          output: dedent`
-              <div className="size-2" />
-            `,
+          code: `<div className="w-2 h-2" />`,
+          output: `<div className="size-2" />`,
           errors: [
             {
               messageId: "useShorthand",
@@ -94,12 +74,8 @@ describe("enforces-shorthand", () => {
           message: 'Use shorthand "size-2" instead of class names "w-2 h-2".',
         },
         {
-          code: dedent`
-            <div className="w-auto h-auto" />
-            `,
-          output: dedent`
-              <div className="size-auto" />
-            `,
+          code: `<div className="w-auto h-auto" />`,
+          output: `<div className="size-auto" />`,
           errors: [
             {
               messageId: "useShorthand",
