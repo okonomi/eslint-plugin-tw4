@@ -4,12 +4,6 @@ import { applyShorthand } from "./shorthand"
 describe("shorthand", () => {
   describe("simple cases", () => {
     it.each([
-      ["w-4 h-4", "size-4"],
-      ["w-auto h-auto", "size-auto"],
-      ["w-px h-px", "size-px"],
-      ["w-full h-full", "size-full"],
-      ["w-dvh h-dvh", "size-dvh"],
-      ["w-fit h-fit", "size-fit"],
       ["w-[100px] h-[100px]", "size-[100px]"],
       ["w-(--var) h-(--var)", "size-(--var)"],
       ["lg:w-1 lg:h-1", "lg:size-1"],
@@ -61,4 +55,24 @@ describe("shorthand", () => {
       expect(applyShorthand(input).value).toBe(expected)
     },
   )
+  describe("spacing", () => {})
+  describe("border", () => {})
+  describe("layout", () => {})
+  describe("sizing", () => {
+    it.each([
+      ["w-1 h-1", "size-1"],
+      ["w-4 h-4", "size-4"],
+      ["w-auto h-auto", "size-auto"],
+      ["w-px h-px", "size-px"],
+      ["w-full h-full", "size-full"],
+      ["w-dvh h-dvh", "size-dvh"],
+      ["w-fit h-fit", "size-fit"],
+    ])('"%s" to "%s"', (input, expected) => {
+      expect(applyShorthand(input).value).toBe(expected)
+    })
+  })
+  describe("grid & flexbox", () => {})
+  describe("transform", () => {})
+  describe("typography", () => {})
+  describe("misc", () => {})
 })
