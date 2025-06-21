@@ -158,8 +158,99 @@ describe("shorthand", () => {
       })
     })
   })
-  describe.skip("layout", () => {
-    // TODO: レイアウト関連のショートハンドを実装
+  describe("layout", () => {
+    describe("inset", () => {
+      it.each([
+        // 2-way patterns
+        ["top-1 bottom-1", "inset-y-1"],
+        ["left-1 right-1", "inset-x-1"],
+        ["start-1 end-1", "inset-x-1"],
+        ["inset-x-1 inset-y-1", "inset-1"],
+        
+        // 4-way patterns
+        ["top-1 bottom-1 left-1 right-1", "inset-1"],
+        ["top-1 bottom-1 start-1 end-1", "inset-1"],
+        
+        // Different values
+        ["top-auto bottom-auto", "inset-y-auto"],
+        ["left-0 right-0", "inset-x-0"],
+        ["start-px end-px", "inset-x-px"],
+        ["inset-x-full inset-y-full", "inset-full"],
+        
+        // Negative values
+        ["-top-1 -bottom-1", "-inset-y-1"],
+        ["-left-2 -right-2", "-inset-x-2"],
+        ["-start-4 -end-4", "-inset-x-4"],
+        ["-inset-x-1 -inset-y-1", "-inset-1"],
+        
+        // Fractional values
+        ["top-1/2 bottom-1/2", "inset-y-1/2"],
+        ["left-1/3 right-1/3", "inset-x-1/3"],
+        ["start-2/3 end-2/3", "inset-x-2/3"],
+      ])('"%s" to "%s"', (input, expected) => {
+        expect(applyShorthand(input).value).toBe(expected)
+      })
+    })
+    
+    describe("scroll margin", () => {
+      it.each([
+        // 2-way patterns
+        ["scroll-mt-1 scroll-mb-1", "scroll-my-1"],
+        ["scroll-ml-1 scroll-mr-1", "scroll-mx-1"],
+        ["scroll-ms-1 scroll-me-1", "scroll-mx-1"],
+        ["scroll-mx-1 scroll-my-1", "scroll-m-1"],
+        
+        // 4-way patterns
+        ["scroll-mt-1 scroll-mb-1 scroll-ml-1 scroll-mr-1", "scroll-m-1"],
+        ["scroll-mt-1 scroll-mb-1 scroll-ms-1 scroll-me-1", "scroll-m-1"],
+        
+        // Different values
+        ["scroll-mt-4 scroll-mb-4", "scroll-my-4"],
+        ["scroll-ml-auto scroll-mr-auto", "scroll-mx-auto"],
+        ["scroll-ms-px scroll-me-px", "scroll-mx-px"],
+      ])('"%s" to "%s"', (input, expected) => {
+        expect(applyShorthand(input).value).toBe(expected)
+      })
+    })
+    
+    describe("scroll padding", () => {
+      it.each([
+        // 2-way patterns
+        ["scroll-pt-1 scroll-pb-1", "scroll-py-1"],
+        ["scroll-pl-1 scroll-pr-1", "scroll-px-1"],
+        ["scroll-ps-1 scroll-pe-1", "scroll-px-1"],
+        ["scroll-px-1 scroll-py-1", "scroll-p-1"],
+        
+        // 4-way patterns
+        ["scroll-pt-1 scroll-pb-1 scroll-pl-1 scroll-pr-1", "scroll-p-1"],
+        ["scroll-pt-1 scroll-pb-1 scroll-ps-1 scroll-pe-1", "scroll-p-1"],
+        
+        // Different values
+        ["scroll-pt-8 scroll-pb-8", "scroll-py-8"],
+        ["scroll-pl-0 scroll-pr-0", "scroll-px-0"],
+        ["scroll-ps-2 scroll-pe-2", "scroll-px-2"],
+      ])('"%s" to "%s"', (input, expected) => {
+        expect(applyShorthand(input).value).toBe(expected)
+      })
+    })
+    
+    describe("gap", () => {
+      it.each([
+        // 2-way gap patterns
+        ["gap-x-1 gap-y-1", "gap-1"],
+        ["gap-x-2 gap-y-2", "gap-2"],
+        ["gap-x-4 gap-y-4", "gap-4"],
+        ["gap-x-8 gap-y-8", "gap-8"],
+        ["gap-x-px gap-y-px", "gap-px"],
+        ["gap-x-0 gap-y-0", "gap-0"],
+        ["gap-x-0.5 gap-y-0.5", "gap-0.5"],
+        ["gap-x-1.5 gap-y-1.5", "gap-1.5"],
+        ["gap-x-12 gap-y-12", "gap-12"],
+        ["gap-x-16 gap-y-16", "gap-16"],
+      ])('"%s" to "%s"', (input, expected) => {
+        expect(applyShorthand(input).value).toBe(expected)
+      })
+    })
   })
   describe("sizing", () => {
     it.each([

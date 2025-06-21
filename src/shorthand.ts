@@ -77,6 +77,127 @@ export function applyShorthand(value: string) {
       }
     }
 
+    // Handle inset classes
+    if (cleanClass.startsWith("inset-")) {
+      const insetPart = cleanClass.substring(6) // Remove "inset-"
+
+      // Check for directional inset (inset-x-, inset-y-)
+      const directionMatch = insetPart.match(/^([xy])-(.+)$/)
+      if (directionMatch) {
+        return {
+          type: `inset-${directionMatch[1]}`,
+          value: directionMatch[2],
+          isNegative,
+          category: "layout-inset",
+        }
+      }
+
+      // Non-directional inset
+      return {
+        type: "inset",
+        value: insetPart,
+        isNegative,
+        category: "layout-inset",
+      }
+    }
+
+    // Handle position classes (top, bottom, left, right, start, end)
+    if (
+      ["top", "bottom", "left", "right", "start", "end"].includes(
+        cleanClass.split("-")[0],
+      )
+    ) {
+      const dashIndex = cleanClass.indexOf("-")
+      if (dashIndex !== -1) {
+        const type = cleanClass.substring(0, dashIndex)
+        const classValue = cleanClass.substring(dashIndex + 1)
+        return {
+          type,
+          value: classValue,
+          isNegative,
+          category: "layout-inset",
+        }
+      }
+    }
+
+    // Handle scroll margin classes
+    if (cleanClass.startsWith("scroll-m")) {
+      const scrollPart = cleanClass.substring(8) // Remove "scroll-m"
+
+      // Check for directional scroll margin (scroll-mt-, scroll-mx-, etc.)
+      const directionMatch = scrollPart.match(/^(t|b|l|r|x|y|s|e)-(.+)$/)
+      if (directionMatch) {
+        return {
+          type: `scroll-m${directionMatch[1]}`,
+          value: directionMatch[2],
+          isNegative,
+          category: "layout-scroll",
+        }
+      }
+
+      // Non-directional scroll margin (scroll-m-)
+      const nonDirectionalMatch = scrollPart.match(/^-(.+)$/)
+      if (nonDirectionalMatch) {
+        return {
+          type: "scroll-m",
+          value: nonDirectionalMatch[1],
+          isNegative,
+          category: "layout-scroll",
+        }
+      }
+    }
+
+    // Handle scroll padding classes
+    if (cleanClass.startsWith("scroll-p")) {
+      const scrollPart = cleanClass.substring(8) // Remove "scroll-p"
+
+      // Check for directional scroll padding (scroll-pt-, scroll-px-, etc.)
+      const directionMatch = scrollPart.match(/^(t|b|l|r|x|y|s|e)-(.+)$/)
+      if (directionMatch) {
+        return {
+          type: `scroll-p${directionMatch[1]}`,
+          value: directionMatch[2],
+          isNegative,
+          category: "layout-scroll",
+        }
+      }
+
+      // Non-directional scroll padding (scroll-p-)
+      const nonDirectionalMatch = scrollPart.match(/^-(.+)$/)
+      if (nonDirectionalMatch) {
+        return {
+          type: "scroll-p",
+          value: nonDirectionalMatch[1],
+          isNegative,
+          category: "layout-scroll",
+        }
+      }
+    }
+
+    // Handle gap classes
+    if (cleanClass.startsWith("gap-")) {
+      const gapPart = cleanClass.substring(4) // Remove "gap-"
+
+      // Check for directional gap (gap-x-, gap-y-)
+      const directionMatch = gapPart.match(/^([xy])-(.+)$/)
+      if (directionMatch) {
+        return {
+          type: `gap-${directionMatch[1]}`,
+          value: directionMatch[2],
+          isNegative,
+          category: "layout-gap",
+        }
+      }
+
+      // Non-directional gap (gap-)
+      return {
+        type: "gap",
+        value: gapPart,
+        isNegative,
+        category: "layout-gap",
+      }
+    }
+
     // Original logic for other classes
     const dashIndex = cleanClass.indexOf("-")
     if (dashIndex === -1) return null
@@ -270,6 +391,91 @@ export function applyShorthand(value: string) {
     },
   ]
 
+  // Define layout patterns
+  const layoutPatterns = [
+    // 4-way inset patterns (highest priority)
+    {
+      patterns: [
+        ["top", "bottom", "left", "right"],
+        ["top", "bottom", "start", "end"],
+      ],
+      shorthand: "inset",
+    },
+    // 2-way inset patterns
+    {
+      patterns: [["inset-x", "inset-y"]],
+      shorthand: "inset",
+    },
+    {
+      patterns: [["top", "bottom"]],
+      shorthand: "inset-y",
+    },
+    {
+      patterns: [
+        ["left", "right"],
+        ["start", "end"],
+      ],
+      shorthand: "inset-x",
+    },
+    // Scroll margin patterns (4-way, highest priority)
+    {
+      patterns: [
+        ["scroll-mt", "scroll-mb", "scroll-ml", "scroll-mr"],
+        ["scroll-mt", "scroll-mb", "scroll-ms", "scroll-me"],
+      ],
+      shorthand: "scroll-m",
+    },
+    // Scroll margin patterns (2-way)
+    {
+      patterns: [["scroll-mx", "scroll-my"]],
+      shorthand: "scroll-m",
+    },
+    {
+      patterns: [["scroll-mt", "scroll-mb"]],
+      shorthand: "scroll-my",
+    },
+    {
+      patterns: [
+        ["scroll-ml", "scroll-mr"],
+        ["scroll-ms", "scroll-me"],
+      ],
+      shorthand: "scroll-mx",
+    },
+    // Scroll padding patterns (4-way, highest priority)
+    {
+      patterns: [
+        ["scroll-pt", "scroll-pb", "scroll-pl", "scroll-pr"],
+        ["scroll-pt", "scroll-pb", "scroll-ps", "scroll-pe"],
+      ],
+      shorthand: "scroll-p",
+    },
+    // Scroll padding patterns (2-way)
+    {
+      patterns: [["scroll-px", "scroll-py"]],
+      shorthand: "scroll-p",
+    },
+    {
+      patterns: [["scroll-pt", "scroll-pb"]],
+      shorthand: "scroll-py",
+    },
+    {
+      patterns: [
+        ["scroll-pl", "scroll-pr"],
+        ["scroll-ps", "scroll-pe"],
+      ],
+      shorthand: "scroll-px",
+    },
+  ]
+
+  // Define gap patterns
+  const gapPatterns = [
+    // Gap patterns (2-way)
+    {
+      patterns: [["gap-x", "gap-y"]],
+      shorthand: "gap",
+    },
+  ]
+
   // Check spacing patterns
   for (const { patterns, shorthand } of spacingPatterns) {
     const result = findMatchingClasses(patterns)
@@ -330,6 +536,64 @@ export function applyShorthand(value: string) {
 
   // Check border radius patterns
   for (const { patterns, shorthand } of borderRadiusPatterns) {
+    const result = findMatchingClasses(patterns)
+    if (result) {
+      const { matchedClasses, commonPrefix, commonValue, commonNegative } =
+        result
+
+      // Create shorthand class
+      const negativePrefix = commonNegative ? "-" : ""
+      const shorthandClass = `${commonPrefix}${negativePrefix}${shorthand}-${commonValue}`
+
+      // Remove matched classes and add shorthand
+      const filteredClasses = classes.filter(
+        (cls) => !matchedClasses.includes(cls),
+      )
+      const firstIndex = Math.min(
+        ...matchedClasses.map((cls) => classes.indexOf(cls)),
+      )
+      filteredClasses.splice(firstIndex, 0, shorthandClass)
+
+      return {
+        applied: true,
+        value: filteredClasses.join(" "),
+        classnames: matchedClasses.join(" "),
+        shorthand: shorthandClass,
+      }
+    }
+  }
+
+  // Check layout patterns
+  for (const { patterns, shorthand } of layoutPatterns) {
+    const result = findMatchingClasses(patterns)
+    if (result) {
+      const { matchedClasses, commonPrefix, commonValue, commonNegative } =
+        result
+
+      // Create shorthand class
+      const negativePrefix = commonNegative ? "-" : ""
+      const shorthandClass = `${commonPrefix}${negativePrefix}${shorthand}-${commonValue}`
+
+      // Remove matched classes and add shorthand
+      const filteredClasses = classes.filter(
+        (cls) => !matchedClasses.includes(cls),
+      )
+      const firstIndex = Math.min(
+        ...matchedClasses.map((cls) => classes.indexOf(cls)),
+      )
+      filteredClasses.splice(firstIndex, 0, shorthandClass)
+
+      return {
+        applied: true,
+        value: filteredClasses.join(" "),
+        classnames: matchedClasses.join(" "),
+        shorthand: shorthandClass,
+      }
+    }
+  }
+
+  // Check gap patterns
+  for (const { patterns, shorthand } of gapPatterns) {
     const result = findMatchingClasses(patterns)
     if (result) {
       const { matchedClasses, commonPrefix, commonValue, commonNegative } =
