@@ -20,7 +20,9 @@
     "build": "tsup src/index.ts --format cjs,esm --dts --out-dir dist --clean",
     "lint": "biome check",
     "lint-fix": "biome check --write --unsafe",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:unit": "vitest run src/",
+    "test:compatibility": "vitest run tests/compatibility/"
   },
   "keywords": [],
   "author": "okonomi <okonomi@oknm.jp>",
@@ -31,10 +33,12 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
+    "@typescript-eslint/rule-tester": "^8.34.1",
     "dedent": "^1.6.0",
     "eslint-vitest-rule-tester": "^2.2.0",
     "tsup": "^8.5.0",
     "typescript": "^5.8.3",
-    "vitest": "^3.2.3"
+    "vitest": "^3.2.3",
+    "vue-eslint-parser": "^10.1.3"
   }
 }

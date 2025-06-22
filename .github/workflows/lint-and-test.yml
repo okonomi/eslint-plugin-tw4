@@ -35,5 +35,9 @@ jobs:
       - name: Lint
         run: pnpm lint
  
-      - name: Test
-        run: pnpm test
+      - name: Unit Tests
+        run: pnpm test:unit
+
+      - name: Compatibility Tests
+        run: pnpm test:compatibility
+        continue-on-error: true

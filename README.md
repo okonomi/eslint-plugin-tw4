@@ -47,3 +47,7 @@ Enforces the use of shorthand utilities over their longhand equivalents to keep 
 ## Notice
 
 This project is experimental and under active development. API changes and breaking changes may occur.
+
+## Acknowledgments
+
+Some test cases are adapted from [eslint-plugin-tailwindcss](https://github.com/francoismassart/eslint-plugin-tailwindcss) by François Massart (MIT License).
