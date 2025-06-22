@@ -3,14 +3,13 @@
  * @description E.g. `mx-4 my-4` can be replaced by `m-4`
  * @author François Massart
  */
-"use strict";
 
 //------------------------------------------------------------------------------
 // Requirements
 //------------------------------------------------------------------------------
 
-var rule = require("../../../lib/rules/enforces-shorthand");
-var RuleTester = require("eslint").RuleTester;
+var rule = require("../../../lib/rules/enforces-shorthand")
+var RuleTester = require("eslint").RuleTester
 
 //------------------------------------------------------------------------------
 // Tests
@@ -22,7 +21,7 @@ var parserOptions = {
   ecmaFeatures: {
     jsx: true,
   },
-};
+}
 
 const skipClassAttributeOptions = [
   {
@@ -32,7 +31,7 @@ const skipClassAttributeOptions = [
       plugins: [],
     },
   },
-];
+]
 
 const incompleteCustomWidthHeightOptions = [
   {
@@ -46,7 +45,7 @@ const incompleteCustomWidthHeightOptions = [
       plugins: [],
     },
   },
-];
+]
 
 const customSpacingOnlyOptions = [
   {
@@ -59,7 +58,7 @@ const customSpacingOnlyOptions = [
       plugins: [],
     },
   },
-];
+]
 
 const customSizeOnlyOptions = [
   {
@@ -72,7 +71,7 @@ const customSizeOnlyOptions = [
       plugins: [],
     },
   },
-];
+]
 
 const ambiguousOptions = [
   {
@@ -87,7 +86,7 @@ const ambiguousOptions = [
       plugins: [],
     },
   },
-];
+]
 
 var generateError = (classnames, shorthand) => {
   return {
@@ -96,10 +95,10 @@ var generateError = (classnames, shorthand) => {
       classnames: classnames.join(", "),
       shorthand: shorthand,
     },
-  };
-};
+  }
+}
 
-var ruleTester = new RuleTester({ parserOptions });
+var ruleTester = new RuleTester({ parserOptions })
 
 ruleTester.run("shorthands", rule, {
   valid: [
@@ -213,7 +212,9 @@ ruleTester.run("shorthands", rule, {
         Possible shorthand for overflow
       </div>
       `,
-      errors: [generateError(["overflow-x-auto", "overflow-y-auto"], "overflow-auto")],
+      errors: [
+        generateError(["overflow-x-auto", "overflow-y-auto"], "overflow-auto"),
+      ],
     },
     {
       code: `
@@ -226,7 +227,12 @@ ruleTester.run("shorthands", rule, {
         Possible shorthand for overscroll
       </div>
       `,
-      errors: [generateError(["overscroll-x-contain", "overscroll-y-contain"], "overscroll-contain")],
+      errors: [
+        generateError(
+          ["overscroll-x-contain", "overscroll-y-contain"],
+          "overscroll-contain",
+        ),
+      ],
     },
     {
       code: `
@@ -298,7 +304,9 @@ ruleTester.run("shorthands", rule, {
         Possible shorthand for border-radius
       </div>
       `,
-      errors: [generateError(["rounded-tl", "rounded-tr", "rounded-b"], "rounded")],
+      errors: [
+        generateError(["rounded-tl", "rounded-tr", "rounded-b"], "rounded"),
+      ],
     },
     {
       code: `
@@ -311,7 +319,12 @@ ruleTester.run("shorthands", rule, {
         Possible shorthand for border-radius
       </div>
       `,
-      errors: [generateError(["rounded-tl-sm", "rounded-tr-sm", "rounded-b-sm"], "rounded-sm")],
+      errors: [
+        generateError(
+          ["rounded-tl-sm", "rounded-tr-sm", "rounded-b-sm"],
+          "rounded-sm",
+        ),
+      ],
     },
     {
       code: `
@@ -324,7 +337,9 @@ ruleTester.run("shorthands", rule, {
         Possible shorthand for border-radius
       </div>
       `,
-      errors: [generateError(["rounded-tl-sm", "rounded-tr-sm"], "rounded-t-sm")],
+      errors: [
+        generateError(["rounded-tl-sm", "rounded-tr-sm"], "rounded-t-sm"),
+      ],
     },
     {
       code: `
@@ -356,7 +371,10 @@ ruleTester.run("shorthands", rule, {
       errors: [
         generateError(["border-t-4", "border-b-4"], "border-y-4"),
         generateError(["md:border-t-0", "md:border-b-0"], "md:border-y-0"),
-        generateError(["lg:border-y", "lg:border-l", "lg:border-r"], "lg:border"),
+        generateError(
+          ["lg:border-y", "lg:border-l", "lg:border-r"],
+          "lg:border",
+        ),
       ],
     },
     {
@@ -383,7 +401,10 @@ ruleTester.run("shorthands", rule, {
       </div>`,
       errors: [
         generateError(["top-[0]", "bottom-[0]"], "inset-y-[0]"),
-        generateError(["right-[var(--some-value)]", "left-[var(--some-value)]"], "inset-x-[var(--some-value)]"),
+        generateError(
+          ["right-[var(--some-value)]", "left-[var(--some-value)]"],
+          "inset-x-[var(--some-value)]",
+        ),
       ],
     },
     {
@@ -425,8 +446,12 @@ ruleTester.run("shorthands", rule, {
       </div>`,
       errors: [
         generateError(
-          ["border-t-indigo-200/50", "border-x-indigo-200/50", "border-b-indigo-200/50"],
-          "border-indigo-200/50"
+          [
+            "border-t-indigo-200/50",
+            "border-x-indigo-200/50",
+            "border-b-indigo-200/50",
+          ],
+          "border-indigo-200/50",
         ),
       ],
     },
@@ -478,12 +503,18 @@ ruleTester.run("shorthands", rule, {
       \`)}>
         Multilines
       </div>`,
-      errors: [generateError(["w-48", "h-48"], "size-48"), generateError(["py-8", "px-8"], "p-8")],
+      errors: [
+        generateError(["w-48", "h-48"], "size-48"),
+        generateError(["py-8", "px-8"], "p-8"),
+      ],
     },
     {
       code: `classnames(['py-8 px-8 w-48 h-48 text-white'])`,
       output: `classnames(['p-8 size-48 text-white'])`,
-      errors: [generateError(["w-48", "h-48"], "size-48"), generateError(["py-8", "px-8"], "p-8")],
+      errors: [
+        generateError(["w-48", "h-48"], "size-48"),
+        generateError(["py-8", "px-8"], "p-8"),
+      ],
     },
     {
       code: `classnames({'py-8 px-8 text-white': true})`,
@@ -513,7 +544,9 @@ ruleTester.run("shorthands", rule, {
     {
       code: `classnames({'md:!rounded-tr block md:rounded-tl md:rounded-br md:rounded-bl': true})`,
       output: `classnames({'md:!rounded-tr block md:rounded-tl md:rounded-b': true})`,
-      errors: [generateError(["md:rounded-br", "md:rounded-bl"], "md:rounded-b")],
+      errors: [
+        generateError(["md:rounded-br", "md:rounded-bl"], "md:rounded-b"),
+      ],
     },
     {
       code: `
@@ -526,7 +559,9 @@ ruleTester.run("shorthands", rule, {
         Issue #120
       </div>
       `,
-      errors: [generateError(["rounded-r-full", "rounded-l-full"], "rounded-full")],
+      errors: [
+        generateError(["rounded-r-full", "rounded-l-full"], "rounded-full"),
+      ],
     },
     {
       code: `classnames('sfc-border-l-0 sfc-border-r-0')`,
@@ -536,7 +571,9 @@ ruleTester.run("shorthands", rule, {
           config: { prefix: "sfc-" },
         },
       ],
-      errors: [generateError(["sfc-border-l-0", "sfc-border-r-0"], "sfc-border-x-0")],
+      errors: [
+        generateError(["sfc-border-l-0", "sfc-border-r-0"], "sfc-border-x-0"),
+      ],
     },
     {
       code: `classnames('md_sfc-border-l-0 md_sfc-border-r-0')`,
@@ -546,7 +583,12 @@ ruleTester.run("shorthands", rule, {
           config: { prefix: "sfc-", separator: "_" },
         },
       ],
-      errors: [generateError(["md_sfc-border-l-0", "md_sfc-border-r-0"], "md_sfc-border-x-0")],
+      errors: [
+        generateError(
+          ["md_sfc-border-l-0", "md_sfc-border-r-0"],
+          "md_sfc-border-x-0",
+        ),
+      ],
     },
     {
       code: `
@@ -559,7 +601,12 @@ ruleTester.run("shorthands", rule, {
         Issue #148
       </div>
       `,
-      errors: [generateError(["border-spacing-x-px", "border-spacing-y-px"], "border-spacing-px")],
+      errors: [
+        generateError(
+          ["border-spacing-x-px", "border-spacing-y-px"],
+          "border-spacing-px",
+        ),
+      ],
     },
     {
       code: `
@@ -613,7 +660,9 @@ ruleTester.run("shorthands", rule, {
         </div>
       </template>
       `,
-      errors: [generateError(["overflow-x-auto", "overflow-y-auto"], "overflow-auto")],
+      errors: [
+        generateError(["overflow-x-auto", "overflow-y-auto"], "overflow-auto"),
+      ],
       filename: "test.vue",
       parser: require.resolve("vue-eslint-parser"),
     },
@@ -632,7 +681,12 @@ ruleTester.run("shorthands", rule, {
         </div>
       </template>
       `,
-      errors: [generateError(["overscroll-x-contain", "overscroll-y-contain"], "overscroll-contain")],
+      errors: [
+        generateError(
+          ["overscroll-x-contain", "overscroll-y-contain"],
+          "overscroll-contain",
+        ),
+      ],
       filename: "test.vue",
       parser: require.resolve("vue-eslint-parser"),
     },
@@ -685,7 +739,12 @@ ruleTester.run("shorthands", rule, {
         support named group/peer syntax
       </div>
       `,
-      errors: [generateError(["group/name:rounded-r-full", "group/name:rounded-l-full"], "group/name:rounded-full")],
+      errors: [
+        generateError(
+          ["group/name:rounded-r-full", "group/name:rounded-l-full"],
+          "group/name:rounded-full",
+        ),
+      ],
     },
     {
       code: `
@@ -698,7 +757,12 @@ ruleTester.run("shorthands", rule, {
         Possible shorthand when using truncate
       </div>
       `,
-      errors: [generateError(["overflow-hidden", "text-ellipsis", "whitespace-nowrap"], "truncate")],
+      errors: [
+        generateError(
+          ["overflow-hidden", "text-ellipsis", "whitespace-nowrap"],
+          "truncate",
+        ),
+      ],
     },
     {
       code: `
@@ -711,7 +775,12 @@ ruleTester.run("shorthands", rule, {
         Possible shorthand when using truncate with breakpoint
       </div>
       `,
-      errors: [generateError(["md:overflow-hidden", "md:text-ellipsis", "md:whitespace-nowrap"], "md:truncate")],
+      errors: [
+        generateError(
+          ["md:overflow-hidden", "md:text-ellipsis", "md:whitespace-nowrap"],
+          "md:truncate",
+        ),
+      ],
     },
     {
       code: `
@@ -725,7 +794,14 @@ ruleTester.run("shorthands", rule, {
       </div>
       `,
       errors: [
-        generateError(["hover:overflow-hidden", "hover:text-ellipsis", "hover:whitespace-nowrap"], "hover:truncate"),
+        generateError(
+          [
+            "hover:overflow-hidden",
+            "hover:text-ellipsis",
+            "hover:whitespace-nowrap",
+          ],
+          "hover:truncate",
+        ),
       ],
     },
     {
@@ -741,8 +817,12 @@ ruleTester.run("shorthands", rule, {
       `,
       errors: [
         generateError(
-          ["hover:sm:!tw-overflow-hidden", "hover:sm:!tw-text-ellipsis", "hover:sm:!tw-whitespace-nowrap"],
-          "hover:sm:!tw-truncate"
+          [
+            "hover:sm:!tw-overflow-hidden",
+            "hover:sm:!tw-text-ellipsis",
+            "hover:sm:!tw-whitespace-nowrap",
+          ],
+          "hover:sm:!tw-truncate",
         ),
       ],
       options: [
@@ -762,26 +842,35 @@ ruleTester.run("shorthands", rule, {
         Possible shorthand when using truncate, tested with additional classnames
       </div>
       `,
-      errors: [generateError(["overflow-hidden", "text-ellipsis", "whitespace-nowrap"], "truncate")],
+      errors: [
+        generateError(
+          ["overflow-hidden", "text-ellipsis", "whitespace-nowrap"],
+          "truncate",
+        ),
+      ],
     },
     {
       code: "<div className={ctl(`${live && 'bg-white'} w-full px-10 py-10`)}>Leading space trim issue with fix</div>",
-      output: "<div className={ctl(`${live && 'bg-white'} w-full p-10`)}>Leading space trim issue with fix</div>",
+      output:
+        "<div className={ctl(`${live && 'bg-white'} w-full p-10`)}>Leading space trim issue with fix</div>",
       errors: [generateError(["px-10", "py-10"], "p-10")],
     },
     {
       code: "<div className={ctl(`${live && 'bg-white'} w-full px-10 py-10 `)}>Leading space trim issue with fix (2)</div>",
-      output: "<div className={ctl(`${live && 'bg-white'} w-full p-10 `)}>Leading space trim issue with fix (2)</div>",
+      output:
+        "<div className={ctl(`${live && 'bg-white'} w-full p-10 `)}>Leading space trim issue with fix (2)</div>",
       errors: [generateError(["px-10", "py-10"], "p-10")],
     },
     {
       code: "<div className={ctl(`w-full px-10 py-10 ${live && 'bg-white'}`)}>Trailing space trim issue with fix</div>",
-      output: "<div className={ctl(`w-full p-10 ${live && 'bg-white'}`)}>Trailing space trim issue with fix</div>",
+      output:
+        "<div className={ctl(`w-full p-10 ${live && 'bg-white'}`)}>Trailing space trim issue with fix</div>",
       errors: [generateError(["px-10", "py-10"], "p-10")],
     },
     {
       code: "<div className={ctl(` w-full px-10 py-10 ${live && 'bg-white'}`)}>Trailing space trim issue with fix (2)</div>",
-      output: "<div className={ctl(` w-full p-10 ${live && 'bg-white'}`)}>Trailing space trim issue with fix (2)</div>",
+      output:
+        "<div className={ctl(` w-full p-10 ${live && 'bg-white'}`)}>Trailing space trim issue with fix (2)</div>",
       errors: [generateError(["px-10", "py-10"], "p-10")],
     },
     {
@@ -803,7 +892,12 @@ ruleTester.run("shorthands", rule, {
     ...["myTag", "myTag.subTag", "myTag(SomeComponent)"].map((tag) => ({
       code: `${tag}\`overflow-hidden text-ellipsis whitespace-nowrap text-white text-xl\``,
       output: `${tag}\`truncate text-white text-xl\``,
-      errors: [generateError(["overflow-hidden", "text-ellipsis", "whitespace-nowrap"], "truncate")],
+      errors: [
+        generateError(
+          ["overflow-hidden", "text-ellipsis", "whitespace-nowrap"],
+          "truncate",
+        ),
+      ],
       options: [
         {
           tags: ["myTag"],
@@ -827,10 +921,19 @@ ruleTester.run("shorthands", rule, {
       code: `<div class="content-center justify-center sm:items-start sm:justify-items-start md:self-end md:justify-self-end lg:self-start lg:justify-self-center">issue #376</div>`,
       output: `<div class="place-content-center sm:place-items-start md:place-self-end lg:self-start lg:justify-self-center">issue #376</div>`,
       errors: [
-        generateError(["content-center", "justify-center"], "place-content-center"),
-        generateError(["sm:items-start", "sm:justify-items-start"], "sm:place-items-start"),
-        generateError(["md:self-end", "md:justify-self-end"], "md:place-self-end"),
+        generateError(
+          ["content-center", "justify-center"],
+          "place-content-center",
+        ),
+        generateError(
+          ["sm:items-start", "sm:justify-items-start"],
+          "sm:place-items-start",
+        ),
+        generateError(
+          ["md:self-end", "md:justify-self-end"],
+          "md:place-self-end",
+        ),
       ],
     },
   ],
-});
+})
