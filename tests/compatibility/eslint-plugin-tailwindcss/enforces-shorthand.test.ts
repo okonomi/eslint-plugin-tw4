@@ -83,7 +83,7 @@ const ambiguousOptions = [
 function generateError(classnames: string[], shorthand: string) {
   return {
     // messageId: "shorthandCandidateDetected",
-    messageId: "useShorthand",
+    messageId: "useShorthand" as const,
     data: {
       classnames: classnames.join(", "),
       shorthand: shorthand,
