@@ -154,6 +154,7 @@ ruleTester.run("shorthands", rule, {
       code: `<div className="py-2.5 md:py-3 pl-2.5 md:pl-4 font-medium uppercase">issue #91</div>`,
     },
     {
+      // biome-ignore lint/style/noUnusedTemplateLiteral: <explanation>
       code: `<div class>No errors while typing</div>`,
     },
     {
@@ -464,7 +465,9 @@ ruleTester.run("shorthands", rule, {
       errors: [generateError(["scale-x-75", "scale-y-75"], "scale-75")],
     },
     {
+      // biome-ignore lint/style/noUnusedTemplateLiteral: <explanation>
       code: `<img className={\`scale-x-75 scale-y-75\`} />`,
+      // biome-ignore lint/style/noUnusedTemplateLiteral: <explanation>
       output: `<img className={\`scale-75\`} />`,
       errors: [generateError(["scale-x-75", "scale-y-75"], "scale-75")],
     },
