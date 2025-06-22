@@ -31,488 +31,12 @@ type TransformResult = {
   shorthand?: string
 }
 
-// Helper function to extract prefix and value from a class
-function parseClass(className: string): ParsedClass {
-  const colonIndex = className.lastIndexOf(":")
-  if (colonIndex !== -1) {
-    const prefix = className.substring(0, colonIndex + 1)
-    const baseClass = className.substring(colonIndex + 1)
-    return { prefix, baseClass }
-  }
-  return { prefix: "", baseClass: className }
-}
+// =============================================================================
+// Public Interface Functions
+// =============================================================================
 
 export function applyShorthand(value: string): TransformResult {
   const classes = value.split(/\s+/).filter(Boolean)
-
-  // Helper function to extract type and value from base class
-  function parseBaseClass(baseClass: string): ParsedBaseClass {
-    // Handle negative values
-    const isNegative = baseClass.startsWith("-")
-    const cleanClass = isNegative ? baseClass.substring(1) : baseClass
-
-    // Define parsers for different class types
-    const parsers = [
-      parseBorderSpacing,
-      parseBorder,
-      parseRounded,
-      parseInset,
-      parsePosition,
-      parseScrollMargin,
-      parseScrollPadding,
-      parseGap,
-      parseGridFlexbox,
-      parseTransform,
-      parseOverflow,
-      parseOverscroll,
-      parseGeneric,
-    ]
-
-    for (const parser of parsers) {
-      const result = parser(cleanClass, isNegative)
-      if (result) return result
-    }
-
-    return null
-  }
-
-  // Individual parser functions
-  function parseBorderSpacing(
-    cleanClass: string,
-    isNegative: boolean,
-  ): ParsedBaseClass {
-    if (!cleanClass.startsWith("border-spacing-")) return null
-
-    const spacingPart = cleanClass.substring(15)
-    const directionMatch = spacingPart.match(/^([xy])-(.+)$/)
-
-    if (directionMatch) {
-      return {
-        type: `border-spacing-${directionMatch[1]}`,
-        value: directionMatch[2],
-        isNegative,
-        category: "misc",
-      }
-    }
-
-    return {
-      type: "border-spacing",
-      value: spacingPart,
-      isNegative,
-      category: "misc",
-    }
-  }
-
-  function parseBorder(
-    cleanClass: string,
-    isNegative: boolean,
-  ): ParsedBaseClass {
-    if (!cleanClass.startsWith("border-")) return null
-
-    const borderPart = cleanClass.substring(7)
-    const directionMatch = borderPart.match(/^([tlbr]|[xy]|s|e)-(.+)$/)
-
-    if (directionMatch) {
-      return {
-        type: `border-${directionMatch[1]}`,
-        value: directionMatch[2],
-        isNegative,
-        category: "border-width-color",
-      }
-    }
-
-    return {
-      type: "border",
-      value: borderPart,
-      isNegative,
-      category: "border-width-color",
-    }
-  }
-
-  function parseRounded(
-    cleanClass: string,
-    isNegative: boolean,
-  ): ParsedBaseClass {
-    if (!cleanClass.startsWith("rounded-")) return null
-
-    const roundedPart = cleanClass.substring(8)
-
-    // Corner-specific rounded
-    const cornerMatch = roundedPart.match(/^(tl|tr|bl|br|ss|se|es|ee)-(.+)$/)
-    if (cornerMatch) {
-      return {
-        type: `rounded-${cornerMatch[1]}`,
-        value: cornerMatch[2],
-        isNegative,
-        category: "border-radius",
-      }
-    }
-
-    // Side-specific rounded
-    const sideMatch = roundedPart.match(/^([tlbr]|s|e)-(.+)$/)
-    if (sideMatch) {
-      return {
-        type: `rounded-${sideMatch[1]}`,
-        value: sideMatch[2],
-        isNegative,
-        category: "border-radius",
-      }
-    }
-
-    return {
-      type: "rounded",
-      value: roundedPart,
-      isNegative,
-      category: "border-radius",
-    }
-  }
-
-  function parseInset(
-    cleanClass: string,
-    isNegative: boolean,
-  ): ParsedBaseClass {
-    if (!cleanClass.startsWith("inset-")) return null
-
-    const insetPart = cleanClass.substring(6)
-    const directionMatch = insetPart.match(/^([xy])-(.+)$/)
-
-    if (directionMatch) {
-      return {
-        type: `inset-${directionMatch[1]}`,
-        value: directionMatch[2],
-        isNegative,
-        category: "layout-inset",
-      }
-    }
-
-    return {
-      type: "inset",
-      value: insetPart,
-      isNegative,
-      category: "layout-inset",
-    }
-  }
-
-  function parsePosition(
-    cleanClass: string,
-    isNegative: boolean,
-  ): ParsedBaseClass {
-    const positionTypes = ["top", "bottom", "left", "right", "start", "end"]
-    const firstPart = cleanClass.split("-")[0]
-
-    if (!positionTypes.includes(firstPart)) return null
-
-    const dashIndex = cleanClass.indexOf("-")
-    if (dashIndex === -1) return null
-
-    const type = cleanClass.substring(0, dashIndex)
-    const classValue = cleanClass.substring(dashIndex + 1)
-
-    return {
-      type,
-      value: classValue,
-      isNegative,
-      category: "layout-inset",
-    }
-  }
-
-  function parseScrollMargin(
-    cleanClass: string,
-    isNegative: boolean,
-  ): ParsedBaseClass {
-    if (!cleanClass.startsWith("scroll-m")) return null
-
-    const scrollPart = cleanClass.substring(8)
-
-    // Directional scroll margin
-    const directionMatch = scrollPart.match(/^(t|b|l|r|x|y|s|e)-(.+)$/)
-    if (directionMatch) {
-      return {
-        type: `scroll-m${directionMatch[1]}`,
-        value: directionMatch[2],
-        isNegative,
-        category: "layout-scroll",
-      }
-    }
-
-    // Non-directional scroll margin
-    const nonDirectionalMatch = scrollPart.match(/^-(.+)$/)
-    if (nonDirectionalMatch) {
-      return {
-        type: "scroll-m",
-        value: nonDirectionalMatch[1],
-        isNegative,
-        category: "layout-scroll",
-      }
-    }
-
-    return null
-  }
-
-  function parseScrollPadding(
-    cleanClass: string,
-    isNegative: boolean,
-  ): ParsedBaseClass {
-    if (!cleanClass.startsWith("scroll-p")) return null
-
-    const scrollPart = cleanClass.substring(8)
-
-    // Directional scroll padding
-    const directionMatch = scrollPart.match(/^(t|b|l|r|x|y|s|e)-(.+)$/)
-    if (directionMatch) {
-      return {
-        type: `scroll-p${directionMatch[1]}`,
-        value: directionMatch[2],
-        isNegative,
-        category: "layout-scroll",
-      }
-    }
-
-    // Non-directional scroll padding
-    const nonDirectionalMatch = scrollPart.match(/^-(.+)$/)
-    if (nonDirectionalMatch) {
-      return {
-        type: "scroll-p",
-        value: nonDirectionalMatch[1],
-        isNegative,
-        category: "layout-scroll",
-      }
-    }
-
-    return null
-  }
-
-  function parseGap(cleanClass: string, isNegative: boolean): ParsedBaseClass {
-    if (!cleanClass.startsWith("gap-")) return null
-
-    const gapPart = cleanClass.substring(4)
-    const directionMatch = gapPart.match(/^([xy])-(.+)$/)
-
-    if (directionMatch) {
-      return {
-        type: `gap-${directionMatch[1]}`,
-        value: directionMatch[2],
-        isNegative,
-        category: "layout-gap",
-      }
-    }
-
-    return {
-      type: "gap",
-      value: gapPart,
-      isNegative,
-      category: "layout-gap",
-    }
-  }
-
-  function parseGridFlexbox(
-    cleanClass: string,
-    isNegative: boolean,
-  ): ParsedBaseClass {
-    if (!cleanClass.startsWith("justify-") && !cleanClass.startsWith("align-"))
-      return null
-
-    const isJustify = cleanClass.startsWith("justify-")
-    const prefix = isJustify ? "justify-" : "align-"
-    const rest = cleanClass.substring(prefix.length)
-
-    const typeMatch = rest.match(/^(items|content|self)-(.+)$/)
-    if (typeMatch) {
-      return {
-        type: `${prefix}${typeMatch[1]}`,
-        value: typeMatch[2],
-        isNegative,
-        category: "grid-flexbox",
-      }
-    }
-
-    return null
-  }
-
-  function parseTransform(
-    cleanClass: string,
-    isNegative: boolean,
-  ): ParsedBaseClass {
-    const transformTypes = ["translate", "scale", "skew"]
-    const transformType = transformTypes.find((type) =>
-      cleanClass.startsWith(`${type}-`),
-    )
-
-    if (!transformType) return null
-
-    const transformMatch = cleanClass.match(
-      new RegExp(`^${transformType}-([xy])-(.+)$`),
-    )
-    if (transformMatch) {
-      return {
-        type: `${transformType}-${transformMatch[1]}`,
-        value: transformMatch[2],
-        isNegative,
-        category: "transform",
-      }
-    }
-
-    return null
-  }
-
-  function parseOverflow(
-    cleanClass: string,
-    isNegative: boolean,
-  ): ParsedBaseClass {
-    if (!cleanClass.startsWith("overflow-")) return null
-
-    const overflowPart = cleanClass.substring(9)
-    const directionMatch = overflowPart.match(/^([xy])-(.+)$/)
-
-    if (directionMatch) {
-      return {
-        type: `overflow-${directionMatch[1]}`,
-        value: directionMatch[2],
-        isNegative,
-        category: "misc",
-      }
-    }
-
-    return {
-      type: "overflow",
-      value: overflowPart,
-      isNegative,
-      category: "misc",
-    }
-  }
-
-  function parseOverscroll(
-    cleanClass: string,
-    isNegative: boolean,
-  ): ParsedBaseClass {
-    if (!cleanClass.startsWith("overscroll-")) return null
-
-    const overscrollPart = cleanClass.substring(11)
-    const directionMatch = overscrollPart.match(/^([xy])-(.+)$/)
-
-    if (directionMatch) {
-      return {
-        type: `overscroll-${directionMatch[1]}`,
-        value: directionMatch[2],
-        isNegative,
-        category: "misc",
-      }
-    }
-
-    return {
-      type: "overscroll",
-      value: overscrollPart,
-      isNegative,
-      category: "misc",
-    }
-  }
-
-  function parseGeneric(
-    cleanClass: string,
-    isNegative: boolean,
-  ): ParsedBaseClass {
-    const dashIndex = cleanClass.indexOf("-")
-    if (dashIndex === -1) return null
-
-    const type = cleanClass.substring(0, dashIndex)
-    const classValue = cleanClass.substring(dashIndex + 1)
-
-    return { type, value: classValue, isNegative }
-  }
-
-  // Helper function to find matching classes
-  function findMatchingClasses(patterns: string[][]): MatchResult | null {
-    for (const pattern of patterns) {
-      const matches: { [key: string]: string } = {}
-      const matchedClasses: string[] = []
-      let commonPrefix = ""
-      let commonValue = ""
-      let commonNegative = false
-      let isValid = true
-
-      // Check if all required classes exist with same prefix, value, and negative status
-      for (const requiredType of pattern) {
-        let found = false
-        for (const className of classes) {
-          const parsed = parseClass(className)
-          const baseParsed = parseBaseClass(parsed.baseClass)
-
-          if (baseParsed && baseParsed.type === requiredType) {
-            if (matchedClasses.length === 0) {
-              // First match - set common values
-              commonPrefix = parsed.prefix
-              commonValue = baseParsed.value
-              commonNegative = baseParsed.isNegative
-            } else {
-              // Subsequent matches - must have same prefix, value, and negative status
-              if (
-                parsed.prefix !== commonPrefix ||
-                baseParsed.value !== commonValue ||
-                baseParsed.isNegative !== commonNegative
-              ) {
-                isValid = false
-                break
-              }
-            }
-            matches[requiredType] = className
-            matchedClasses.push(className)
-            found = true
-            break
-          }
-        }
-        if (!found) {
-          isValid = false
-          break
-        }
-      }
-
-      if (isValid && matchedClasses.length === pattern.length) {
-        return {
-          matches,
-          matchedClasses,
-          commonPrefix,
-          commonValue,
-          commonNegative,
-        }
-      }
-    }
-    return null
-  }
-
-  // Helper function to apply pattern transformation
-  function applyPatternTransformation(
-    patterns: ShorthandPattern[],
-    shorthandName: string,
-  ): TransformResult | null {
-    for (const { patterns: patternList, shorthand } of patterns) {
-      const result = findMatchingClasses(patternList)
-      if (result) {
-        const { matchedClasses, commonPrefix, commonValue, commonNegative } =
-          result
-
-        // Create shorthand class
-        const negativePrefix = commonNegative ? "-" : ""
-        const shorthandClass = `${commonPrefix}${negativePrefix}${shorthand}-${commonValue}`
-
-        // Remove matched classes and add shorthand
-        const filteredClasses = classes.filter(
-          (cls) => !matchedClasses.includes(cls),
-        )
-        const firstIndex = Math.min(
-          ...matchedClasses.map((cls) => classes.indexOf(cls)),
-        )
-        filteredClasses.splice(firstIndex, 0, shorthandClass)
-
-        return {
-          applied: true,
-          value: filteredClasses.join(" "),
-          classnames: matchedClasses.join(" "),
-          shorthand: shorthandClass,
-        }
-      }
-    }
-    return null
-  }
 
   // Define all pattern sets
   const patternSets = {
@@ -529,14 +53,14 @@ export function applyShorthand(value: string): TransformResult {
 
   // Try each pattern set
   for (const [name, patterns] of Object.entries(patternSets)) {
-    const result = applyPatternTransformation(patterns, name)
+    const result = applyPatternTransformation(patterns, classes)
     if (result) return result
   }
 
   // Special cases that need custom handling
   const specialResults = [
-    handleSizing(classes, findMatchingClasses),
-    handleTransforms(classes, findMatchingClasses),
+    handleSizing(classes),
+    handleTransforms(classes),
     handleMiscPatterns(classes),
   ]
 
@@ -577,7 +101,9 @@ export function findAllShorthands(value: string) {
   }
 }
 
-// Pattern definition functions
+// =============================================================================
+// Pattern Definition Functions
+// =============================================================================
 function getSpacingPatterns(): ShorthandPattern[] {
   return [
     // 4-way patterns (highest priority)
@@ -835,12 +361,12 @@ function getBorderSpacingPatterns(): ShorthandPattern[] {
   ]
 }
 
-// Special case handlers
-function handleSizing(
-  classes: string[],
-  findMatchingClasses: (patterns: string[][]) => MatchResult | null,
-): TransformResult | null {
-  const sizingResult = findMatchingClasses([["w", "h"]])
+// =============================================================================
+// Special Case Handlers
+// =============================================================================
+
+function handleSizing(classes: string[]): TransformResult | null {
+  const sizingResult = findMatchingClasses([["w", "h"]], classes)
   if (sizingResult) {
     const { matchedClasses, commonPrefix, commonValue, commonNegative } =
       sizingResult
@@ -866,40 +392,17 @@ function handleSizing(
   return null
 }
 
-function handleTransforms(
-  classes: string[],
-  findMatchingClasses: (patterns: string[][]) => MatchResult | null,
-): TransformResult | null {
+function handleTransforms(classes: string[]): TransformResult | null {
   const transformTypes = ["translate", "scale", "skew"]
 
   for (const transformType of transformTypes) {
-    const result = findMatchingClasses([
-      [`${transformType}-x`, `${transformType}-y`],
-    ])
+    const result = findMatchingClasses(
+      [[`${transformType}-x`, `${transformType}-y`]],
+      classes,
+    )
     if (result) {
       const { matchedClasses, commonPrefix, commonValue, commonNegative } =
         result
-
-      // Helper to convert transform values
-      function convertTransformValue(type: string, value: string): string {
-        switch (type) {
-          case "translate":
-            if (value === "0") return "0"
-            if (value === "px") return "1px"
-            if (value === "full") return "100%"
-            if (value.includes("/")) {
-              const [num, denom] = value.split("/")
-              return `${(Number.parseFloat(num) / Number.parseFloat(denom)) * 100}%`
-            }
-            return `${Number.parseFloat(value) * 0.25}rem`
-          case "scale":
-            return (Number.parseFloat(value) / 100).toString()
-          case "skew":
-            return `${value}deg`
-          default:
-            return value
-        }
-      }
 
       // For transform handling, we need to check the actual values
       // Since we can't access parseBaseClass here, we'll do a simpler approach
@@ -1010,4 +513,484 @@ function handleMiscPatterns(classes: string[]): TransformResult | null {
     }
   }
   return null
+}
+
+// =============================================================================
+// Utility Functions
+// =============================================================================
+
+function parseClass(className: string): ParsedClass {
+  const colonIndex = className.lastIndexOf(":")
+  if (colonIndex !== -1) {
+    const prefix = className.substring(0, colonIndex + 1)
+    const baseClass = className.substring(colonIndex + 1)
+    return { prefix, baseClass }
+  }
+  return { prefix: "", baseClass: className }
+}
+
+function parseBaseClass(baseClass: string): ParsedBaseClass {
+  // Handle negative values
+  const isNegative = baseClass.startsWith("-")
+  const cleanClass = isNegative ? baseClass.substring(1) : baseClass
+
+  // Define parsers for different class types
+  const parsers = [
+    parseBorderSpacing,
+    parseBorder,
+    parseRounded,
+    parseInset,
+    parsePosition,
+    parseScrollMargin,
+    parseScrollPadding,
+    parseGap,
+    parseGridFlexbox,
+    parseTransform,
+    parseOverflow,
+    parseOverscroll,
+    parseGeneric,
+  ]
+
+  for (const parser of parsers) {
+    const result = parser(cleanClass, isNegative)
+    if (result) return result
+  }
+
+  return null
+}
+
+function findMatchingClasses(
+  patterns: string[][],
+  classes: string[],
+): MatchResult | null {
+  for (const pattern of patterns) {
+    const matches: { [key: string]: string } = {}
+    const matchedClasses: string[] = []
+    let commonPrefix = ""
+    let commonValue = ""
+    let commonNegative = false
+    let isValid = true
+
+    // Check if all required classes exist with same prefix, value, and negative status
+    for (const requiredType of pattern) {
+      let found = false
+      for (const className of classes) {
+        const parsed = parseClass(className)
+        const baseParsed = parseBaseClass(parsed.baseClass)
+
+        if (baseParsed && baseParsed.type === requiredType) {
+          if (matchedClasses.length === 0) {
+            // First match - set common values
+            commonPrefix = parsed.prefix
+            commonValue = baseParsed.value
+            commonNegative = baseParsed.isNegative
+          } else {
+            // Subsequent matches - must have same prefix, value, and negative status
+            if (
+              parsed.prefix !== commonPrefix ||
+              baseParsed.value !== commonValue ||
+              baseParsed.isNegative !== commonNegative
+            ) {
+              isValid = false
+              break
+            }
+          }
+          matches[requiredType] = className
+          matchedClasses.push(className)
+          found = true
+          break
+        }
+      }
+      if (!found) {
+        isValid = false
+        break
+      }
+    }
+
+    if (isValid && matchedClasses.length === pattern.length) {
+      return {
+        matches,
+        matchedClasses,
+        commonPrefix,
+        commonValue,
+        commonNegative,
+      }
+    }
+  }
+  return null
+}
+
+function applyPatternTransformation(
+  patterns: ShorthandPattern[],
+  classes: string[],
+): TransformResult | null {
+  for (const { patterns: patternList, shorthand } of patterns) {
+    const result = findMatchingClasses(patternList, classes)
+    if (result) {
+      const { matchedClasses, commonPrefix, commonValue, commonNegative } =
+        result
+
+      // Create shorthand class
+      const negativePrefix = commonNegative ? "-" : ""
+      const shorthandClass = `${commonPrefix}${negativePrefix}${shorthand}-${commonValue}`
+
+      // Remove matched classes and add shorthand
+      const filteredClasses = classes.filter(
+        (cls) => !matchedClasses.includes(cls),
+      )
+      const firstIndex = Math.min(
+        ...matchedClasses.map((cls) => classes.indexOf(cls)),
+      )
+      filteredClasses.splice(firstIndex, 0, shorthandClass)
+
+      return {
+        applied: true,
+        value: filteredClasses.join(" "),
+        classnames: matchedClasses.join(" "),
+        shorthand: shorthandClass,
+      }
+    }
+  }
+  return null
+}
+
+// =============================================================================
+// Individual Parser Functions
+// =============================================================================
+
+function parseBorderSpacing(
+  cleanClass: string,
+  isNegative: boolean,
+): ParsedBaseClass {
+  if (!cleanClass.startsWith("border-spacing-")) return null
+
+  const spacingPart = cleanClass.substring(15)
+  const directionMatch = spacingPart.match(/^([xy])-(.+)$/)
+
+  if (directionMatch) {
+    return {
+      type: `border-spacing-${directionMatch[1]}`,
+      value: directionMatch[2],
+      isNegative,
+      category: "misc",
+    }
+  }
+
+  return {
+    type: "border-spacing",
+    value: spacingPart,
+    isNegative,
+    category: "misc",
+  }
+}
+
+function parseBorder(cleanClass: string, isNegative: boolean): ParsedBaseClass {
+  if (!cleanClass.startsWith("border-")) return null
+
+  const borderPart = cleanClass.substring(7)
+  const directionMatch = borderPart.match(/^([tlbr]|[xy]|s|e)-(.+)$/)
+
+  if (directionMatch) {
+    return {
+      type: `border-${directionMatch[1]}`,
+      value: directionMatch[2],
+      isNegative,
+      category: "border-width-color",
+    }
+  }
+
+  return {
+    type: "border",
+    value: borderPart,
+    isNegative,
+    category: "border-width-color",
+  }
+}
+
+function parseRounded(
+  cleanClass: string,
+  isNegative: boolean,
+): ParsedBaseClass {
+  if (!cleanClass.startsWith("rounded-")) return null
+
+  const roundedPart = cleanClass.substring(8)
+
+  // Corner-specific rounded
+  const cornerMatch = roundedPart.match(/^(tl|tr|bl|br|ss|se|es|ee)-(.+)$/)
+  if (cornerMatch) {
+    return {
+      type: `rounded-${cornerMatch[1]}`,
+      value: cornerMatch[2],
+      isNegative,
+      category: "border-radius",
+    }
+  }
+
+  // Side-specific rounded
+  const sideMatch = roundedPart.match(/^([tlbr]|s|e)-(.+)$/)
+  if (sideMatch) {
+    return {
+      type: `rounded-${sideMatch[1]}`,
+      value: sideMatch[2],
+      isNegative,
+      category: "border-radius",
+    }
+  }
+
+  return {
+    type: "rounded",
+    value: roundedPart,
+    isNegative,
+    category: "border-radius",
+  }
+}
+
+function parseInset(cleanClass: string, isNegative: boolean): ParsedBaseClass {
+  if (!cleanClass.startsWith("inset-")) return null
+
+  const insetPart = cleanClass.substring(6)
+  const directionMatch = insetPart.match(/^([xy])-(.+)$/)
+
+  if (directionMatch) {
+    return {
+      type: `inset-${directionMatch[1]}`,
+      value: directionMatch[2],
+      isNegative,
+      category: "layout-inset",
+    }
+  }
+
+  return {
+    type: "inset",
+    value: insetPart,
+    isNegative,
+    category: "layout-inset",
+  }
+}
+
+function parsePosition(
+  cleanClass: string,
+  isNegative: boolean,
+): ParsedBaseClass {
+  const positionTypes = ["top", "bottom", "left", "right", "start", "end"]
+  const firstPart = cleanClass.split("-")[0]
+
+  if (!positionTypes.includes(firstPart)) return null
+
+  const dashIndex = cleanClass.indexOf("-")
+  if (dashIndex === -1) return null
+
+  const type = cleanClass.substring(0, dashIndex)
+  const classValue = cleanClass.substring(dashIndex + 1)
+
+  return {
+    type,
+    value: classValue,
+    isNegative,
+    category: "layout-inset",
+  }
+}
+
+function parseScrollMargin(
+  cleanClass: string,
+  isNegative: boolean,
+): ParsedBaseClass {
+  if (!cleanClass.startsWith("scroll-m")) return null
+
+  const scrollPart = cleanClass.substring(8)
+
+  // Directional scroll margin
+  const directionMatch = scrollPart.match(/^(t|b|l|r|x|y|s|e)-(.+)$/)
+  if (directionMatch) {
+    return {
+      type: `scroll-m${directionMatch[1]}`,
+      value: directionMatch[2],
+      isNegative,
+      category: "layout-scroll",
+    }
+  }
+
+  // Non-directional scroll margin
+  const nonDirectionalMatch = scrollPart.match(/^-(.+)$/)
+  if (nonDirectionalMatch) {
+    return {
+      type: "scroll-m",
+      value: nonDirectionalMatch[1],
+      isNegative,
+      category: "layout-scroll",
+    }
+  }
+
+  return null
+}
+
+function parseScrollPadding(
+  cleanClass: string,
+  isNegative: boolean,
+): ParsedBaseClass {
+  if (!cleanClass.startsWith("scroll-p")) return null
+
+  const scrollPart = cleanClass.substring(8)
+
+  // Directional scroll padding
+  const directionMatch = scrollPart.match(/^(t|b|l|r|x|y|s|e)-(.+)$/)
+  if (directionMatch) {
+    return {
+      type: `scroll-p${directionMatch[1]}`,
+      value: directionMatch[2],
+      isNegative,
+      category: "layout-scroll",
+    }
+  }
+
+  // Non-directional scroll padding
+  const nonDirectionalMatch = scrollPart.match(/^-(.+)$/)
+  if (nonDirectionalMatch) {
+    return {
+      type: "scroll-p",
+      value: nonDirectionalMatch[1],
+      isNegative,
+      category: "layout-scroll",
+    }
+  }
+
+  return null
+}
+
+function parseGap(cleanClass: string, isNegative: boolean): ParsedBaseClass {
+  if (!cleanClass.startsWith("gap-")) return null
+
+  const gapPart = cleanClass.substring(4)
+  const directionMatch = gapPart.match(/^([xy])-(.+)$/)
+
+  if (directionMatch) {
+    return {
+      type: `gap-${directionMatch[1]}`,
+      value: directionMatch[2],
+      isNegative,
+      category: "layout-gap",
+    }
+  }
+
+  return {
+    type: "gap",
+    value: gapPart,
+    isNegative,
+    category: "layout-gap",
+  }
+}
+
+function parseGridFlexbox(
+  cleanClass: string,
+  isNegative: boolean,
+): ParsedBaseClass {
+  if (!cleanClass.startsWith("justify-") && !cleanClass.startsWith("align-"))
+    return null
+
+  const isJustify = cleanClass.startsWith("justify-")
+  const prefix = isJustify ? "justify-" : "align-"
+  const rest = cleanClass.substring(prefix.length)
+
+  const typeMatch = rest.match(/^(items|content|self)-(.+)$/)
+  if (typeMatch) {
+    return {
+      type: `${prefix}${typeMatch[1]}`,
+      value: typeMatch[2],
+      isNegative,
+      category: "grid-flexbox",
+    }
+  }
+
+  return null
+}
+
+function parseTransform(
+  cleanClass: string,
+  isNegative: boolean,
+): ParsedBaseClass {
+  const transformTypes = ["translate", "scale", "skew"]
+  const transformType = transformTypes.find((type) =>
+    cleanClass.startsWith(`${type}-`),
+  )
+
+  if (!transformType) return null
+
+  const transformMatch = cleanClass.match(
+    new RegExp(`^${transformType}-([xy])-(.+)$`),
+  )
+  if (transformMatch) {
+    return {
+      type: `${transformType}-${transformMatch[1]}`,
+      value: transformMatch[2],
+      isNegative,
+      category: "transform",
+    }
+  }
+
+  return null
+}
+
+function parseOverflow(
+  cleanClass: string,
+  isNegative: boolean,
+): ParsedBaseClass {
+  if (!cleanClass.startsWith("overflow-")) return null
+
+  const overflowPart = cleanClass.substring(9)
+  const directionMatch = overflowPart.match(/^([xy])-(.+)$/)
+
+  if (directionMatch) {
+    return {
+      type: `overflow-${directionMatch[1]}`,
+      value: directionMatch[2],
+      isNegative,
+      category: "misc",
+    }
+  }
+
+  return {
+    type: "overflow",
+    value: overflowPart,
+    isNegative,
+    category: "misc",
+  }
+}
+
+function parseOverscroll(
+  cleanClass: string,
+  isNegative: boolean,
+): ParsedBaseClass {
+  if (!cleanClass.startsWith("overscroll-")) return null
+
+  const overscrollPart = cleanClass.substring(11)
+  const directionMatch = overscrollPart.match(/^([xy])-(.+)$/)
+
+  if (directionMatch) {
+    return {
+      type: `overscroll-${directionMatch[1]}`,
+      value: directionMatch[2],
+      isNegative,
+      category: "misc",
+    }
+  }
+
+  return {
+    type: "overscroll",
+    value: overscrollPart,
+    isNegative,
+    category: "misc",
+  }
+}
+
+function parseGeneric(
+  cleanClass: string,
+  isNegative: boolean,
+): ParsedBaseClass {
+  const dashIndex = cleanClass.indexOf("-")
+  if (dashIndex === -1) return null
+
+  const type = cleanClass.substring(0, dashIndex)
+  const classValue = cleanClass.substring(dashIndex + 1)
+
+  return { type, value: classValue, isNegative }
 }
