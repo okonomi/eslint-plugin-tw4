@@ -8,11 +8,14 @@ An ESLint plugin for formatting TailwindCSS v4 class lists.
 
 `eslint-plugin-tw4` is an ESLint plugin dedicated to TailwindCSS v4. It properly formats TailwindCSS class names to improve code readability and maintainability.
 
+This plugin is heavily inspired by and aims to be compatible with [eslint-plugin-tailwindcss](https://github.com/francoismassart/eslint-plugin-tailwindcss), but specifically designed for TailwindCSS v4.
+
 ## Features
 
 - **TailwindCSS v4 Only**: Supports TailwindCSS v4 exclusively
 - **Class List Formatting**: Automatically formats TailwindCSS class names
-- **Compatibility**: Aims for compatibility with [eslint-plugin-tailwindcss](https://github.com/francoismassart/eslint-plugin-tailwindcss)
+- **Based on eslint-plugin-tailwindcss**: Built upon the foundation of the excellent [eslint-plugin-tailwindcss](https://github.com/francoismassart/eslint-plugin-tailwindcss)
+- **Compatible API**: Maintains similar configuration and usage patterns
 
 ## Rules
 
