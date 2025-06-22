@@ -8,8 +8,8 @@
 // Requirements
 //------------------------------------------------------------------------------
 
-var rule = require("../../../lib/rules/enforces-shorthand")
-var RuleTester = require("eslint").RuleTester
+import { RuleTester } from "@typescript-eslint/rule-tester"
+import rule from "../../../src/rules/enforces-shorthand"
 
 //------------------------------------------------------------------------------
 // Tests
