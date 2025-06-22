@@ -110,4 +110,25 @@ describe("enforces-shorthand", () => {
       )
     })
   })
+  describe("rule options", () => {
+    it("should set options", async () => {
+      const { result } = await invalid({
+        code: `<div className="px-1 py-1" />`,
+        options: [
+          {
+            callees: ["clsx", "classnames"],
+            config: {
+              size: {
+                width: "w",
+                height: "h",
+              },
+            },
+            skipClassAttribute: true,
+            tags: ["div", "span"],
+          },
+        ],
+      })
+      expect(result.output).toEqual(`<div className="p-1" />`)
+    })
+  })
 })

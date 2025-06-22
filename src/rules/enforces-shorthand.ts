@@ -17,7 +17,31 @@ export default createRule({
       useShorthand:
         'Use shorthand "{{shorthand}}" instead of class names "{{classnames}}".',
     },
-    schema: [],
+    schema: [
+      {
+        type: "object",
+        properties: {
+          callees: {
+            type: "array",
+            items: { type: "string", minLength: 0 },
+            uniqueItems: true,
+          },
+          config: {
+            type: ["object", "string"],
+          },
+          skipClassAttribute: {
+            type: "boolean",
+            default: false,
+          },
+          tags: {
+            type: "array",
+            items: { type: "string", minLength: 0 },
+            uniqueItems: true,
+          },
+        },
+        additionalProperties: false,
+      },
+    ],
   },
   defaultOptions: [],
   create(context) {
