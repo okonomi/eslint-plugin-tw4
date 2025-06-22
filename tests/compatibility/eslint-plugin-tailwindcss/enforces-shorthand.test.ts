@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * @fileoverview Detect classname candidates for shorthand replacement
  * @description E.g. `mx-4 my-4` can be replaced by `m-4`
