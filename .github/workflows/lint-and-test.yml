@@ -1,0 +1,39 @@
+name: Lint and Test
+
+permissions:
+  contents: read
+ 
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: |
+    lint-and-test-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-and-test:
+    name: Lint and Test
+    runs-on: ubuntu-latest
+ 
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+ 
+      - name: Set up Node.js
+        uses: jdx/mise-action@v2
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+ 
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Lint
+        run: pnpm lint
+ 
+      - name: Test
+        run: pnpm test
