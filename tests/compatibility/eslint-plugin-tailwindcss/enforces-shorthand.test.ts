@@ -15,14 +15,6 @@ import rule from "../../../src/rules/enforces-shorthand"
 // Tests
 //------------------------------------------------------------------------------
 
-var parserOptions = {
-  ecmaVersion: 2019,
-  sourceType: "module",
-  ecmaFeatures: {
-    jsx: true,
-  },
-}
-
 const skipClassAttributeOptions = [
   {
     skipClassAttribute: true,
@@ -88,9 +80,10 @@ const ambiguousOptions = [
   },
 ]
 
-var generateError = (classnames, shorthand) => {
+function generateError(classnames: string[], shorthand: string) {
   return {
-    messageId: "shorthandCandidateDetected",
+    // messageId: "shorthandCandidateDetected",
+    messageId: "useShorthand",
     data: {
       classnames: classnames.join(", "),
       shorthand: shorthand,
@@ -98,7 +91,17 @@ var generateError = (classnames, shorthand) => {
   }
 }
 
-var ruleTester = new RuleTester({ parserOptions })
+const ruleTester = new RuleTester({
+  languageOptions: {
+    ecmaVersion: 2019,
+    sourceType: "module",
+    parserOptions: {
+      ecmaFeatures: {
+        jsx: true,
+      },
+    },
+  },
+})
 
 ruleTester.run("shorthands", rule, {
   valid: [
