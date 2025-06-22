@@ -1,8 +1,14 @@
 // @ts-nocheck
 /**
- * @fileoverview Detect classname candidates for shorthand replacement
- * @description E.g. `mx-4 my-4` can be replaced by `m-4`
- * @author François Massart
+ * Originally based on enforces-shorthand rule tests from eslint-plugin-tailwindcss
+ * Copyright (c) François Massart
+ * Licensed under the MIT License
+ * Source: https://github.com/francoismassart/eslint-plugin-tailwindcss/blob/master/tests/lib/rules/enforces-shorthand.js
+ *
+ * Modifications:
+ * - Adapted for TypeScript and @typescript-eslint/rule-tester
+ * - Updated to work with custom shorthand implementation
+ * - Modified test structure for this project's requirements
  */
 
 //------------------------------------------------------------------------------
