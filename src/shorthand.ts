@@ -31,6 +31,12 @@ type TransformResult = {
   shorthand?: string
 }
 
+type ParsedClassInfo = {
+  original: string
+  parsed: ParsedClass
+  baseParsed: ParsedBaseClass
+}
+
 // =============================================================================
 // Pattern Definition Constants
 // =============================================================================
@@ -292,17 +298,28 @@ const PATTERN_SETS = {
 export function applyShorthand(value: string): TransformResult {
   const classes = value.split(/\s+/).filter(Boolean)
 
+  // Parse all classes once at the beginning
+  const parsedClasses: ParsedClassInfo[] = classes.map((className) => {
+    const parsed = parseClass(className)
+    const baseParsed = parseBaseClass(parsed.baseClass)
+    return {
+      original: className,
+      parsed,
+      baseParsed,
+    }
+  })
+
   // Try each pattern set
   for (const [name, patterns] of Object.entries(PATTERN_SETS)) {
-    const result = applyPatternTransformation(patterns, classes)
+    const result = applyPatternTransformation(patterns, parsedClasses)
     if (result) return result
   }
 
   // Special cases that need custom handling
   const specialResults = [
-    handleSizing(classes),
-    handleTransforms(classes),
-    handleMiscPatterns(classes),
+    handleSizing(parsedClasses),
+    handleTransforms(parsedClasses),
+    handleMiscPatterns(parsedClasses),
   ]
 
   for (const result of specialResults) {
@@ -346,8 +363,10 @@ export function findAllShorthands(value: string) {
 // Special Case Handlers
 // =============================================================================
 
-function handleSizing(classes: string[]): TransformResult | null {
-  const sizingResult = findMatchingClasses([["w", "h"]], classes)
+function handleSizing(
+  parsedClasses: ParsedClassInfo[],
+): TransformResult | null {
+  const sizingResult = findMatchingClasses([["w", "h"]], parsedClasses)
   if (sizingResult) {
     const { matchedClasses, commonPrefix, commonValue, commonNegative } =
       sizingResult
@@ -355,17 +374,23 @@ function handleSizing(classes: string[]): TransformResult | null {
     const negativePrefix = commonNegative ? "-" : ""
     const shorthandClass = `${commonPrefix}${negativePrefix}size-${commonValue}`
 
-    const filteredClasses = classes.filter(
-      (cls) => !matchedClasses.includes(cls),
+    const remainingClasses = parsedClasses.filter(
+      (cls) => !matchedClasses.includes(cls.original),
     )
     const firstIndex = Math.min(
-      ...matchedClasses.map((cls) => classes.indexOf(cls)),
+      ...matchedClasses.map((cls) =>
+        parsedClasses.findIndex((pc) => pc.original === cls),
+      ),
     )
-    filteredClasses.splice(firstIndex, 0, shorthandClass)
+    const finalClasses = [
+      ...remainingClasses.slice(0, firstIndex).map((c) => c.original),
+      shorthandClass,
+      ...remainingClasses.slice(firstIndex).map((c) => c.original),
+    ]
 
     return {
       applied: true,
-      value: filteredClasses.join(" "),
+      value: finalClasses.join(" "),
       classnames: matchedClasses.join(" "),
       shorthand: shorthandClass,
     }
@@ -373,13 +398,15 @@ function handleSizing(classes: string[]): TransformResult | null {
   return null
 }
 
-function handleTransforms(classes: string[]): TransformResult | null {
+function handleTransforms(
+  parsedClasses: ParsedClassInfo[],
+): TransformResult | null {
   const transformTypes = ["translate", "scale", "skew"]
 
   for (const transformType of transformTypes) {
     const result = findMatchingClasses(
       [[`${transformType}-x`, `${transformType}-y`]],
-      classes,
+      parsedClasses,
     )
     if (result) {
       const { matchedClasses, commonPrefix, commonValue, commonNegative } =
@@ -399,17 +426,23 @@ function handleTransforms(classes: string[]): TransformResult | null {
       }
 
       // Remove matched classes and add shorthand
-      const filteredClasses = classes.filter(
-        (cls) => !matchedClasses.includes(cls),
+      const remainingClasses = parsedClasses.filter(
+        (cls) => !matchedClasses.includes(cls.original),
       )
       const firstIndex = Math.min(
-        ...matchedClasses.map((cls) => classes.indexOf(cls)),
+        ...matchedClasses.map((cls) =>
+          parsedClasses.findIndex((pc) => pc.original === cls),
+        ),
       )
-      filteredClasses.splice(firstIndex, 0, shorthandClass)
+      const finalClasses = [
+        ...remainingClasses.slice(0, firstIndex).map((c) => c.original),
+        shorthandClass,
+        ...remainingClasses.slice(firstIndex).map((c) => c.original),
+      ]
 
       return {
         applied: true,
-        value: filteredClasses.join(" "),
+        value: finalClasses.join(" "),
         classnames: matchedClasses.join(" "),
         shorthand: shorthandClass,
       }
@@ -418,7 +451,9 @@ function handleTransforms(classes: string[]): TransformResult | null {
   return null
 }
 
-function handleMiscPatterns(classes: string[]): TransformResult | null {
+function handleMiscPatterns(
+  parsedClasses: ParsedClassInfo[],
+): TransformResult | null {
   const miscPatterns = [
     {
       patterns: [["overflow-hidden", "text-ellipsis", "whitespace-nowrap"]],
@@ -439,8 +474,8 @@ function handleMiscPatterns(classes: string[]): TransformResult | null {
       for (const expectedType of pattern) {
         let found = false
 
-        for (const className of classes) {
-          const parsed = parseClass(className)
+        for (const classInfo of parsedClasses) {
+          const { original, parsed } = classInfo
 
           // Check for exact match with expected type
           if (parsed.baseClass === expectedType) {
@@ -452,7 +487,7 @@ function handleMiscPatterns(classes: string[]): TransformResult | null {
             }
 
             currentMatches[expectedType] = ""
-            currentMatchedClasses.push(className)
+            currentMatchedClasses.push(original)
             found = true
             break
           }
@@ -477,17 +512,23 @@ function handleMiscPatterns(classes: string[]): TransformResult | null {
       const shorthandClass = `${commonPrefix}${shorthand}`
 
       // Remove matched classes and add shorthand
-      const filteredClasses = classes.filter(
-        (cls) => !matchedClasses.includes(cls),
+      const remainingClasses = parsedClasses.filter(
+        (cls) => !matchedClasses.includes(cls.original),
       )
       const firstIndex = Math.min(
-        ...matchedClasses.map((cls) => classes.indexOf(cls)),
+        ...matchedClasses.map((cls) =>
+          parsedClasses.findIndex((pc) => pc.original === cls),
+        ),
       )
-      filteredClasses.splice(firstIndex, 0, shorthandClass)
+      const finalClasses = [
+        ...remainingClasses.slice(0, firstIndex).map((c) => c.original),
+        shorthandClass,
+        ...remainingClasses.slice(firstIndex).map((c) => c.original),
+      ]
 
       return {
         applied: true,
-        value: filteredClasses.join(" "),
+        value: finalClasses.join(" "),
         classnames: matchedClasses.join(" "),
         shorthand: shorthandClass,
       }
@@ -542,7 +583,7 @@ function parseBaseClass(baseClass: string): ParsedBaseClass {
 
 function findMatchingClasses(
   patterns: string[][],
-  classes: string[],
+  parsedClasses: ParsedClassInfo[],
 ): MatchResult | null {
   for (const pattern of patterns) {
     const matches: { [key: string]: string } = {}
@@ -555,9 +596,8 @@ function findMatchingClasses(
     // Check if all required classes exist with same prefix, value, and negative status
     for (const requiredType of pattern) {
       let found = false
-      for (const className of classes) {
-        const parsed = parseClass(className)
-        const baseParsed = parseBaseClass(parsed.baseClass)
+      for (const classInfo of parsedClasses) {
+        const { original, parsed, baseParsed } = classInfo
 
         if (baseParsed && baseParsed.type === requiredType) {
           if (matchedClasses.length === 0) {
@@ -576,8 +616,8 @@ function findMatchingClasses(
               break
             }
           }
-          matches[requiredType] = className
-          matchedClasses.push(className)
+          matches[requiredType] = original
+          matchedClasses.push(original)
           found = true
           break
         }
@@ -603,10 +643,10 @@ function findMatchingClasses(
 
 function applyPatternTransformation(
   patterns: ShorthandPattern[],
-  classes: string[],
+  parsedClasses: ParsedClassInfo[],
 ): TransformResult | null {
   for (const { patterns: patternList, shorthand } of patterns) {
-    const result = findMatchingClasses(patternList, classes)
+    const result = findMatchingClasses(patternList, parsedClasses)
     if (result) {
       const { matchedClasses, commonPrefix, commonValue, commonNegative } =
         result
@@ -616,17 +656,23 @@ function applyPatternTransformation(
       const shorthandClass = `${commonPrefix}${negativePrefix}${shorthand}-${commonValue}`
 
       // Remove matched classes and add shorthand
-      const filteredClasses = classes.filter(
-        (cls) => !matchedClasses.includes(cls),
+      const remainingClasses = parsedClasses.filter(
+        (cls) => !matchedClasses.includes(cls.original),
       )
       const firstIndex = Math.min(
-        ...matchedClasses.map((cls) => classes.indexOf(cls)),
+        ...matchedClasses.map((cls) =>
+          parsedClasses.findIndex((pc) => pc.original === cls),
+        ),
       )
-      filteredClasses.splice(firstIndex, 0, shorthandClass)
+      const finalClasses = [
+        ...remainingClasses.slice(0, firstIndex).map((c) => c.original),
+        shorthandClass,
+        ...remainingClasses.slice(firstIndex).map((c) => c.original),
+      ]
 
       return {
         applied: true,
-        value: filteredClasses.join(" "),
+        value: finalClasses.join(" "),
         classnames: matchedClasses.join(" "),
         shorthand: shorthandClass,
       }
