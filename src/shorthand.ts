@@ -374,26 +374,7 @@ function handleSizing(
     const negativePrefix = commonNegative ? "-" : ""
     const shorthandClass = `${commonPrefix}${negativePrefix}size-${commonValue}`
 
-    const remainingClasses = parsedClasses.filter(
-      (cls) => !matchedClasses.includes(cls.original),
-    )
-    const firstIndex = Math.min(
-      ...matchedClasses.map((cls) =>
-        parsedClasses.findIndex((pc) => pc.original === cls),
-      ),
-    )
-    const finalClasses = [
-      ...remainingClasses.slice(0, firstIndex).map((c) => c.original),
-      shorthandClass,
-      ...remainingClasses.slice(firstIndex).map((c) => c.original),
-    ]
-
-    return {
-      applied: true,
-      value: finalClasses.join(" "),
-      classnames: matchedClasses.join(" "),
-      shorthand: shorthandClass,
-    }
+    return createTransformResult(parsedClasses, matchedClasses, shorthandClass)
   }
   return null
 }
@@ -425,27 +406,11 @@ function handleTransforms(
         continue
       }
 
-      // Remove matched classes and add shorthand
-      const remainingClasses = parsedClasses.filter(
-        (cls) => !matchedClasses.includes(cls.original),
-      )
-      const firstIndex = Math.min(
-        ...matchedClasses.map((cls) =>
-          parsedClasses.findIndex((pc) => pc.original === cls),
-        ),
-      )
-      const finalClasses = [
-        ...remainingClasses.slice(0, firstIndex).map((c) => c.original),
+      return createTransformResult(
+        parsedClasses,
+        matchedClasses,
         shorthandClass,
-        ...remainingClasses.slice(firstIndex).map((c) => c.original),
-      ]
-
-      return {
-        applied: true,
-        value: finalClasses.join(" "),
-        classnames: matchedClasses.join(" "),
-        shorthand: shorthandClass,
-      }
+      )
     }
   }
   return null
@@ -511,27 +476,11 @@ function handleMiscPatterns(
       // Create shorthand class
       const shorthandClass = `${commonPrefix}${shorthand}`
 
-      // Remove matched classes and add shorthand
-      const remainingClasses = parsedClasses.filter(
-        (cls) => !matchedClasses.includes(cls.original),
-      )
-      const firstIndex = Math.min(
-        ...matchedClasses.map((cls) =>
-          parsedClasses.findIndex((pc) => pc.original === cls),
-        ),
-      )
-      const finalClasses = [
-        ...remainingClasses.slice(0, firstIndex).map((c) => c.original),
+      return createTransformResult(
+        parsedClasses,
+        matchedClasses,
         shorthandClass,
-        ...remainingClasses.slice(firstIndex).map((c) => c.original),
-      ]
-
-      return {
-        applied: true,
-        value: finalClasses.join(" "),
-        classnames: matchedClasses.join(" "),
-        shorthand: shorthandClass,
-      }
+      )
     }
   }
   return null
@@ -655,30 +604,42 @@ function applyPatternTransformation(
       const negativePrefix = commonNegative ? "-" : ""
       const shorthandClass = `${commonPrefix}${negativePrefix}${shorthand}-${commonValue}`
 
-      // Remove matched classes and add shorthand
-      const remainingClasses = parsedClasses.filter(
-        (cls) => !matchedClasses.includes(cls.original),
-      )
-      const firstIndex = Math.min(
-        ...matchedClasses.map((cls) =>
-          parsedClasses.findIndex((pc) => pc.original === cls),
-        ),
-      )
-      const finalClasses = [
-        ...remainingClasses.slice(0, firstIndex).map((c) => c.original),
+      return createTransformResult(
+        parsedClasses,
+        matchedClasses,
         shorthandClass,
-        ...remainingClasses.slice(firstIndex).map((c) => c.original),
-      ]
-
-      return {
-        applied: true,
-        value: finalClasses.join(" "),
-        classnames: matchedClasses.join(" "),
-        shorthand: shorthandClass,
-      }
+      )
     }
   }
   return null
+}
+
+function createTransformResult(
+  parsedClasses: ParsedClassInfo[],
+  matchedClasses: string[],
+  shorthandClass: string,
+): TransformResult {
+  // Remove matched classes and add shorthand
+  const remainingClasses = parsedClasses.filter(
+    (cls) => !matchedClasses.includes(cls.original),
+  )
+  const firstIndex = Math.min(
+    ...matchedClasses.map((cls) =>
+      parsedClasses.findIndex((pc) => pc.original === cls),
+    ),
+  )
+  const finalClasses = [
+    ...remainingClasses.slice(0, firstIndex).map((c) => c.original),
+    shorthandClass,
+    ...remainingClasses.slice(firstIndex).map((c) => c.original),
+  ]
+
+  return {
+    applied: true,
+    value: finalClasses.join(" "),
+    classnames: matchedClasses.join(" "),
+    shorthand: shorthandClass,
+  }
 }
 
 // =============================================================================
