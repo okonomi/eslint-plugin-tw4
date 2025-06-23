@@ -2,6 +2,14 @@ import { describe, expect, it } from "vitest"
 import { applyShorthand } from "./shorthand"
 
 describe("shorthand", () => {
+  describe("no effect", () => {
+    it.each(["overflow-hidden text-ellipsis hover:whitespace-nowrap"])(
+      'should return "%s" as is',
+      (input) => {
+        expect(applyShorthand(input).value).toBe(input)
+      },
+    )
+  })
   describe("simple cases", () => {
     it.each([
       ["w-[100px] h-[100px]", "size-[100px]"],

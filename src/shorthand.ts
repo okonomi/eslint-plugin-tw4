@@ -435,6 +435,7 @@ function handleMiscPatterns(
       const currentMatches: { [key: string]: string } = {}
       const currentMatchedClasses: string[] = []
       let currentCommonPrefix = ""
+      let patternValid = true
 
       for (const expectedType of pattern) {
         let found = false
@@ -444,27 +445,37 @@ function handleMiscPatterns(
 
           // Check for exact match with expected type
           if (parsed.baseClass === expectedType) {
-            if (!currentCommonPrefix) {
-              currentCommonPrefix = parsed.prefix
-            } else if (currentCommonPrefix !== parsed.prefix) {
-              found = false
+            if (currentMatches[expectedType] === undefined) {
+              // First time we see this class
+              if (Object.keys(currentMatches).length === 0) {
+                // This is the first class we're matching
+                currentCommonPrefix = parsed.prefix
+              } else if (currentCommonPrefix !== parsed.prefix) {
+                // Different prefixes found, this pattern doesn't match
+                patternValid = false
+                break
+              }
+
+              currentMatches[expectedType] = ""
+              currentMatchedClasses.push(original)
+              found = true
               break
             }
-
-            currentMatches[expectedType] = ""
-            currentMatchedClasses.push(original)
-            found = true
-            break
           }
         }
 
-        if (!found) {
+        if (!found || !patternValid) {
+          // Reset everything if any class is not found or has different prefix
+          patternValid = false
           break
         }
       }
 
-      // If all expected classes in this pattern were found
-      if (Object.keys(currentMatches).length === pattern.length) {
+      // If all expected classes in this pattern were found and prefixes match
+      if (
+        patternValid &&
+        Object.keys(currentMatches).length === pattern.length
+      ) {
         matches = currentMatches
         matchedClasses = currentMatchedClasses
         commonPrefix = currentCommonPrefix
