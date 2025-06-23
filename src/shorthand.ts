@@ -637,7 +637,7 @@ function createTransformResult(
   return {
     applied: true,
     value: finalClasses.join(" "),
-    classnames: matchedClasses.join(" "),
+    classnames: matchedClasses.join(", "),
     shorthand: shorthandClass,
   }
 }

@@ -8,7 +8,7 @@ function generateError(classnames: string[], shorthand: string) {
   return {
     messageId: "useShorthand",
     data: {
-      classnames: classnames.join(" "),
+      classnames: classnames.join(", "),
       shorthand,
     },
   }

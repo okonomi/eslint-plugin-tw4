@@ -16,25 +16,25 @@ describe("shorthand", () => {
       {
         input: "w-1 block h-1",
         expected: "size-1 block",
-        classnames: "w-1 h-1",
+        classnames: "w-1, h-1",
         shorthand: "size-1",
       },
       {
         input: "block w-1 h-1",
         expected: "block size-1",
-        classnames: "w-1 h-1",
+        classnames: "w-1, h-1",
         shorthand: "size-1",
       },
       {
         input: "w-1 h-1 block",
         expected: "size-1 block",
-        classnames: "w-1 h-1",
+        classnames: "w-1, h-1",
         shorthand: "size-1",
       },
       {
         input: "black w-1 bg-white h-1 mt-1",
         expected: "black size-1 bg-white mt-1",
-        classnames: "w-1 h-1",
+        classnames: "w-1, h-1",
         shorthand: "size-1",
       },
     ])(
