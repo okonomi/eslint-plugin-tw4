@@ -29,6 +29,28 @@ describe("enforces-shorthand", () => {
     },
   })
 
+  describe("attribute", () => {
+    it("should not report if className is not present", async () => {
+      const { result } = await valid({
+        code: "<div />",
+      })
+      expect(result.output).toEqual("<div />")
+    })
+    it("should not report if className is empty", async () => {
+      const { result } = await valid({
+        code: "<div className={''} />",
+      })
+      expect(result.output).toEqual("<div className={''} />")
+    })
+    it("should report if class is present", async () => {
+      const { result } = await invalid({
+        code: `<div class="w-1 h-1" />`,
+        output: `<div class="size-1" />`,
+        errors: [generateError(["w-1", "h-1"], "size-1")],
+      })
+      expect(result.output).toEqual(`<div class="size-1" />`)
+    })
+  })
   describe("sizing", () => {
     describe("valid", () => {
       it.each([

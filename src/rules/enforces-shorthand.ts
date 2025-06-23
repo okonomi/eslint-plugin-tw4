@@ -47,7 +47,10 @@ export default createRule({
   create(context) {
     return {
       JSXAttribute(node) {
-        if (node.name.name !== "className" || !node.value) {
+        if (
+          (node.name.name !== "className" && node.name.name !== "class") ||
+          !node.value
+        ) {
           return
         }
 
@@ -68,7 +71,11 @@ export default createRule({
                   classnames: transformation.classnames,
                 },
                 fix(fixer) {
-                  return fixer.replaceText(node, `className="${result.value}"`)
+                  const attributeName = node.name.name
+                  return fixer.replaceText(
+                    node,
+                    `${attributeName}="${result.value}"`,
+                  )
                 },
               })
             }
