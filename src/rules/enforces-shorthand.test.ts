@@ -1,4 +1,3 @@
-import dedent from "dedent"
 import { createRuleTester } from "eslint-vitest-rule-tester"
 import { describe, expect, it } from "vitest"
 
