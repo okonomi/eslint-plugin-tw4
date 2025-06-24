@@ -299,15 +299,7 @@ export function applyShorthand(value: string): TransformResult {
   const classes = value.split(/\s+/).filter(Boolean)
 
   // Parse all classes once at the beginning
-  const parsedClasses: ParsedClassInfo[] = classes.map((className) => {
-    const parsed = parseClass(className)
-    const baseParsed = parseBaseClass(parsed.baseClass)
-    return {
-      original: className,
-      parsed,
-      baseParsed,
-    }
-  })
+  const parsedClasses = parseClasses(classes)
 
   // Try each pattern set
   for (const [name, patterns] of Object.entries(PATTERN_SETS)) {
@@ -500,6 +492,18 @@ function handleMiscPatterns(
 // =============================================================================
 // Utility Functions
 // =============================================================================
+
+function parseClasses(classes: string[]): ParsedClassInfo[] {
+  return classes.map((className) => {
+    const parsed = parseClass(className)
+    const baseParsed = parseBaseClass(parsed.baseClass)
+    return {
+      original: className,
+      parsed,
+      baseParsed,
+    }
+  })
+}
 
 function parseClass(className: string): ParsedClass {
   const colonIndex = className.lastIndexOf(":")
