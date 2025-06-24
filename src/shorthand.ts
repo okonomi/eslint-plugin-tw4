@@ -1,17 +1,4 @@
-import { parseClasses } from "./tw-shorthand/parsing"
-
-// Types for better structure
-type ParsedClass = {
-  prefix: string
-  baseClass: string
-}
-
-type ParsedBaseClass = {
-  type: string
-  value: string
-  isNegative: boolean
-  category?: string
-} | null
+import { type ParsedClassInfo, parseClasses } from "./tw-shorthand/parsing"
 
 type ShorthandPattern = {
   patterns: string[][]
@@ -31,12 +18,6 @@ type TransformResult = {
   value: string
   classnames?: string
   shorthand?: string
-}
-
-type ParsedClassInfo = {
-  original: string
-  parsed: ParsedClass
-  baseParsed: ParsedBaseClass
 }
 
 // =============================================================================
