@@ -1,5 +1,5 @@
 import { ESLintUtils } from "@typescript-eslint/utils"
-import { findAllShorthands } from "../shorthand"
+import { applyAllShorthands } from "../shorthand"
 
 const createRule = ESLintUtils.RuleCreator(
   (name) => `https://example.com/rule/${name}`,
@@ -59,7 +59,7 @@ export default createRule({
           node.value.type === "Literal" &&
           typeof node.value.value === "string"
         ) {
-          const result = findAllShorthands(node.value.value)
+          const result = applyAllShorthands(node.value.value)
           if (result.applied) {
             // Report each transformation as a separate error
             for (const transformation of result.transformations) {

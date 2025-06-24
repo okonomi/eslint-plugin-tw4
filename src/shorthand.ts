@@ -329,7 +329,7 @@ export function applyShorthand(value: string): TransformResult {
   return { applied: false, value }
 }
 
-export function findAllShorthands(value: string) {
+export function applyAllShorthands(value: string) {
   const transformations: Array<{
     classnames: string
     shorthand: string

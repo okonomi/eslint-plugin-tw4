@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { applyShorthand } from "./shorthand"
+import { applyAllShorthands, applyShorthand } from "./shorthand"
 
 describe("shorthand", () => {
   describe("no effect", () => {
@@ -410,4 +410,13 @@ describe("shorthand", () => {
       expect(applyShorthand(input).value).toBe(expected)
     })
   })
+})
+
+describe("applyAllShorthands", () => {
+  it.each([["md:w-1 md:h-1 lg:w-2 lg:h-2", "md:size-1 lg:size-2"]])(
+    'should convert "%s" to "%s"',
+    (input, expected) => {
+      expect(applyAllShorthands(input).value).toBe(expected)
+    },
+  )
 })
