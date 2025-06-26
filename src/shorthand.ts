@@ -482,7 +482,7 @@ function findMatchingClasses(
 ): MatchResult | null {
   for (const pattern of patterns) {
     const matches: { [key: string]: string } = {}
-    const matchedClasses: string[] = []
+    const matchedClassInfos: ParsedClassInfo[] = []
     let commonPrefix = ""
     let commonValue = ""
     let commonNegative = false
@@ -495,7 +495,7 @@ function findMatchingClasses(
         const { original, parsed, baseParsed } = classInfo
 
         if (baseParsed && baseParsed.type === requiredType) {
-          if (matchedClasses.length === 0) {
+          if (matchedClassInfos.length === 0) {
             // First match - set common values
             commonPrefix = parsed.prefix
             commonValue = baseParsed.value
@@ -512,7 +512,7 @@ function findMatchingClasses(
             }
           }
           matches[requiredType] = original
-          matchedClasses.push(original)
+          matchedClassInfos.push(classInfo)
           found = true
           break
         }
@@ -523,7 +523,20 @@ function findMatchingClasses(
       }
     }
 
-    if (isValid && matchedClasses.length === pattern.length) {
+    if (isValid && matchedClassInfos.length === pattern.length) {
+      // Sort matched classes by their original appearance order
+      matchedClassInfos.sort((a, b) => {
+        const aIndex = parsedClasses.findIndex(
+          (cls) => cls.original === a.original,
+        )
+        const bIndex = parsedClasses.findIndex(
+          (cls) => cls.original === b.original,
+        )
+        return aIndex - bIndex
+      })
+
+      const matchedClasses = matchedClassInfos.map((info) => info.original)
+
       return {
         matches,
         matchedClasses,

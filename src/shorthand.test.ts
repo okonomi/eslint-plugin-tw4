@@ -19,6 +19,14 @@ describe("shorthand", () => {
       expect(applyShorthand(input).value).toBe(expected)
     })
   })
+  describe("classes order", () => {
+    it.each([
+      ["h-1 w-1", "h-1, w-1"],
+      ["py-1 px-1", "py-1, px-1"],
+    ])('should keep classes order "%s"', (input, expected) => {
+      expect(applyShorthand(input).classnames).toBe(expected)
+    })
+  })
   describe("another class is in between", () => {
     it.each([
       {
