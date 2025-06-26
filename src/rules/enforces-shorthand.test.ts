@@ -118,8 +118,8 @@ describe("enforces-shorthand", () => {
           code: `<div className="w-1 h-1 mt-1 mb-1" />`,
           output: `<div className="size-1 my-1" />`,
           errors: [
-            generateError(["mt-1", "mb-1"], "my-1"),
             generateError(["w-1", "h-1"], "size-1"),
+            generateError(["mt-1", "mb-1"], "my-1"),
           ],
         },
       ])(

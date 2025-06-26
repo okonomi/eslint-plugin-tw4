@@ -427,4 +427,14 @@ describe("applyAllShorthands", () => {
       expect(applyAllShorthands(input).value).toBe(expected)
     },
   )
+  describe("multiple shorthand classes", () => {
+    it.each([
+      ["mt-1 mb-1 md:mx-2 md:my-2", ["mt-1, mb-1", "md:mx-2, md:my-2"]],
+    ])('should keep classes order "%s"', (input, expected) => {
+      const result = applyAllShorthands(input)
+      expect(
+        result.transformations.map(({ classnames }) => classnames),
+      ).toEqual(expected)
+    })
+  })
 })

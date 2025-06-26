@@ -308,6 +308,7 @@ export function applyAllShorthands(value: string) {
   const transformations: Array<{
     classnames: string
     shorthand: string
+    position: number
   }> = []
 
   let currentValue = value
@@ -317,9 +318,15 @@ export function applyAllShorthands(value: string) {
   while (hasChanges) {
     const result = applyShorthand(currentValue)
     if (result.applied && result.classnames && result.shorthand) {
+      // Find the position of the first matched class in the original value
+      const matchedClasses = result.classnames.split(", ")
+      const firstMatchedClass = matchedClasses[0]
+      const position = value.split(/\s+/).indexOf(firstMatchedClass)
+
       transformations.push({
         classnames: result.classnames,
         shorthand: result.shorthand,
+        position: position,
       })
       currentValue = result.value
     } else {
@@ -327,10 +334,16 @@ export function applyAllShorthands(value: string) {
     }
   }
 
+  // Sort transformations by their original position
+  transformations.sort((a, b) => a.position - b.position)
+
   return {
     applied: transformations.length > 0,
     value: currentValue,
-    transformations,
+    transformations: transformations.map(({ classnames, shorthand }) => ({
+      classnames,
+      shorthand,
+    })),
   }
 }
 
