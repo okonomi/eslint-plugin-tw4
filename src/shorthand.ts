@@ -324,7 +324,7 @@ export function applyShorthand(value: string): TransformResult {
   const parsedClasses = parseClasses(classes)
 
   // Try each pattern set
-  for (const [name, patterns] of Object.entries(PATTERN_SETS)) {
+  for (const [_name, patterns] of Object.entries(PATTERN_SETS)) {
     const result = applyPatternTransformation(patterns, parsedClasses)
     if (result) return result
   }
@@ -398,8 +398,7 @@ function handleTransforms(
       parsedClasses,
     )
     if (result) {
-      const { matchedClasses, commonPrefix, commonValue, commonNegative } =
-        result
+      const { matchedClasses, commonValue, commonNegative } = result
 
       // For transform handling, we need to check the actual values
       // Since we can't access parseBaseClass here, we'll do a simpler approach
@@ -430,7 +429,6 @@ function handleMiscPatterns(
   ]
 
   for (const { patterns, shorthand } of miscPatterns) {
-    let matches: { [key: string]: string } = {}
     let matchedClasses: string[] = []
     let commonPrefix = ""
 
@@ -479,7 +477,6 @@ function handleMiscPatterns(
         patternValid &&
         Object.keys(currentMatches).length === pattern.length
       ) {
-        matches = currentMatches
         matchedClasses = currentMatchedClasses
         commonPrefix = currentCommonPrefix
         break
