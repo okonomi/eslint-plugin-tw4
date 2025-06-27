@@ -274,36 +274,6 @@ const PATTERN_SETS = {
   borderSpacing: BORDER_SPACING_PATTERNS,
 }
 
-// =============================================================================
-// Public Interface Functions
-// =============================================================================
-
-export function applyShorthand(value: string): TransformResult {
-  const classes = value.split(/\s+/).filter(Boolean)
-
-  // Parse all classes once at the beginning
-  const parsedClasses = parseClasses(classes)
-
-  // Try each pattern set
-  for (const [name, patterns] of Object.entries(PATTERN_SETS)) {
-    const result = applyPatternTransformation(patterns, parsedClasses)
-    if (result) return result
-  }
-
-  // Special cases that need custom handling
-  const specialResults = [
-    handleSizing(parsedClasses),
-    handleTransforms(parsedClasses),
-    handleMiscPatterns(parsedClasses),
-  ]
-
-  for (const result of specialResults) {
-    if (result?.applied) return result
-  }
-
-  return { applied: false, value }
-}
-
 export function applyAllShorthands(value: string) {
   const transformations: Array<{
     classnames: string
@@ -345,6 +315,56 @@ export function applyAllShorthands(value: string) {
       shorthand,
     })),
   }
+}
+
+export function applyShorthand(value: string): TransformResult {
+  const classes = value.split(/\s+/).filter(Boolean)
+
+  // Parse all classes once at the beginning
+  const parsedClasses = parseClasses(classes)
+
+  // Try each pattern set
+  for (const [name, patterns] of Object.entries(PATTERN_SETS)) {
+    const result = applyPatternTransformation(patterns, parsedClasses)
+    if (result) return result
+  }
+
+  // Special cases that need custom handling
+  const specialResults = [
+    handleSizing(parsedClasses),
+    handleTransforms(parsedClasses),
+    handleMiscPatterns(parsedClasses),
+  ]
+
+  for (const result of specialResults) {
+    if (result?.applied) return result
+  }
+
+  return { applied: false, value }
+}
+
+function applyPatternTransformation(
+  patterns: ShorthandPattern[],
+  parsedClasses: ParsedClassInfo[],
+): TransformResult | null {
+  for (const { patterns: patternList, shorthand } of patterns) {
+    const result = findMatchingClasses(patternList, parsedClasses)
+    if (result) {
+      const { matchedClasses, commonPrefix, commonValue, commonNegative } =
+        result
+
+      // Create shorthand class
+      const negativePrefix = commonNegative ? "-" : ""
+      const shorthandClass = `${commonPrefix}${negativePrefix}${shorthand}-${commonValue}`
+
+      return createTransformResult(
+        parsedClasses,
+        matchedClasses,
+        shorthandClass,
+      )
+    }
+  }
+  return null
 }
 
 // =============================================================================
@@ -557,30 +577,6 @@ function findMatchingClasses(
         commonValue,
         commonNegative,
       }
-    }
-  }
-  return null
-}
-
-function applyPatternTransformation(
-  patterns: ShorthandPattern[],
-  parsedClasses: ParsedClassInfo[],
-): TransformResult | null {
-  for (const { patterns: patternList, shorthand } of patterns) {
-    const result = findMatchingClasses(patternList, parsedClasses)
-    if (result) {
-      const { matchedClasses, commonPrefix, commonValue, commonNegative } =
-        result
-
-      // Create shorthand class
-      const negativePrefix = commonNegative ? "-" : ""
-      const shorthandClass = `${commonPrefix}${negativePrefix}${shorthand}-${commonValue}`
-
-      return createTransformResult(
-        parsedClasses,
-        matchedClasses,
-        shorthandClass,
-      )
     }
   }
   return null
