@@ -3,7 +3,7 @@
   "extends": [
     "config:recommended",
     "customManagers:biomeVersions",
-    "automergePatch"
+    ":automergePatch"
   ],
   "automergeStrategy": "squash"
 }
