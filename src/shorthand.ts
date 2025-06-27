@@ -403,22 +403,17 @@ function handleTransforms(
 
       // For transform handling, we need to check the actual values
       // Since we can't access parseBaseClass here, we'll do a simpler approach
-      let shorthandClass: string
-
       if (commonValue) {
         // Same values: use simple shorthand
         const negativePrefix = commonNegative ? "-" : ""
-        shorthandClass = `${negativePrefix}${transformType}-${commonValue}`
-      } else {
-        // For now, skip complex transform handling
-        continue
-      }
+        const shorthandClass = `${negativePrefix}${transformType}-${commonValue}`
 
-      return createTransformResult(
-        parsedClasses,
-        matchedClasses,
-        shorthandClass,
-      )
+        return createTransformResult(
+          parsedClasses,
+          matchedClasses,
+          shorthandClass,
+        )
+      }
     }
   }
   return null
