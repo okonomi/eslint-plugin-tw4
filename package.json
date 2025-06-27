@@ -32,7 +32,7 @@
     "@typescript-eslint/utils": "^8.34.1"
   },
   "devDependencies": {
-    "@biomejs/biome": "^1.9.4",
+    "@biomejs/biome": "^2.0.0",
     "@typescript-eslint/rule-tester": "^8.34.1",
     "dedent": "^1.6.0",
     "eslint-vitest-rule-tester": "^2.2.0",
