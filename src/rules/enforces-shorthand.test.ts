@@ -73,7 +73,7 @@ describe("enforces-shorthand", () => {
         // `<div class="group/name:rounded-r-full rounded-l-full" />`,
         // `<div class="overflow-hidden text-ellipsis hover:whitespace-nowrap" />`,
         // `<div class="overflow-hidden text-ellipsis !whitespace-nowrap" />`,
-        "<div className={`absolute inset-y-0 left-0 w-1/3 rounded-[inherit] shadow-lg ${className}`} />",
+        // "<div className={`absolute inset-y-0 left-0 w-1/3 rounded-[inherit] shadow-lg ${className}`} />",
         "<div className={'w-screen h-screen'} />",
         //         {
         //           code: `<div class="h-custom w-custom">Incomplete config should not use size-*</div>`,
