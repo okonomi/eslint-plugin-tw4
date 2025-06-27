@@ -27,7 +27,7 @@
   "keywords": [],
   "author": "okonomi <okonomi@oknm.jp>",
   "license": "MIT",
-  "packageManager": "pnpm@10.12.1",
+  "packageManager": "pnpm@10.12.4",
   "dependencies": {
     "@typescript-eslint/utils": "^8.34.1"
   },
