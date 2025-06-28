@@ -145,6 +145,15 @@ describe("shorthand", () => {
       expect(result.applied).toBe(true)
       expect(result.value).toBe("md:m-4 lg:p-2")
     })
+
+    it.each([["h-10 md:h-5 md:w-5", "h-10 md:size-5"]])(
+      "should complex transform %s to %s",
+      (input, expected) => {
+        const result = applyShorthands(input)
+        expect(result.applied).toBe(true)
+        expect(result.value).toBe(expected)
+      },
+    )
   })
 
   describe("performance comparison", () => {

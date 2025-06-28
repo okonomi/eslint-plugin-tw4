@@ -393,72 +393,67 @@ function findMatchingClasses(
   classInfos: ClassInfo[],
 ): MatchResult | null {
   for (const pattern of patterns) {
-    const matches: { [key: string]: string } = {}
-    const matchedClassInfos: ClassInfo[] = []
-    let commonPrefix = ""
-    let commonValue = ""
-    let commonNegative = false
-    let isValid = true
+    // Try to find complete patterns by grouping classes by prefix and value
+    const classGroups = new Map<string, ClassInfo[]>()
 
-    // Check if all required classes exist with same prefix, value, and negative status
-    for (const requiredType of pattern) {
-      let found = false
-      for (const classInfo of classInfos) {
-        // Simple, direct access - no null checks needed!
-        if (classInfo.type === requiredType) {
-          if (matchedClassInfos.length === 0) {
-            // First match - set common values
-            commonPrefix = classInfo.prefix
-            commonValue = classInfo.value
-            commonNegative = classInfo.isNegative
-          } else {
-            // Subsequent matches - must have same prefix, value, and negative status
-            // Treat empty string as default value (same as any other empty string)
-            const normalizedCommonValue = commonValue === "" ? "" : commonValue
-            const normalizedCurrentValue =
-              classInfo.value === "" ? "" : classInfo.value
-
-            if (
-              classInfo.prefix !== commonPrefix ||
-              normalizedCurrentValue !== normalizedCommonValue ||
-              classInfo.isNegative !== commonNegative
-            ) {
-              isValid = false
-              break
-            }
-          }
-          matches[requiredType] = classInfo.original
-          matchedClassInfos.push(classInfo)
-          found = true
-          break
+    // Group classes by prefix-value combination
+    for (const classInfo of classInfos) {
+      if (pattern.includes(classInfo.type)) {
+        const key = `${classInfo.prefix}|${classInfo.value}|${classInfo.isNegative}`
+        if (!classGroups.has(key)) {
+          classGroups.set(key, [])
         }
-      }
-      if (!found) {
-        isValid = false
-        break
+        const group = classGroups.get(key)
+        if (group) {
+          group.push(classInfo)
+        }
       }
     }
 
-    if (isValid && matchedClassInfos.length === pattern.length) {
-      // Sort matched classes by their original appearance order
-      matchedClassInfos.sort((a, b) => {
-        const aIndex = classInfos.findIndex(
-          (cls) => cls.original === a.original,
-        )
-        const bIndex = classInfos.findIndex(
-          (cls) => cls.original === b.original,
-        )
-        return aIndex - bIndex
-      })
+    // Check each group to see if it contains all required types
+    for (const [key, groupClasses] of classGroups) {
+      const [prefix, value, isNegativeStr] = key.split("|")
+      const isNegative = isNegativeStr === "true"
 
-      const matchedClasses = matchedClassInfos.map((info) => info.original)
+      // Check if this group has all required types
+      const foundTypes = new Set(groupClasses.map((c) => c.type))
+      const hasAllTypes = pattern.every((requiredType) =>
+        foundTypes.has(requiredType),
+      )
 
-      return {
-        matches,
-        matchedClasses,
-        commonPrefix,
-        commonValue,
-        commonNegative,
+      if (hasAllTypes && groupClasses.length === pattern.length) {
+        // Found a complete match
+        const matches: { [key: string]: string } = {}
+        const matchedClassInfos: ClassInfo[] = []
+
+        for (const requiredType of pattern) {
+          const classInfo = groupClasses.find((c) => c.type === requiredType)
+          if (classInfo) {
+            matches[requiredType] = classInfo.original
+            matchedClassInfos.push(classInfo)
+          }
+        }
+
+        // Sort matched classes by their original appearance order
+        matchedClassInfos.sort((a, b) => {
+          const aIndex = classInfos.findIndex(
+            (cls) => cls.original === a.original,
+          )
+          const bIndex = classInfos.findIndex(
+            (cls) => cls.original === b.original,
+          )
+          return aIndex - bIndex
+        })
+
+        const matchedClasses = matchedClassInfos.map((info) => info.original)
+
+        return {
+          matches,
+          matchedClasses,
+          commonPrefix: prefix,
+          commonValue: value,
+          commonNegative: isNegative,
+        }
       }
     }
   }
