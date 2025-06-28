@@ -81,6 +81,16 @@ describe("shorthand", () => {
       expect(result.applied).toBe(false)
       expect(result.value).toBe("m-4 p-2")
     })
+
+    it.each([
+      ["content-center justify-center", "place-content-center"],
+      ["sm:items-start sm:justify-items-start", "sm:place-items-start"],
+      ["md:self-end md:justify-self-end", "md:place-self-end"],
+    ])("should transform %s to %s", (input, expected) => {
+      const result = applyShorthand(input)
+      expect(result.applied).toBe(true)
+      expect(result.shorthand).toBe(expected)
+    })
   })
 
   describe("applyShorthands", () => {
