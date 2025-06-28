@@ -17,13 +17,6 @@ type MatchResult = {
   commonNegative: boolean
 }
 
-type TransformResult = {
-  applied: boolean
-  value: string
-  classnames?: string
-  shorthand?: string
-}
-
 type ParsedTransformResult = {
   applied: boolean
   classInfos: ClassInfo[]
@@ -356,32 +349,6 @@ export function applyShorthands(value: string) {
     value: finalValue,
     transformations: compactedTransformations,
   }
-}
-
-export function applyShorthand(inputValue: string): TransformResult {
-  const classes = inputValue.split(/\s+/).filter(Boolean)
-  const classInfos = parseClasses(classes)
-
-  // Use the transformation function
-  const transformResult = findShorthandTransformation(classInfos)
-
-  if (
-    transformResult.applied &&
-    transformResult.matchedClasses &&
-    transformResult.shorthandClass
-  ) {
-    // Assemble the final classes
-    const finalClasses = transformResult.classInfos.map((c) => c.original)
-    return {
-      applied: true,
-      value: finalClasses.join(" "),
-      classnames: transformResult.matchedClasses.join(", "),
-      shorthand: transformResult.shorthandClass,
-    }
-  }
-
-  const originalValue = classInfos.map((cls) => cls.original).join(" ")
-  return { applied: false, value: originalValue }
 }
 
 // =============================================================================
