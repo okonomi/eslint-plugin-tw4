@@ -294,42 +294,48 @@ const PATTERN_SETS = {
   borderSpacing: BORDER_SPACING_PATTERNS,
 }
 
-export function applyAllShorthands(value: string) {
+export function applyShorthands(value: string) {
+  // Step 1: Parse - Parse input classes once
+  const originalClasses = value.split(/\s+/).filter(Boolean)
+  let parsedClasses = parseClasses(originalClasses)
+
+  // Step 2: Transform - Apply transformations iteratively
   const transformations: Array<{
     classnames: string
     shorthand: string
     position: number
   }> = []
 
-  let currentValue = value
   let hasChanges = true
-
-  // Keep applying shorthand transformations until no more are found
   while (hasChanges) {
-    const result = applyShorthand(currentValue)
+    const result = findShorthandTransformation(parsedClasses)
     if (result.applied && result.classnames && result.shorthand) {
       // Find the position of the first matched class in the original value
       const matchedClasses = result.classnames.split(", ")
       const firstMatchedClass = matchedClasses[0]
-      const position = value.split(/\s+/).indexOf(firstMatchedClass)
+      const position = originalClasses.indexOf(firstMatchedClass)
 
       transformations.push({
         classnames: result.classnames,
         shorthand: result.shorthand,
         position: position,
       })
-      currentValue = result.value
+
+      // Update parsedClasses for next iteration
+      const newClasses = result.value.split(/\s+/).filter(Boolean)
+      parsedClasses = parseClasses(newClasses)
     } else {
       hasChanges = false
     }
   }
 
-  // Sort transformations by their original position
+  // Step 3: Assemble - Sort transformations and build final result
   transformations.sort((a, b) => a.position - b.position)
+  const finalValue = parsedClasses.map((cls) => cls.original).join(" ")
 
   return {
     applied: transformations.length > 0,
-    value: currentValue,
+    value: finalValue,
     transformations: transformations.map(({ classnames, shorthand }) => ({
       classnames,
       shorthand,
@@ -339,10 +345,13 @@ export function applyAllShorthands(value: string) {
 
 export function applyShorthand(value: string): TransformResult {
   const classes = value.split(/\s+/).filter(Boolean)
-
-  // Parse all classes once at the beginning
   const parsedClasses = parseClasses(classes)
+  return findShorthandTransformation(parsedClasses)
+}
 
+function findShorthandTransformation(
+  parsedClasses: ParsedClassInfo[],
+): TransformResult {
   // Try each pattern set
   for (const [_name, patterns] of Object.entries(PATTERN_SETS)) {
     const result = applyPatternTransformation(patterns, parsedClasses)
@@ -360,6 +369,7 @@ export function applyShorthand(value: string): TransformResult {
     if (result?.applied) return result
   }
 
+  const value = parsedClasses.map((cls) => cls.original).join(" ")
   return { applied: false, value }
 }
 

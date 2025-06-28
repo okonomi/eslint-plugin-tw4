@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { applyAllShorthands, applyShorthand } from "./shorthand"
+import { applyShorthand, applyShorthands } from "./shorthand"
 
 describe("shorthand", () => {
   describe("no effect", () => {
@@ -432,18 +432,18 @@ describe("shorthand", () => {
   })
 })
 
-describe("applyAllShorthands", () => {
+describe("applyShorthands", () => {
   it.each([["md:w-1 md:h-1 lg:w-2 lg:h-2", "md:size-1 lg:size-2"]])(
     'should convert "%s" to "%s"',
     (input, expected) => {
-      expect(applyAllShorthands(input).value).toBe(expected)
+      expect(applyShorthands(input).value).toBe(expected)
     },
   )
   describe("multiple shorthand classes", () => {
     it.each([
       ["mt-1 mb-1 md:mx-2 md:my-2", ["mt-1, mb-1", "md:mx-2, md:my-2"]],
     ])('should keep classes order "%s"', (input, expected) => {
-      const result = applyAllShorthands(input)
+      const result = applyShorthands(input)
       expect(
         result.transformations.map(({ classnames }) => classnames),
       ).toEqual(expected)
