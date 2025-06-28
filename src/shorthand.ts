@@ -299,7 +299,7 @@ export function applyShorthands(value: string) {
   const originalClasses = value.split(/\s+/).filter(Boolean)
   let parsedClasses = parseClasses(originalClasses)
 
-  // Step 2: Transform - Apply transformations iteratively
+  // Step 2: Transform - Apply transformations iteratively on ParsedClassInfo[]
   const transformations: Array<{
     classnames: string
     shorthand: string
@@ -309,28 +309,25 @@ export function applyShorthands(value: string) {
   let hasChanges = true
   while (hasChanges) {
     const result = findShorthandTransformation(parsedClasses)
-    if (result.applied && result.classnames && result.shorthand) {
+    if (result.applied && result.matchedClasses && result.shorthandClass) {
       // Find the position of the first matched class in the original value
-      const matchedClasses = result.classnames.split(", ")
-      const firstMatchedClass = matchedClasses[0]
+      const firstMatchedClass = result.matchedClasses[0]
       const position = originalClasses.indexOf(firstMatchedClass)
 
       transformations.push({
-        classnames: result.classnames,
-        shorthand: result.shorthand,
+        classnames: result.matchedClasses.join(", "),
+        shorthand: result.shorthandClass,
         position: position,
       })
 
-      // Update parsedClasses for next iteration
-      const newClasses = result.value.split(/\s+/).filter(Boolean)
-      parsedClasses = parseClasses(newClasses)
+      // Update parsedClasses directly (no string conversion/parsing)
+      parsedClasses = result.parsedClasses
     } else {
       hasChanges = false
     }
   }
 
-  // Step 3: Assemble - Sort transformations and build final result
-  transformations.sort((a, b) => a.position - b.position)
+  // Step 3: Assemble - Convert to string only once at the end
   const finalValue = parsedClasses.map((cls) => cls.original).join(" ")
 
   // Compact transformations to merge multi-step changes
@@ -346,191 +343,30 @@ export function applyShorthands(value: string) {
   }
 }
 
-export function applyShorthand(value: string): TransformResult {
-  const classes = value.split(/\s+/).filter(Boolean)
+export function applyShorthand(inputValue: string): TransformResult {
+  const classes = inputValue.split(/\s+/).filter(Boolean)
   const parsedClasses = parseClasses(classes)
-  return findShorthandTransformation(parsedClasses)
-}
 
-function findShorthandTransformation(
-  parsedClasses: ParsedClassInfo[],
-): TransformResult {
-  // Try each pattern set
-  for (const [_name, patterns] of Object.entries(PATTERN_SETS)) {
-    const result = applyPatternTransformation(patterns, parsedClasses)
-    if (result) return result
-  }
+  // Use the transformation function
+  const transformResult = findShorthandTransformation(parsedClasses)
 
-  // Special cases that need custom handling
-  const specialResults = [
-    handleSizing(parsedClasses),
-    handleTransforms(parsedClasses),
-    handleMiscPatterns(parsedClasses),
-  ]
-
-  for (const result of specialResults) {
-    if (result?.applied) return result
-  }
-
-  const value = parsedClasses.map((cls) => cls.original).join(" ")
-  return { applied: false, value }
-}
-
-function applyPatternTransformation(
-  patterns: ShorthandPattern[],
-  parsedClasses: ParsedClassInfo[],
-): TransformResult | null {
-  for (const { patterns: patternList, shorthand } of patterns) {
-    const result = findMatchingClasses(patternList, parsedClasses)
-    if (result) {
-      const { matchedClasses, commonPrefix, commonValue, commonNegative } =
-        result
-
-      // Create shorthand class
-      const negativePrefix = commonNegative ? "-" : ""
-      const valuePart = commonValue === "" ? "" : `-${commonValue}`
-      const shorthandClass = `${commonPrefix}${negativePrefix}${shorthand}${valuePart}`
-
-      return createTransformResult(
-        parsedClasses,
-        matchedClasses,
-        shorthandClass,
-      )
+  if (
+    transformResult.applied &&
+    transformResult.matchedClasses &&
+    transformResult.shorthandClass
+  ) {
+    // Assemble the final classes
+    const finalClasses = transformResult.parsedClasses.map((c) => c.original)
+    return {
+      applied: true,
+      value: finalClasses.join(" "),
+      classnames: transformResult.matchedClasses.join(", "),
+      shorthand: transformResult.shorthandClass,
     }
   }
-  return null
-}
 
-// =============================================================================
-// Special Case Handlers
-// =============================================================================
-
-function handleSizing(
-  parsedClasses: ParsedClassInfo[],
-): TransformResult | null {
-  const sizingResult = findMatchingClasses([["w", "h"]], parsedClasses)
-  if (sizingResult) {
-    const { matchedClasses, commonPrefix, commonValue, commonNegative } =
-      sizingResult
-
-    const negativePrefix = commonNegative ? "-" : ""
-    const valuePart = commonValue === "" ? "" : `-${commonValue}`
-    const shorthandClass = `${commonPrefix}${negativePrefix}size${valuePart}`
-
-    return createTransformResult(parsedClasses, matchedClasses, shorthandClass)
-  }
-  return null
-}
-
-function handleTransforms(
-  parsedClasses: ParsedClassInfo[],
-): TransformResult | null {
-  const transformTypes = ["translate", "scale", "skew"]
-
-  for (const transformType of transformTypes) {
-    const result = findMatchingClasses(
-      [[`${transformType}-x`, `${transformType}-y`]],
-      parsedClasses,
-    )
-    if (result) {
-      const { matchedClasses, commonValue, commonNegative } = result
-
-      // For transform handling, we need to check the actual values
-      // Since we can't access parseBaseClass here, we'll do a simpler approach
-      if (commonValue !== null) {
-        // Same values: use simple shorthand
-        const negativePrefix = commonNegative ? "-" : ""
-        const valuePart = commonValue === "" ? "" : `-${commonValue}`
-        const shorthandClass = `${negativePrefix}${transformType}${valuePart}`
-
-        return createTransformResult(
-          parsedClasses,
-          matchedClasses,
-          shorthandClass,
-        )
-      }
-    }
-  }
-  return null
-}
-
-function handleMiscPatterns(
-  parsedClasses: ParsedClassInfo[],
-): TransformResult | null {
-  const miscPatterns = [
-    {
-      patterns: [["overflow-hidden", "text-ellipsis", "whitespace-nowrap"]],
-      shorthand: "truncate",
-    },
-  ]
-
-  for (const { patterns, shorthand } of miscPatterns) {
-    let matchedClasses: string[] = []
-    let commonPrefix = ""
-
-    for (const pattern of patterns) {
-      const currentMatches: { [key: string]: string } = {}
-      const currentMatchedClasses: string[] = []
-      let currentCommonPrefix = ""
-      let patternValid = true
-
-      for (const expectedType of pattern) {
-        let found = false
-
-        for (const classInfo of parsedClasses) {
-          const { original, parsed } = classInfo
-
-          // Check for exact match with expected type
-          if (parsed.baseClass === expectedType) {
-            if (currentMatches[expectedType] === undefined) {
-              // First time we see this class
-              if (Object.keys(currentMatches).length === 0) {
-                // This is the first class we're matching
-                currentCommonPrefix = parsed.prefix
-              } else if (currentCommonPrefix !== parsed.prefix) {
-                // Different prefixes found, this pattern doesn't match
-                patternValid = false
-                break
-              }
-
-              currentMatches[expectedType] = ""
-              currentMatchedClasses.push(original)
-              found = true
-              break
-            }
-          }
-        }
-
-        if (!found || !patternValid) {
-          // Reset everything if any class is not found or has different prefix
-          patternValid = false
-          break
-        }
-      }
-
-      // If all expected classes in this pattern were found and prefixes match
-      if (
-        patternValid &&
-        Object.keys(currentMatches).length === pattern.length
-      ) {
-        matchedClasses = currentMatchedClasses
-        commonPrefix = currentCommonPrefix
-        break
-      }
-    }
-
-    if (matchedClasses.length > 0) {
-      // Create shorthand class
-      const shorthandClass = `${commonPrefix}${shorthand}`
-
-      return createTransformResult(
-        parsedClasses,
-        matchedClasses,
-        shorthandClass,
-      )
-    }
-  }
-  return null
+  const originalValue = parsedClasses.map((cls) => cls.original).join(" ")
+  return { applied: false, value: originalValue }
 }
 
 // =============================================================================
@@ -615,34 +451,6 @@ function findMatchingClasses(
   return null
 }
 
-function createTransformResult(
-  parsedClasses: ParsedClassInfo[],
-  matchedClasses: string[],
-  shorthandClass: string,
-): TransformResult {
-  // Remove matched classes and add shorthand
-  const remainingClasses = parsedClasses.filter(
-    (cls) => !matchedClasses.includes(cls.original),
-  )
-  const firstIndex = Math.min(
-    ...matchedClasses.map((cls) =>
-      parsedClasses.findIndex((pc) => pc.original === cls),
-    ),
-  )
-  const finalClasses = [
-    ...remainingClasses.slice(0, firstIndex).map((c) => c.original),
-    shorthandClass,
-    ...remainingClasses.slice(firstIndex).map((c) => c.original),
-  ]
-
-  return {
-    applied: true,
-    value: finalClasses.join(" "),
-    classnames: matchedClasses.join(", "),
-    shorthand: shorthandClass,
-  }
-}
-
 // =============================================================================
 // Transformation Compaction
 // =============================================================================
@@ -689,46 +497,282 @@ function compactTransformations(
     (transformation) => !usedAsInput.has(transformation.shorthand),
   )
 
-  // For each final transformation, trace back to find all original classes
-  const result = finalTransformations.map((transformation) => {
-    const originalClassesFound: string[] = []
-    const visited = new Set<string>()
+  // Sort the final transformations by the position of their first original class
+  const result = finalTransformations
+    .map((transformation) => {
+      const originalClassesFound: string[] = []
+      const visited = new Set<string>()
 
-    // Recursively collect original classes while preserving order
-    function collectOriginalClasses(shorthandOrClass: string) {
-      if (visited.has(shorthandOrClass)) {
-        return
-      }
-      visited.add(shorthandOrClass)
-
-      const inputClasses = shorthandToInputClasses.get(shorthandOrClass)
-      if (inputClasses) {
-        // This is a shorthand, so collect its input classes
-        for (const cls of inputClasses) {
-          collectOriginalClasses(cls)
+      // Recursively collect original classes while preserving order
+      function collectOriginalClasses(shorthandOrClass: string) {
+        if (visited.has(shorthandOrClass)) {
+          return
         }
-      } else {
-        // This is an original class
-        if (!originalClassesFound.includes(shorthandOrClass)) {
-          originalClassesFound.push(shorthandOrClass)
+        visited.add(shorthandOrClass)
+
+        const inputClasses = shorthandToInputClasses.get(shorthandOrClass)
+        if (inputClasses) {
+          // This is a shorthand, so collect its input classes
+          for (const cls of inputClasses) {
+            collectOriginalClasses(cls)
+          }
+        } else {
+          // This is an original class
+          if (!originalClassesFound.includes(shorthandOrClass)) {
+            originalClassesFound.push(shorthandOrClass)
+          }
         }
       }
-    }
 
-    collectOriginalClasses(transformation.shorthand)
+      collectOriginalClasses(transformation.shorthand)
 
-    // Sort the found original classes by their appearance in the original input
-    const orderedClasses = originalClassesFound.sort((a, b) => {
-      const indexA = originalClasses.indexOf(a)
-      const indexB = originalClasses.indexOf(b)
-      return indexA - indexB
+      // Sort the found original classes by their appearance in the original input
+      const orderedClasses = originalClassesFound.sort((a, b) => {
+        const indexA = originalClasses.indexOf(a)
+        const indexB = originalClasses.indexOf(b)
+        return indexA - indexB
+      })
+
+      // Find the minimum index for ordering final transformations
+      const minIndex = Math.min(
+        ...orderedClasses.map((cls) => originalClasses.indexOf(cls)),
+      )
+
+      return {
+        classnames: orderedClasses.join(", "),
+        shorthand: transformation.shorthand,
+        minIndex,
+      }
     })
-
-    return {
-      classnames: orderedClasses.join(", "),
-      shorthand: transformation.shorthand,
-    }
-  })
+    .sort((a, b) => a.minIndex - b.minIndex)
+    .map(({ classnames, shorthand }) => ({ classnames, shorthand }))
 
   return result
+}
+
+// =============================================================================
+// ParsedClassInfo Operations
+// =============================================================================
+
+type ParsedTransformResult = {
+  applied: boolean
+  parsedClasses: ParsedClassInfo[]
+  matchedClasses?: string[]
+  shorthandClass?: string
+}
+
+function applyTransformationToParsedClasses(
+  parsedClasses: ParsedClassInfo[],
+  matchedClasses: string[],
+  shorthandClass: string,
+): ParsedClassInfo[] {
+  // Remove matched classes
+  const remainingClasses = parsedClasses.filter(
+    (cls) => !matchedClasses.includes(cls.original),
+  )
+
+  // Parse the shorthand class
+  const shorthandParsed = parseClasses([shorthandClass])[0]
+
+  // Find insertion position
+  const firstIndex = Math.min(
+    ...matchedClasses.map((cls) =>
+      parsedClasses.findIndex((pc) => pc.original === cls),
+    ),
+  )
+
+  // Insert shorthand at the appropriate position
+  return [
+    ...remainingClasses.slice(0, firstIndex),
+    shorthandParsed,
+    ...remainingClasses.slice(firstIndex),
+  ]
+}
+
+function findShorthandTransformation(
+  parsedClasses: ParsedClassInfo[],
+): ParsedTransformResult {
+  // Try each pattern set
+  for (const [_name, patterns] of Object.entries(PATTERN_SETS)) {
+    const result = applyPatternTransformation(patterns, parsedClasses)
+    if (result.applied) return result
+  }
+
+  // Special cases that need custom handling
+  const specialResults = [
+    handleSizing(parsedClasses),
+    handleTransforms(parsedClasses),
+    handleMiscPatterns(parsedClasses),
+  ]
+
+  for (const result of specialResults) {
+    if (result.applied) return result
+  }
+
+  return { applied: false, parsedClasses }
+}
+
+function applyPatternTransformation(
+  patterns: ShorthandPattern[],
+  parsedClasses: ParsedClassInfo[],
+): ParsedTransformResult {
+  for (const { patterns: patternList, shorthand } of patterns) {
+    const result = findMatchingClasses(patternList, parsedClasses)
+    if (result) {
+      const { matchedClasses, commonPrefix, commonValue, commonNegative } =
+        result
+
+      // Create shorthand class name
+      const negativePrefix = commonNegative ? "-" : ""
+      const valuePart = commonValue === "" ? "" : `-${commonValue}`
+      const shorthandClass = `${commonPrefix}${negativePrefix}${shorthand}${valuePart}`
+
+      return {
+        applied: true,
+        parsedClasses: applyTransformationToParsedClasses(
+          parsedClasses,
+          matchedClasses,
+          shorthandClass,
+        ),
+        matchedClasses,
+        shorthandClass,
+      }
+    }
+  }
+  return { applied: false, parsedClasses }
+}
+
+function handleSizing(parsedClasses: ParsedClassInfo[]): ParsedTransformResult {
+  const sizingResult = findMatchingClasses([["w", "h"]], parsedClasses)
+  if (sizingResult) {
+    const { matchedClasses, commonPrefix, commonValue, commonNegative } =
+      sizingResult
+
+    const negativePrefix = commonNegative ? "-" : ""
+    const valuePart = commonValue === "" ? "" : `-${commonValue}`
+    const shorthandClass = `${commonPrefix}${negativePrefix}size${valuePart}`
+
+    return {
+      applied: true,
+      parsedClasses: applyTransformationToParsedClasses(
+        parsedClasses,
+        matchedClasses,
+        shorthandClass,
+      ),
+      matchedClasses,
+      shorthandClass,
+    }
+  }
+  return { applied: false, parsedClasses }
+}
+
+function handleTransforms(
+  parsedClasses: ParsedClassInfo[],
+): ParsedTransformResult {
+  const transformTypes = ["translate", "scale", "skew"]
+
+  for (const transformType of transformTypes) {
+    const result = findMatchingClasses(
+      [[`${transformType}-x`, `${transformType}-y`]],
+      parsedClasses,
+    )
+    if (result) {
+      const { matchedClasses, commonValue, commonNegative } = result
+
+      if (commonValue !== null) {
+        const negativePrefix = commonNegative ? "-" : ""
+        const valuePart = commonValue === "" ? "" : `-${commonValue}`
+        const shorthandClass = `${negativePrefix}${transformType}${valuePart}`
+
+        return {
+          applied: true,
+          parsedClasses: applyTransformationToParsedClasses(
+            parsedClasses,
+            matchedClasses,
+            shorthandClass,
+          ),
+          matchedClasses,
+          shorthandClass,
+        }
+      }
+    }
+  }
+  return { applied: false, parsedClasses }
+}
+
+function handleMiscPatterns(
+  parsedClasses: ParsedClassInfo[],
+): ParsedTransformResult {
+  const miscPatterns = [
+    {
+      patterns: [["overflow-hidden", "text-ellipsis", "whitespace-nowrap"]],
+      shorthand: "truncate",
+    },
+  ]
+
+  for (const { patterns, shorthand } of miscPatterns) {
+    let matchedClasses: string[] = []
+    let commonPrefix = ""
+
+    for (const pattern of patterns) {
+      const currentMatches: { [key: string]: string } = {}
+      const currentMatchedClasses: string[] = []
+      let currentCommonPrefix = ""
+      let patternValid = true
+
+      for (const expectedType of pattern) {
+        let found = false
+
+        for (const classInfo of parsedClasses) {
+          const { original, parsed } = classInfo
+
+          if (parsed.baseClass === expectedType) {
+            if (currentMatches[expectedType] === undefined) {
+              if (Object.keys(currentMatches).length === 0) {
+                currentCommonPrefix = parsed.prefix
+              } else if (currentCommonPrefix !== parsed.prefix) {
+                patternValid = false
+                break
+              }
+
+              currentMatches[expectedType] = ""
+              currentMatchedClasses.push(original)
+              found = true
+              break
+            }
+          }
+        }
+
+        if (!found || !patternValid) {
+          patternValid = false
+          break
+        }
+      }
+
+      if (
+        patternValid &&
+        Object.keys(currentMatches).length === pattern.length
+      ) {
+        matchedClasses = currentMatchedClasses
+        commonPrefix = currentCommonPrefix
+        break
+      }
+    }
+
+    if (matchedClasses.length > 0) {
+      const shorthandClass = `${commonPrefix}${shorthand}`
+
+      return {
+        applied: true,
+        parsedClasses: applyTransformationToParsedClasses(
+          parsedClasses,
+          matchedClasses,
+          shorthandClass,
+        ),
+        matchedClasses,
+        shorthandClass,
+      }
+    }
+  }
+  return { applied: false, parsedClasses }
 }
