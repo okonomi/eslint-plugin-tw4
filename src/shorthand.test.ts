@@ -183,6 +183,12 @@ describe("shorthand", () => {
         ["rounded-tl-sm rounded-bl-sm rounded-r-sm", "rounded-sm"],
         ["rounded-tr-md rounded-br-md rounded-l-md", "rounded-md"],
 
+        // start/end patterns
+        ["rounded-ss rounded-se rounded-b", "rounded"],
+        ["rounded-es-lg rounded-ee-lg rounded-t-lg", "rounded-lg"],
+        ["rounded-ss-sm rounded-es-sm rounded-e-sm", "rounded-sm"],
+        ["rounded-se-md rounded-ee-md rounded-s-md", "rounded-md"],
+
         // Different sizes
         ["rounded-tl-full rounded-tr-full", "rounded-t-full"],
         ["rounded-t-none rounded-b-none", "rounded-none"],

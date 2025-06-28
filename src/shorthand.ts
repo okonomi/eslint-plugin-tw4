@@ -125,6 +125,23 @@ const BORDER_RADIUS_PATTERNS: ShorthandPattern[] = [
     patterns: [["rounded-tr", "rounded-br", "rounded-l"]],
     shorthand: "rounded",
   },
+  // Start/End patterns for 2-corners and 1-side to full
+  {
+    patterns: [["rounded-ss", "rounded-se", "rounded-b"]],
+    shorthand: "rounded",
+  },
+  {
+    patterns: [["rounded-es", "rounded-ee", "rounded-t"]],
+    shorthand: "rounded",
+  },
+  {
+    patterns: [["rounded-ss", "rounded-es", "rounded-e"]],
+    shorthand: "rounded",
+  },
+  {
+    patterns: [["rounded-se", "rounded-ee", "rounded-s"]],
+    shorthand: "rounded",
+  },
   // Side pairs to full
   {
     patterns: [
