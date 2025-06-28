@@ -128,7 +128,7 @@ function parseRounded(
 
   const roundedPart = cleanClass.substring(8)
 
-  // Corner-specific rounded
+  // Corner-specific rounded with value
   const cornerMatch = roundedPart.match(/^(tl|tr|bl|br|ss|se|es|ee)-(.+)$/)
   if (cornerMatch) {
     return {
@@ -139,12 +139,34 @@ function parseRounded(
     }
   }
 
-  // Side-specific rounded
+  // Corner-specific rounded without value (default size)
+  const cornerNoValueMatch = roundedPart.match(/^(tl|tr|bl|br|ss|se|es|ee)$/)
+  if (cornerNoValueMatch) {
+    return {
+      type: `rounded-${cornerNoValueMatch[1]}`,
+      value: "",
+      isNegative,
+      category: "border-radius",
+    }
+  }
+
+  // Side-specific rounded with value
   const sideMatch = roundedPart.match(/^([tlbr]|s|e)-(.+)$/)
   if (sideMatch) {
     return {
       type: `rounded-${sideMatch[1]}`,
       value: sideMatch[2],
+      isNegative,
+      category: "border-radius",
+    }
+  }
+
+  // Side-specific rounded without value (default size)
+  const sideNoValueMatch = roundedPart.match(/^([tlbr]|s|e)$/)
+  if (sideNoValueMatch) {
+    return {
+      type: `rounded-${sideNoValueMatch[1]}`,
+      value: "",
       isNegative,
       category: "border-radius",
     }

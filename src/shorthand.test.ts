@@ -177,6 +177,12 @@ describe("shorthand", () => {
           "rounded-sm",
         ],
 
+        // 2-corners and 1-side to full
+        ["rounded-tl rounded-tr rounded-b", "rounded"],
+        ["rounded-bl-lg rounded-br-lg rounded-t-lg", "rounded-lg"],
+        ["rounded-tl-sm rounded-bl-sm rounded-r-sm", "rounded-sm"],
+        ["rounded-tr-md rounded-br-md rounded-l-md", "rounded-md"],
+
         // Different sizes
         ["rounded-tl-full rounded-tr-full", "rounded-t-full"],
         ["rounded-t-none rounded-b-none", "rounded-none"],

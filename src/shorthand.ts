@@ -108,6 +108,23 @@ const BORDER_RADIUS_PATTERNS: ShorthandPattern[] = [
     ],
     shorthand: "rounded",
   },
+  // 2-corners and 1-side to full (highest priority for 3-element patterns)
+  {
+    patterns: [["rounded-tl", "rounded-tr", "rounded-b"]],
+    shorthand: "rounded",
+  },
+  {
+    patterns: [["rounded-bl", "rounded-br", "rounded-t"]],
+    shorthand: "rounded",
+  },
+  {
+    patterns: [["rounded-tl", "rounded-bl", "rounded-r"]],
+    shorthand: "rounded",
+  },
+  {
+    patterns: [["rounded-tr", "rounded-br", "rounded-l"]],
+    shorthand: "rounded",
+  },
   // Side pairs to full
   {
     patterns: [
@@ -355,7 +372,8 @@ function applyPatternTransformation(
 
       // Create shorthand class
       const negativePrefix = commonNegative ? "-" : ""
-      const shorthandClass = `${commonPrefix}${negativePrefix}${shorthand}-${commonValue}`
+      const valuePart = commonValue === "" ? "" : `-${commonValue}`
+      const shorthandClass = `${commonPrefix}${negativePrefix}${shorthand}${valuePart}`
 
       return createTransformResult(
         parsedClasses,
@@ -380,7 +398,8 @@ function handleSizing(
       sizingResult
 
     const negativePrefix = commonNegative ? "-" : ""
-    const shorthandClass = `${commonPrefix}${negativePrefix}size-${commonValue}`
+    const valuePart = commonValue === "" ? "" : `-${commonValue}`
+    const shorthandClass = `${commonPrefix}${negativePrefix}size${valuePart}`
 
     return createTransformResult(parsedClasses, matchedClasses, shorthandClass)
   }
@@ -402,10 +421,11 @@ function handleTransforms(
 
       // For transform handling, we need to check the actual values
       // Since we can't access parseBaseClass here, we'll do a simpler approach
-      if (commonValue) {
+      if (commonValue !== null) {
         // Same values: use simple shorthand
         const negativePrefix = commonNegative ? "-" : ""
-        const shorthandClass = `${negativePrefix}${transformType}-${commonValue}`
+        const valuePart = commonValue === "" ? "" : `-${commonValue}`
+        const shorthandClass = `${negativePrefix}${transformType}${valuePart}`
 
         return createTransformResult(
           parsedClasses,
@@ -527,9 +547,14 @@ function findMatchingClasses(
             commonNegative = baseParsed.isNegative
           } else {
             // Subsequent matches - must have same prefix, value, and negative status
+            // Treat empty string as default value (same as any other empty string)
+            const normalizedCommonValue = commonValue === "" ? "" : commonValue
+            const normalizedCurrentValue =
+              baseParsed.value === "" ? "" : baseParsed.value
+
             if (
               parsed.prefix !== commonPrefix ||
-              baseParsed.value !== commonValue ||
+              normalizedCurrentValue !== normalizedCommonValue ||
               baseParsed.isNegative !== commonNegative
             ) {
               isValid = false
