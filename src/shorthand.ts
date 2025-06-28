@@ -478,7 +478,6 @@ function findShorthandTransformation(
   const specialResults = [
     handleSizing(classInfos),
     handleTransforms(classInfos),
-    handlePlaceContentPatterns(classInfos),
     handleMiscPatterns(classInfos),
   ]
 
@@ -654,79 +653,6 @@ function handleMiscPatterns(classInfos: ClassInfo[]): ParsedTransformResult {
       }
     }
   }
-  return { applied: false, classInfos }
-}
-
-function handlePlaceContentPatterns(
-  classInfos: ClassInfo[],
-): ParsedTransformResult {
-  // Define patterns for place-* shortcuts
-  const placePatterns = [
-    {
-      alignType: "content",
-      justifyType: "justify",
-      shorthand: "place-content",
-    },
-    {
-      alignType: "items",
-      justifyType: "justify-items",
-      shorthand: "place-items",
-    },
-    {
-      alignType: "self",
-      justifyType: "justify-self",
-      shorthand: "place-self",
-    },
-  ]
-
-  for (const pattern of placePatterns) {
-    // Look for matching align and justify classes with the same value
-    const alignClass = classInfos.find(
-      (classInfo) => classInfo.type === pattern.alignType && classInfo.value,
-    )
-    const justifyClass = classInfos.find(
-      (classInfo) => classInfo.type === pattern.justifyType && classInfo.value,
-    )
-
-    if (
-      alignClass &&
-      justifyClass &&
-      alignClass.value === justifyClass.value &&
-      alignClass.prefix === justifyClass.prefix &&
-      alignClass.isNegative === justifyClass.isNegative
-    ) {
-      const { prefix, value, isNegative } = alignClass
-      const matchedClasses = [alignClass.original, justifyClass.original]
-
-      const shorthandClass = buildShorthandClassName(
-        prefix,
-        pattern.shorthand,
-        value,
-        isNegative,
-      )
-
-      // Directly construct ClassInfo without string parsing
-      const shorthandClassInfo: ClassInfo = {
-        original: shorthandClass,
-        prefix,
-        type: pattern.shorthand,
-        value,
-        isNegative,
-      }
-
-      return {
-        applied: true,
-        classInfos: applyTransformationToClassInfos(
-          classInfos,
-          matchedClasses,
-          shorthandClassInfo,
-        ),
-        matchedClasses,
-        shorthandClass,
-      }
-    }
-  }
-
   return { applied: false, classInfos }
 }
 

@@ -366,18 +366,53 @@ function parseGridFlexbox(
   cleanClass: string,
   isNegative: boolean,
 ): ParseResult | null {
-  if (!cleanClass.startsWith("justify-") && !cleanClass.startsWith("align-"))
-    return null
+  // Handle justify- prefixed classes
+  if (cleanClass.startsWith("justify-")) {
+    const rest = cleanClass.substring("justify-".length)
+    const typeMatch = rest.match(/^(items|content|self)-(.+)$/)
+    if (typeMatch) {
+      return {
+        type: `justify-${typeMatch[1]}`,
+        value: typeMatch[2],
+        isNegative,
+        category: "grid-flexbox",
+      }
+    }
+  }
 
-  const isJustify = cleanClass.startsWith("justify-")
-  const prefix = isJustify ? "justify-" : "align-"
-  const rest = cleanClass.substring(prefix.length)
+  // Handle align- prefixed classes
+  if (cleanClass.startsWith("align-")) {
+    const rest = cleanClass.substring("align-".length)
+    const typeMatch = rest.match(/^(items|content|self)-(.+)$/)
+    if (typeMatch) {
+      return {
+        type: `align-${typeMatch[1]}`,
+        value: typeMatch[2],
+        isNegative,
+        category: "grid-flexbox",
+      }
+    }
+  }
 
-  const typeMatch = rest.match(/^(items|content|self)-(.+)$/)
-  if (typeMatch) {
+  // Handle Tailwind CSS shorthand classes (content-*, items-*, self-*)
+  // These are treated as align-* equivalents
+  const shorthandMatch = cleanClass.match(/^(content|items|self)-(.+)$/)
+  if (shorthandMatch) {
     return {
-      type: `${prefix}${typeMatch[1]}`,
-      value: typeMatch[2],
+      type: `align-${shorthandMatch[1]}`,
+      value: shorthandMatch[2],
+      isNegative,
+      category: "grid-flexbox",
+    }
+  }
+
+  // Handle single justify-* classes (justify-center, justify-start, etc.)
+  // These are treated as justify-content equivalents
+  const justifyMatch = cleanClass.match(/^justify-(.+)$/)
+  if (justifyMatch && !justifyMatch[1].includes("-")) {
+    return {
+      type: "justify-content",
+      value: justifyMatch[1],
       isNegative,
       category: "grid-flexbox",
     }
