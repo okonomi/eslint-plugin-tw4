@@ -333,13 +333,16 @@ export function applyShorthands(value: string) {
   transformations.sort((a, b) => a.position - b.position)
   const finalValue = parsedClasses.map((cls) => cls.original).join(" ")
 
+  // Compact transformations to merge multi-step changes
+  const compactedTransformations = compactTransformations(
+    transformations,
+    originalClasses,
+  )
+
   return {
     applied: transformations.length > 0,
     value: finalValue,
-    transformations: transformations.map(({ classnames, shorthand }) => ({
-      classnames,
-      shorthand,
-    })),
+    transformations: compactedTransformations,
   }
 }
 
@@ -638,4 +641,94 @@ function createTransformResult(
     classnames: matchedClasses.join(", "),
     shorthand: shorthandClass,
   }
+}
+
+// =============================================================================
+// Transformation Compaction
+// =============================================================================
+
+function compactTransformations(
+  transformations: Array<{
+    classnames: string
+    shorthand: string
+    position: number
+  }>,
+  originalClasses: string[],
+): Array<{
+  classnames: string
+  shorthand: string
+}> {
+  if (transformations.length <= 1) {
+    return transformations.map(({ classnames, shorthand }) => ({
+      classnames,
+      shorthand,
+    }))
+  }
+
+  // Create a mapping from shorthand to the classes that produced it
+  const shorthandToInputClasses = new Map<string, string[]>()
+
+  for (const transformation of transformations) {
+    const classes = transformation.classnames.split(", ")
+    shorthandToInputClasses.set(transformation.shorthand, classes)
+  }
+
+  // Find which shorthands are used as inputs to other transformations
+  const usedAsInput = new Set<string>()
+  for (const transformation of transformations) {
+    const classes = transformation.classnames.split(", ")
+    for (const cls of classes) {
+      if (shorthandToInputClasses.has(cls)) {
+        usedAsInput.add(cls)
+      }
+    }
+  }
+
+  // Final transformations are those whose shorthand is not used as input
+  const finalTransformations = transformations.filter(
+    (transformation) => !usedAsInput.has(transformation.shorthand),
+  )
+
+  // For each final transformation, trace back to find all original classes
+  const result = finalTransformations.map((transformation) => {
+    const originalClassesFound: string[] = []
+    const visited = new Set<string>()
+
+    // Recursively collect original classes while preserving order
+    function collectOriginalClasses(shorthandOrClass: string) {
+      if (visited.has(shorthandOrClass)) {
+        return
+      }
+      visited.add(shorthandOrClass)
+
+      const inputClasses = shorthandToInputClasses.get(shorthandOrClass)
+      if (inputClasses) {
+        // This is a shorthand, so collect its input classes
+        for (const cls of inputClasses) {
+          collectOriginalClasses(cls)
+        }
+      } else {
+        // This is an original class
+        if (!originalClassesFound.includes(shorthandOrClass)) {
+          originalClassesFound.push(shorthandOrClass)
+        }
+      }
+    }
+
+    collectOriginalClasses(transformation.shorthand)
+
+    // Sort the found original classes by their appearance in the original input
+    const orderedClasses = originalClassesFound.sort((a, b) => {
+      const indexA = originalClasses.indexOf(a)
+      const indexB = originalClasses.indexOf(b)
+      return indexA - indexB
+    })
+
+    return {
+      classnames: orderedClasses.join(", "),
+      shorthand: transformation.shorthand,
+    }
+  })
+
+  return result
 }

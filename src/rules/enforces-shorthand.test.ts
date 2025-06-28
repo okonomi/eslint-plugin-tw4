@@ -50,6 +50,21 @@ describe("enforces-shorthand", () => {
       expect(result.output).toEqual(`<div class="size-1" />`)
     })
   })
+  describe("compact reports", () => {
+    it("should multiple reports into one", async () => {
+      await invalid({
+        code: `
+          <div class="border-t-1 border-x-1 border-b-1" />
+        `,
+        output: `
+          <div class="border-1" />
+        `,
+        errors: [
+          generateError(["border-t-1", "border-x-1", "border-b-1"], "border-1"),
+        ],
+      })
+    })
+  })
   describe("sizing", () => {
     describe("valid", () => {
       it.each([
