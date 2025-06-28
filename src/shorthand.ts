@@ -564,15 +564,12 @@ type ParsedTransformResult = {
 function applyTransformationToParsedClasses(
   parsedClasses: ParsedClassInfo[],
   matchedClasses: string[],
-  shorthandClass: string,
+  shorthandParsed: ParsedClassInfo,
 ): ParsedClassInfo[] {
   // Remove matched classes
   const remainingClasses = parsedClasses.filter(
     (cls) => !matchedClasses.includes(cls.original),
   )
-
-  // Parse the shorthand class
-  const shorthandParsed = parseClasses([shorthandClass])[0]
 
   // Find insertion position
   const firstIndex = Math.min(
@@ -619,20 +616,18 @@ function applyPatternTransformation(
   for (const { patterns: patternList, shorthand } of patterns) {
     const result = findMatchingClasses(patternList, parsedClasses)
     if (result) {
-      const { matchedClasses, commonPrefix, commonValue, commonNegative } =
-        result
+      const { matchedClasses } = result
 
-      // Create shorthand class name
-      const negativePrefix = commonNegative ? "-" : ""
-      const valuePart = commonValue === "" ? "" : `-${commonValue}`
-      const shorthandClass = `${commonPrefix}${negativePrefix}${shorthand}${valuePart}`
+      // Create shorthand class and parse it
+      const { shorthandClass, shorthandParsed } =
+        createShorthandFromMatchResult(result, shorthand)
 
       return {
         applied: true,
         parsedClasses: applyTransformationToParsedClasses(
           parsedClasses,
           matchedClasses,
-          shorthandClass,
+          shorthandParsed,
         ),
         matchedClasses,
         shorthandClass,
@@ -645,19 +640,20 @@ function applyPatternTransformation(
 function handleSizing(parsedClasses: ParsedClassInfo[]): ParsedTransformResult {
   const sizingResult = findMatchingClasses([["w", "h"]], parsedClasses)
   if (sizingResult) {
-    const { matchedClasses, commonPrefix, commonValue, commonNegative } =
-      sizingResult
+    const { matchedClasses } = sizingResult
 
-    const negativePrefix = commonNegative ? "-" : ""
-    const valuePart = commonValue === "" ? "" : `-${commonValue}`
-    const shorthandClass = `${commonPrefix}${negativePrefix}size${valuePart}`
+    // Create shorthand class and parse it
+    const { shorthandClass, shorthandParsed } = createShorthandFromMatchResult(
+      sizingResult,
+      "size",
+    )
 
     return {
       applied: true,
       parsedClasses: applyTransformationToParsedClasses(
         parsedClasses,
         matchedClasses,
-        shorthandClass,
+        shorthandParsed,
       ),
       matchedClasses,
       shorthandClass,
@@ -677,19 +673,20 @@ function handleTransforms(
       parsedClasses,
     )
     if (result) {
-      const { matchedClasses, commonValue, commonNegative } = result
+      const { matchedClasses, commonValue } = result
 
       if (commonValue !== null) {
-        const negativePrefix = commonNegative ? "-" : ""
-        const valuePart = commonValue === "" ? "" : `-${commonValue}`
-        const shorthandClass = `${negativePrefix}${transformType}${valuePart}`
+        // For transforms, we need to handle the prefix differently (no common prefix)
+        const modifiedResult = { ...result, commonPrefix: "" }
+        const { shorthandClass, shorthandParsed } =
+          createShorthandFromMatchResult(modifiedResult, transformType)
 
         return {
           applied: true,
           parsedClasses: applyTransformationToParsedClasses(
             parsedClasses,
             matchedClasses,
-            shorthandClass,
+            shorthandParsed,
           ),
           matchedClasses,
           shorthandClass,
@@ -762,12 +759,26 @@ function handleMiscPatterns(
     if (matchedClasses.length > 0) {
       const shorthandClass = `${commonPrefix}${shorthand}`
 
+      // Directly construct ParsedClassInfo without string parsing
+      const shorthandParsed: ParsedClassInfo = {
+        original: shorthandClass,
+        parsed: {
+          prefix: commonPrefix,
+          baseClass: shorthand,
+        },
+        baseParsed: {
+          type: shorthand,
+          value: "",
+          isNegative: false,
+        },
+      }
+
       return {
         applied: true,
         parsedClasses: applyTransformationToParsedClasses(
           parsedClasses,
           matchedClasses,
-          shorthandClass,
+          shorthandParsed,
         ),
         matchedClasses,
         shorthandClass,
@@ -775,4 +786,32 @@ function handleMiscPatterns(
     }
   }
   return { applied: false, parsedClasses }
+}
+
+function createShorthandFromMatchResult(
+  matchResult: MatchResult,
+  shorthandType: string,
+): { shorthandClass: string; shorthandParsed: ParsedClassInfo } {
+  const { commonPrefix, commonValue, commonNegative } = matchResult
+
+  // Create shorthand class name
+  const negativePrefix = commonNegative ? "-" : ""
+  const valuePart = commonValue === "" ? "" : `-${commonValue}`
+  const shorthandClass = `${commonPrefix}${negativePrefix}${shorthandType}${valuePart}`
+
+  // Directly construct ParsedClassInfo without string parsing
+  const shorthandParsed: ParsedClassInfo = {
+    original: shorthandClass,
+    parsed: {
+      prefix: commonPrefix,
+      baseClass: `${negativePrefix}${shorthandType}${valuePart}`,
+    },
+    baseParsed: {
+      type: shorthandType,
+      value: commonValue,
+      isNegative: commonNegative,
+    },
+  }
+
+  return { shorthandClass, shorthandParsed }
 }
