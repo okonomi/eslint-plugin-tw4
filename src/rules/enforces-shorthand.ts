@@ -61,14 +61,38 @@ export default createRule({
         ) {
           const result = applyShorthands(node.value.value)
           if (result.applied) {
-            // Report each transformation as a separate error
-            for (const transformation of result.transformations) {
+            if (result.transformations.length > 0) {
+              // Report each transformation as a separate error
+              for (const transformation of result.transformations) {
+                context.report({
+                  node: node.value,
+                  messageId: "useShorthand",
+                  data: {
+                    shorthand: transformation.shorthand,
+                    classnames: transformation.classnames,
+                  },
+                  fix(fixer) {
+                    const attributeName = node.name.name
+                    return fixer.replaceText(
+                      node,
+                      `${attributeName}="${result.value}"`,
+                    )
+                  },
+                })
+              }
+            } else if (result.value !== node.value.value) {
+              // Handle cases where transformation occurred but no explicit transformations recorded
+              const originalClasses = node.value.value
+                .split(/\s+/)
+                .filter(Boolean)
+
+              // For redundancy removal cases, report all original classes as being consolidated
               context.report({
                 node: node.value,
                 messageId: "useShorthand",
                 data: {
-                  shorthand: transformation.shorthand,
-                  classnames: transformation.classnames,
+                  shorthand: result.value,
+                  classnames: originalClasses.join(", "),
                 },
                 fix(fixer) {
                   const attributeName = node.name.name

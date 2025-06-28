@@ -51,8 +51,8 @@ describe("enforces-shorthand", () => {
     })
   })
   describe("compact reports", () => {
-    it("should multiple reports into one", async () => {
-      await invalid({
+    it.each([
+      {
         code: `
           <div class="border-t-1 border-x-1 border-b-1" />
         `,
@@ -62,7 +62,22 @@ describe("enforces-shorthand", () => {
         errors: [
           generateError(["border-t-1", "border-x-1", "border-b-1"], "border-1"),
         ],
-      })
+      },
+      {
+        code: `
+          <div class="p-2 pl-2 pr-2">
+            Issue #182
+          </div>
+        `,
+        output: `
+          <div class="p-2">
+            Issue #182
+          </div>
+        `,
+        errors: [generateError(["p-2", "pl-2", "pr-2"], "p-2")],
+      },
+    ])("should multiple reports into one", async (params) => {
+      await invalid(params)
     })
   })
   describe("sizing", () => {

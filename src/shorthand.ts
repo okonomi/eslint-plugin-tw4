@@ -343,6 +343,42 @@ export function applyShorthands(value: string) {
     }
   }
 
+  // Step 2.5: Remove redundant classes after transformations
+  const redundancyResult = removeRedundantClasses(classInfos)
+  if (redundancyResult.removedClasses.length > 0) {
+    classInfos = redundancyResult.classInfos
+
+    // Add redundancy removal as a transformation
+    // Find the remaining class that covers the removed functionality
+    const remainingClass = redundancyResult.classInfos.find((c) => {
+      // Find a class that could represent the combined functionality
+      const removedClassInfo = parseClasses(redundancyResult.removedClasses)[0]
+      return (
+        c.prefix === removedClassInfo.prefix &&
+        c.value === removedClassInfo.value &&
+        c.isNegative === removedClassInfo.isNegative
+      )
+    })
+
+    if (remainingClass) {
+      const allClasses = [
+        ...redundancyResult.removedClasses,
+        remainingClass.original,
+      ]
+      const position = Math.min(
+        ...allClasses
+          .map((cls) => originalClasses.indexOf(cls))
+          .filter((i) => i !== -1),
+      )
+
+      transformations.push({
+        classnames: allClasses.join(", "),
+        shorthand: remainingClass.original,
+        position: position,
+      })
+    }
+  }
+
   // Step 3: Assemble - Convert to string only once at the end
   const finalValue = classInfos.map((cls) => cls.original).join(" ")
 
@@ -783,3 +819,153 @@ function compactTransformations(
 
   return result
 }
+
+// =============================================================================
+// Redundancy Detection and Removal
+// =============================================================================
+
+function removeRedundantClasses(classInfos: ClassInfo[]): {
+  classInfos: ClassInfo[]
+  removedClasses: string[]
+} {
+  const removedClasses: string[] = []
+  let filteredClasses = [...classInfos]
+
+  // Define redundancy rules
+  const redundancyRules = [
+    // If we have p-X, then px-X and py-X are redundant (and their components)
+    {
+      base: "p",
+      redundant: ["px", "py", "pt", "pb", "pl", "pr", "ps", "pe"],
+    },
+    // If we have m-X, then mx-X and my-X are redundant (and their components)
+    {
+      base: "m",
+      redundant: ["mx", "my", "mt", "mb", "ml", "mr", "ms", "me"],
+    },
+    // If we have px-X, then pl-X and pr-X are redundant
+    {
+      base: "px",
+      redundant: ["pl", "pr", "ps", "pe"],
+    },
+    // If we have py-X, then pt-X and pb-X are redundant
+    {
+      base: "py",
+      redundant: ["pt", "pb"],
+    },
+    // If we have mx-X, then ml-X and mr-X are redundant
+    {
+      base: "mx",
+      redundant: ["ml", "mr", "ms", "me"],
+    },
+    // If we have my-X, then mt-X and mb-X are redundant
+    {
+      base: "my",
+      redundant: ["mt", "mb"],
+    },
+    // Border patterns
+    {
+      base: "border",
+      redundant: [
+        "border-x",
+        "border-y",
+        "border-t",
+        "border-b",
+        "border-l",
+        "border-r",
+        "border-s",
+        "border-e",
+      ],
+    },
+    {
+      base: "border-x",
+      redundant: ["border-l", "border-r", "border-s", "border-e"],
+    },
+    {
+      base: "border-y",
+      redundant: ["border-t", "border-b"],
+    },
+    // Rounded patterns
+    {
+      base: "rounded",
+      redundant: [
+        "rounded-t",
+        "rounded-b",
+        "rounded-l",
+        "rounded-r",
+        "rounded-s",
+        "rounded-e",
+        "rounded-tl",
+        "rounded-tr",
+        "rounded-bl",
+        "rounded-br",
+        "rounded-ss",
+        "rounded-se",
+        "rounded-es",
+        "rounded-ee",
+      ],
+    },
+    {
+      base: "rounded-t",
+      redundant: ["rounded-tl", "rounded-tr", "rounded-ss", "rounded-se"],
+    },
+    {
+      base: "rounded-b",
+      redundant: ["rounded-bl", "rounded-br", "rounded-es", "rounded-ee"],
+    },
+    {
+      base: "rounded-l",
+      redundant: ["rounded-tl", "rounded-bl"],
+    },
+    {
+      base: "rounded-r",
+      redundant: ["rounded-tr", "rounded-br"],
+    },
+    {
+      base: "rounded-s",
+      redundant: ["rounded-ss", "rounded-es"],
+    },
+    {
+      base: "rounded-e",
+      redundant: ["rounded-se", "rounded-ee"],
+    },
+  ]
+
+  for (const rule of redundancyRules) {
+    // Group classes by prefix and value
+    const classGroups = new Map<string, ClassInfo[]>()
+    for (const classInfo of filteredClasses) {
+      const key = `${classInfo.prefix}|${classInfo.value}|${classInfo.isNegative}`
+      if (!classGroups.has(key)) {
+        classGroups.set(key, [])
+      }
+      const group = classGroups.get(key)
+      if (group) {
+        group.push(classInfo)
+      }
+    }
+
+    for (const [_, groupClasses] of classGroups) {
+      // Check if base class exists in this group
+      const baseClass = groupClasses.find((c) => c.type === rule.base)
+      if (baseClass) {
+        // Remove redundant classes from the same group
+        const redundantClassesToRemove = groupClasses.filter(
+          (c) => rule.redundant.includes(c.type) && c !== baseClass,
+        )
+
+        for (const redundantClass of redundantClassesToRemove) {
+          removedClasses.push(redundantClass.original)
+          filteredClasses = filteredClasses.filter((c) => c !== redundantClass)
+        }
+      }
+    }
+  }
+
+  return {
+    classInfos: filteredClasses,
+    removedClasses,
+  }
+}
+
+// =============================================================================
