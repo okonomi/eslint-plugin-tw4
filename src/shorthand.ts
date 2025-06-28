@@ -110,36 +110,22 @@ const BORDER_RADIUS_PATTERNS: ShorthandPattern[] = [
   },
   // 2-corners and 1-side to full (highest priority for 3-element patterns)
   {
-    patterns: [["rounded-tl", "rounded-tr", "rounded-b"]],
-    shorthand: "rounded",
-  },
-  {
-    patterns: [["rounded-bl", "rounded-br", "rounded-t"]],
-    shorthand: "rounded",
-  },
-  {
-    patterns: [["rounded-tl", "rounded-bl", "rounded-r"]],
-    shorthand: "rounded",
-  },
-  {
-    patterns: [["rounded-tr", "rounded-br", "rounded-l"]],
+    patterns: [
+      ["rounded-tl", "rounded-tr", "rounded-b"],
+      ["rounded-bl", "rounded-br", "rounded-t"],
+      ["rounded-tl", "rounded-bl", "rounded-r"],
+      ["rounded-tr", "rounded-br", "rounded-l"],
+    ],
     shorthand: "rounded",
   },
   // Start/End patterns for 2-corners and 1-side to full
   {
-    patterns: [["rounded-ss", "rounded-se", "rounded-b"]],
-    shorthand: "rounded",
-  },
-  {
-    patterns: [["rounded-es", "rounded-ee", "rounded-t"]],
-    shorthand: "rounded",
-  },
-  {
-    patterns: [["rounded-ss", "rounded-es", "rounded-e"]],
-    shorthand: "rounded",
-  },
-  {
-    patterns: [["rounded-se", "rounded-ee", "rounded-s"]],
+    patterns: [
+      ["rounded-ss", "rounded-se", "rounded-b"],
+      ["rounded-es", "rounded-ee", "rounded-t"],
+      ["rounded-ss", "rounded-es", "rounded-e"],
+      ["rounded-se", "rounded-ee", "rounded-s"],
+    ],
     shorthand: "rounded",
   },
   // Side pairs to full
