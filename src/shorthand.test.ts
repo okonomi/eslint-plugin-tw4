@@ -61,14 +61,18 @@ describe("shorthand", () => {
       expect(result.transformations[0].shorthand).toBe("translate-4")
     })
 
-    it("should handle misc patterns", () => {
-      const result = applyShorthands(
-        "overflow-hidden text-ellipsis whitespace-nowrap",
-      )
+    it.each([
+      ["overflow-hidden text-ellipsis whitespace-nowrap", "truncate"],
+      [
+        "md:overflow-hidden md:text-ellipsis md:whitespace-nowrap",
+        "md:truncate",
+      ],
+    ])("should handle %s to %s", (input, expected) => {
+      const result = applyShorthands(input)
       expect(result.applied).toBe(true)
-      expect(result.value).toBe("truncate")
+      expect(result.value).toBe(expected)
       expect(result.transformations).toHaveLength(1)
-      expect(result.transformations[0].shorthand).toBe("truncate")
+      expect(result.transformations[0].shorthand).toBe(expected)
     })
 
     it("should handle prefixed classes", () => {

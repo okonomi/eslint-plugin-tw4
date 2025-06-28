@@ -286,6 +286,13 @@ const BORDER_SPACING_PATTERNS: ShorthandPattern[] = [
   },
 ]
 
+const MISC_PATTERNS: ShorthandPattern[] = [
+  {
+    patterns: [["overflow-hidden", "text-ellipsis", "whitespace-nowrap"]],
+    shorthand: "truncate",
+  },
+]
+
 const PATTERN_SETS = {
   spacing: SPACING_PATTERNS,
   border: BORDER_PATTERNS,
@@ -296,6 +303,7 @@ const PATTERN_SETS = {
   overflow: OVERFLOW_PATTERNS,
   overscroll: OVERSCROLL_PATTERNS,
   borderSpacing: BORDER_SPACING_PATTERNS,
+  misc: MISC_PATTERNS,
 }
 
 // =============================================================================
@@ -360,66 +368,148 @@ function findMatchingClasses(
   classInfos: ClassInfo[],
 ): MatchResult | null {
   for (const pattern of patterns) {
-    // Try to find complete patterns by grouping classes by prefix and value
-    const classGroups = new Map<string, ClassInfo[]>()
+    // Check if this is a misc pattern (contains complete class names that don't follow type-value pattern)
+    const isMiscPattern =
+      pattern.includes("overflow-hidden") ||
+      pattern.includes("text-ellipsis") ||
+      pattern.includes("whitespace-nowrap")
 
-    // Group classes by prefix-value combination
-    for (const classInfo of classInfos) {
-      if (pattern.includes(classInfo.type)) {
-        const key = `${classInfo.prefix}|${classInfo.value}|${classInfo.isNegative}`
-        if (!classGroups.has(key)) {
-          classGroups.set(key, [])
-        }
-        const group = classGroups.get(key)
-        if (group) {
-          group.push(classInfo)
-        }
-      }
-    }
+    if (isMiscPattern) {
+      // Handle misc patterns that match full class names
+      const classGroups = new Map<string, ClassInfo[]>()
 
-    // Check each group to see if it contains all required types
-    for (const [key, groupClasses] of classGroups) {
-      const [prefix, value, isNegativeStr] = key.split("|")
-      const isNegative = isNegativeStr === "true"
-
-      // Check if this group has all required types
-      const foundTypes = new Set(groupClasses.map((c) => c.type))
-      const hasAllTypes = pattern.every((requiredType) =>
-        foundTypes.has(requiredType),
-      )
-
-      if (hasAllTypes && groupClasses.length === pattern.length) {
-        // Found a complete match
-        const matches: { [key: string]: string } = {}
-        const matchedClassInfos: ClassInfo[] = []
-
-        for (const requiredType of pattern) {
-          const classInfo = groupClasses.find((c) => c.type === requiredType)
-          if (classInfo) {
-            matches[requiredType] = classInfo.original
-            matchedClassInfos.push(classInfo)
+      // Group classes by prefix combination
+      for (const classInfo of classInfos) {
+        // For misc patterns, we need to match the original class name without prefix
+        // because parseGeneric splits "overflow-hidden" into type="overflow", value="hidden"
+        const baseClass = classInfo.original.replace(/^.*:/, "")
+        if (pattern.includes(baseClass)) {
+          const key = `${classInfo.prefix}|${classInfo.isNegative}`
+          if (!classGroups.has(key)) {
+            classGroups.set(key, [])
+          }
+          const group = classGroups.get(key)
+          if (group) {
+            group.push(classInfo)
           }
         }
+      }
 
-        // Sort matched classes by their original appearance order
-        matchedClassInfos.sort((a, b) => {
-          const aIndex = classInfos.findIndex(
-            (cls) => cls.original === a.original,
-          )
-          const bIndex = classInfos.findIndex(
-            (cls) => cls.original === b.original,
-          )
-          return aIndex - bIndex
-        })
+      // Check each group to see if it contains all required types
+      for (const [key, groupClasses] of classGroups) {
+        const [prefix, isNegativeStr] = key.split("|")
+        const isNegative = isNegativeStr === "true"
 
-        const matchedClasses = matchedClassInfos.map((info) => info.original)
+        // Check if this group has all required types
+        const foundTypes = new Set(
+          groupClasses.map((c) => {
+            return c.original.replace(/^.*:/, "")
+          }),
+        )
+        const hasAllTypes = pattern.every((requiredType) =>
+          foundTypes.has(requiredType),
+        )
 
-        return {
-          matches,
-          matchedClasses,
-          commonPrefix: prefix,
-          commonValue: value,
-          commonNegative: isNegative,
+        if (hasAllTypes && groupClasses.length === pattern.length) {
+          // Found a complete match
+          const matches: { [key: string]: string } = {}
+          const matchedClassInfos: ClassInfo[] = []
+
+          for (const requiredType of pattern) {
+            const classInfo = groupClasses.find((c) => {
+              const baseClass = c.original.replace(/^.*:/, "")
+              return baseClass === requiredType
+            })
+            if (classInfo) {
+              matches[requiredType] = classInfo.original
+              matchedClassInfos.push(classInfo)
+            }
+          }
+
+          // Sort matched classes by their original appearance order
+          matchedClassInfos.sort((a, b) => {
+            const aIndex = classInfos.findIndex(
+              (cls) => cls.original === a.original,
+            )
+            const bIndex = classInfos.findIndex(
+              (cls) => cls.original === b.original,
+            )
+            return aIndex - bIndex
+          })
+
+          const matchedClasses = matchedClassInfos.map((info) => info.original)
+
+          return {
+            matches,
+            matchedClasses,
+            commonPrefix: prefix,
+            commonValue: "", // Misc patterns don't have values
+            commonNegative: isNegative,
+          }
+        }
+      }
+    } else {
+      // Handle regular patterns that match by type and value
+      const classGroups = new Map<string, ClassInfo[]>()
+
+      // Group classes by prefix-value combination
+      for (const classInfo of classInfos) {
+        if (pattern.includes(classInfo.type)) {
+          const key = `${classInfo.prefix}|${classInfo.value}|${classInfo.isNegative}`
+          if (!classGroups.has(key)) {
+            classGroups.set(key, [])
+          }
+          const group = classGroups.get(key)
+          if (group) {
+            group.push(classInfo)
+          }
+        }
+      }
+
+      // Check each group to see if it contains all required types
+      for (const [key, groupClasses] of classGroups) {
+        const [prefix, value, isNegativeStr] = key.split("|")
+        const isNegative = isNegativeStr === "true"
+
+        // Check if this group has all required types
+        const foundTypes = new Set(groupClasses.map((c) => c.type))
+        const hasAllTypes = pattern.every((requiredType) =>
+          foundTypes.has(requiredType),
+        )
+
+        if (hasAllTypes && groupClasses.length === pattern.length) {
+          // Found a complete match
+          const matches: { [key: string]: string } = {}
+          const matchedClassInfos: ClassInfo[] = []
+
+          for (const requiredType of pattern) {
+            const classInfo = groupClasses.find((c) => c.type === requiredType)
+            if (classInfo) {
+              matches[requiredType] = classInfo.original
+              matchedClassInfos.push(classInfo)
+            }
+          }
+
+          // Sort matched classes by their original appearance order
+          matchedClassInfos.sort((a, b) => {
+            const aIndex = classInfos.findIndex(
+              (cls) => cls.original === a.original,
+            )
+            const bIndex = classInfos.findIndex(
+              (cls) => cls.original === b.original,
+            )
+            return aIndex - bIndex
+          })
+
+          const matchedClasses = matchedClassInfos.map((info) => info.original)
+
+          return {
+            matches,
+            matchedClasses,
+            commonPrefix: prefix,
+            commonValue: value,
+            commonNegative: isNegative,
+          }
         }
       }
     }
@@ -440,7 +530,6 @@ function findShorthandTransformation(
   const specialResults = [
     handleSizing(classInfos),
     handleTransforms(classInfos),
-    handleMiscPatterns(classInfos),
   ]
 
   for (const result of specialResults) {
@@ -528,90 +617,6 @@ function handleTransforms(classInfos: ClassInfo[]): ParsedTransformResult {
           matchedClasses,
           shorthandClass,
         }
-      }
-    }
-  }
-  return { applied: false, classInfos }
-}
-
-function handleMiscPatterns(classInfos: ClassInfo[]): ParsedTransformResult {
-  const miscPatterns = [
-    {
-      patterns: [["overflow-hidden", "text-ellipsis", "whitespace-nowrap"]],
-      shorthand: "truncate",
-    },
-  ]
-
-  for (const { patterns, shorthand } of miscPatterns) {
-    let matchedClasses: string[] = []
-    let commonPrefix = ""
-
-    for (const pattern of patterns) {
-      const currentMatches: { [key: string]: string } = {}
-      const currentMatchedClasses: string[] = []
-      let currentCommonPrefix = ""
-      let patternValid = true
-
-      for (const expectedType of pattern) {
-        let found = false
-
-        for (const classInfo of classInfos) {
-          // Check if this classInfo matches the expected type
-          // For misc patterns, we need to match the full original class name
-          if (classInfo.original === expectedType) {
-            if (currentMatches[expectedType] === undefined) {
-              if (Object.keys(currentMatches).length === 0) {
-                currentCommonPrefix = classInfo.prefix
-              } else if (currentCommonPrefix !== classInfo.prefix) {
-                patternValid = false
-                break
-              }
-
-              currentMatches[expectedType] = ""
-              currentMatchedClasses.push(classInfo.original)
-              found = true
-              break
-            }
-          }
-        }
-
-        if (!found || !patternValid) {
-          patternValid = false
-          break
-        }
-      }
-
-      if (
-        patternValid &&
-        Object.keys(currentMatches).length === pattern.length
-      ) {
-        matchedClasses = currentMatchedClasses
-        commonPrefix = currentCommonPrefix
-        break
-      }
-    }
-
-    if (matchedClasses.length > 0) {
-      const shorthandClass = buildShorthandClassName(commonPrefix, shorthand)
-
-      // Directly construct ClassInfo without string parsing
-      const shorthandClassInfo: ClassInfo = {
-        original: shorthandClass,
-        prefix: commonPrefix,
-        type: shorthand,
-        value: "",
-        isNegative: false,
-      }
-
-      return {
-        applied: true,
-        classInfos: applyTransformationToClassInfos(
-          classInfos,
-          matchedClasses,
-          shorthandClassInfo,
-        ),
-        matchedClasses,
-        shorthandClass,
       }
     }
   }
