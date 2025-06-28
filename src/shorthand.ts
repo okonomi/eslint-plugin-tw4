@@ -757,7 +757,7 @@ function handleMiscPatterns(
     }
 
     if (matchedClasses.length > 0) {
-      const shorthandClass = `${commonPrefix}${shorthand}`
+      const shorthandClass = buildShorthandClassName(commonPrefix, shorthand)
 
       // Directly construct ParsedClassInfo without string parsing
       const shorthandParsed: ParsedClassInfo = {
@@ -788,23 +788,40 @@ function handleMiscPatterns(
   return { applied: false, parsedClasses }
 }
 
+/**
+ * Build shorthand class name from components
+ */
+function buildShorthandClassName(
+  prefix: string,
+  shorthandType: string,
+  value = "",
+  isNegative = false,
+): string {
+  const negativePrefix = isNegative ? "-" : ""
+  const valuePart = value === "" ? "" : `-${value}`
+  return `${prefix}${negativePrefix}${shorthandType}${valuePart}`
+}
+
 function createShorthandFromMatchResult(
   matchResult: MatchResult,
   shorthandType: string,
 ): { shorthandClass: string; shorthandParsed: ParsedClassInfo } {
   const { commonPrefix, commonValue, commonNegative } = matchResult
 
-  // Create shorthand class name
-  const negativePrefix = commonNegative ? "-" : ""
-  const valuePart = commonValue === "" ? "" : `-${commonValue}`
-  const shorthandClass = `${commonPrefix}${negativePrefix}${shorthandType}${valuePart}`
+  // Create shorthand class name using the common function
+  const shorthandClass = buildShorthandClassName(
+    commonPrefix,
+    shorthandType,
+    commonValue,
+    commonNegative,
+  )
 
   // Directly construct ParsedClassInfo without string parsing
   const shorthandParsed: ParsedClassInfo = {
     original: shorthandClass,
     parsed: {
       prefix: commonPrefix,
-      baseClass: `${negativePrefix}${shorthandType}${valuePart}`,
+      baseClass: `${commonNegative ? "-" : ""}${shorthandType}${commonValue === "" ? "" : `-${commonValue}`}`,
     },
     baseParsed: {
       type: shorthandType,
