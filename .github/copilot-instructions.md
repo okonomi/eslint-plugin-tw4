@@ -7,3 +7,4 @@
   - 単体テスト: `pnpm test:unit`
   - 互換性テスト: `pnpm test:compatibility`
 - コードスニペットを実行するときは `npx tsx -e` を使用してください。
+- デバッグコードは`tmp/` ディレクトリに作成してください。
