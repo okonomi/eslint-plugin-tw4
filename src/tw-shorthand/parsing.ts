@@ -145,17 +145,30 @@ function parseBorder(
   if (!cleanClass.startsWith("border-")) return null
 
   const borderPart = cleanClass.substring(7)
-  const directionMatch = borderPart.match(/^([tlbr]|[xy]|s|e)-(.+)$/)
 
-  if (directionMatch) {
+  // Check for direction with value (e.g., border-x-2, border-y-4)
+  const directionWithValueMatch = borderPart.match(/^([tlbr]|[xy]|s|e)-(.+)$/)
+  if (directionWithValueMatch) {
     return {
-      type: `border-${directionMatch[1]}`,
-      value: directionMatch[2],
+      type: `border-${directionWithValueMatch[1]}`,
+      value: directionWithValueMatch[2],
       isNegative,
       category: "border-width-color",
     }
   }
 
+  // Check for direction without value (e.g., border-x, border-y, border-t)
+  const directionMatch = borderPart.match(/^([tlbr]|[xy]|s|e)$/)
+  if (directionMatch) {
+    return {
+      type: `border-${directionMatch[1]}`,
+      value: "",
+      isNegative,
+      category: "border-width-color",
+    }
+  }
+
+  // Default border with value (e.g., border-2, border-red-500)
   return {
     type: "border",
     value: borderPart,

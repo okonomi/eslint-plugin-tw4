@@ -36,6 +36,13 @@ describe("shorthand", () => {
       expect(result.transformations).toHaveLength(1)
       expect(result.transformations[0].shorthand).toBe("border-2")
     })
+    it("should handle border without variants", () => {
+      const result = applyShorthands("border-y border-l border-r")
+      expect(result.applied).toBe(true)
+      expect(result.value).toBe("border")
+      expect(result.transformations).toHaveLength(1)
+      expect(result.transformations[0].shorthand).toBe("border")
+    })
 
     it("should handle rounded patterns", () => {
       const result = applyShorthands("rounded-tl-lg rounded-tr-lg")

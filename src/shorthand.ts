@@ -85,6 +85,15 @@ const BORDER_PATTERNS: ShorthandPattern[] = [
     ],
     shorthand: "border",
   },
+  // 3-way border patterns (border-y + left/right or border-x + top/bottom)
+  {
+    patterns: [
+      ["border-y", "border-l", "border-r"],
+      ["border-y", "border-s", "border-e"],
+      ["border-x", "border-t", "border-b"],
+    ],
+    shorthand: "border",
+  },
   // 2-way border patterns
   {
     patterns: [["border-x", "border-y"]],
