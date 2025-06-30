@@ -16,6 +16,8 @@ export type ClassInfo = {
   value: string
   /** Whether this class has negative modifier */
   isNegative: boolean
+  /** Whether this class has important modifier */
+  isImportant: boolean
   /** Optional category for grouping related classes */
   category?: string
 }
@@ -27,6 +29,7 @@ type ParseResult = {
   type: string
   value: string
   isNegative: boolean
+  isImportant: boolean
   category?: string
 }
 
@@ -41,8 +44,8 @@ export function parseClasses(classes: string[]): ClassInfo[] {
  * Parse a single class into improved structure
  */
 export function parseClass(className: string): ClassInfo {
-  const { prefix, baseClass } = splitPrefixAndBase(className)
-  const baseInfo = parseBaseClass(baseClass)
+  const { prefix, baseClass, isImportant } = splitPrefixAndBase(className)
+  const baseInfo = parseBaseClass(baseClass, isImportant)
 
   return {
     original: className,
@@ -50,30 +53,36 @@ export function parseClass(className: string): ClassInfo {
     type: baseInfo.type,
     value: baseInfo.value,
     isNegative: baseInfo.isNegative,
+    isImportant: baseInfo.isImportant,
     category: baseInfo.category,
   }
 }
 
 /**
- * Split class name into prefix and base class
+ * Split class name into prefix, base class, and important modifier
  */
 function splitPrefixAndBase(className: string): {
   prefix: string
   baseClass: string
+  isImportant: boolean
 } {
-  const colonIndex = className.lastIndexOf(":")
+  // Check for important modifier (!) at the end
+  const isImportant = className.endsWith("!")
+  const classWithoutImportant = isImportant ? className.slice(0, -1) : className
+
+  const colonIndex = classWithoutImportant.lastIndexOf(":")
   if (colonIndex !== -1) {
-    const prefix = className.substring(0, colonIndex + 1)
-    const baseClass = className.substring(colonIndex + 1)
-    return { prefix, baseClass }
+    const prefix = classWithoutImportant.substring(0, colonIndex + 1)
+    const baseClass = classWithoutImportant.substring(colonIndex + 1)
+    return { prefix, baseClass, isImportant }
   }
-  return { prefix: "", baseClass: className }
+  return { prefix: "", baseClass: classWithoutImportant, isImportant }
 }
 
 /**
  * Parse base class into type, value, and other properties
  */
-function parseBaseClass(baseClass: string): ParseResult {
+function parseBaseClass(baseClass: string, isImportant: boolean): ParseResult {
   // Handle negative values
   const isNegative = baseClass.startsWith("-")
   const cleanClass = isNegative ? baseClass.substring(1) : baseClass
@@ -96,7 +105,7 @@ function parseBaseClass(baseClass: string): ParseResult {
   ]
 
   for (const parser of parsers) {
-    const result = parser(cleanClass, isNegative)
+    const result = parser(cleanClass, isNegative, isImportant)
     if (result) return result
   }
 
@@ -105,6 +114,7 @@ function parseBaseClass(baseClass: string): ParseResult {
     type: cleanClass,
     value: "",
     isNegative,
+    isImportant,
   }
 }
 
@@ -115,6 +125,7 @@ function parseBaseClass(baseClass: string): ParseResult {
 function parseBorderSpacing(
   cleanClass: string,
   isNegative: boolean,
+  isImportant: boolean,
 ): ParseResult | null {
   if (!cleanClass.startsWith("border-spacing-")) return null
 
@@ -126,6 +137,7 @@ function parseBorderSpacing(
       type: `border-spacing-${directionMatch[1]}`,
       value: directionMatch[2],
       isNegative,
+      isImportant,
       category: "misc",
     }
   }
@@ -134,6 +146,7 @@ function parseBorderSpacing(
     type: "border-spacing",
     value: spacingPart,
     isNegative,
+    isImportant,
     category: "misc",
   }
 }
@@ -141,6 +154,7 @@ function parseBorderSpacing(
 function parseBorder(
   cleanClass: string,
   isNegative: boolean,
+  isImportant: boolean,
 ): ParseResult | null {
   if (!cleanClass.startsWith("border-")) return null
 
@@ -153,6 +167,7 @@ function parseBorder(
       type: `border-${directionWithValueMatch[1]}`,
       value: directionWithValueMatch[2],
       isNegative,
+      isImportant,
       category: "border-width-color",
     }
   }
@@ -164,6 +179,7 @@ function parseBorder(
       type: `border-${directionMatch[1]}`,
       value: "",
       isNegative,
+      isImportant,
       category: "border-width-color",
     }
   }
@@ -173,6 +189,7 @@ function parseBorder(
     type: "border",
     value: borderPart,
     isNegative,
+    isImportant,
     category: "border-width-color",
   }
 }
@@ -180,6 +197,7 @@ function parseBorder(
 function parseRounded(
   cleanClass: string,
   isNegative: boolean,
+  isImportant: boolean,
 ): ParseResult | null {
   if (!cleanClass.startsWith("rounded-")) return null
 
@@ -192,6 +210,7 @@ function parseRounded(
       type: `rounded-${cornerMatch[1]}`,
       value: cornerMatch[2],
       isNegative,
+      isImportant,
       category: "border-radius",
     }
   }
@@ -203,6 +222,7 @@ function parseRounded(
       type: `rounded-${cornerNoValueMatch[1]}`,
       value: "",
       isNegative,
+      isImportant,
       category: "border-radius",
     }
   }
@@ -214,6 +234,7 @@ function parseRounded(
       type: `rounded-${sideMatch[1]}`,
       value: sideMatch[2],
       isNegative,
+      isImportant,
       category: "border-radius",
     }
   }
@@ -225,6 +246,7 @@ function parseRounded(
       type: `rounded-${sideNoValueMatch[1]}`,
       value: "",
       isNegative,
+      isImportant,
       category: "border-radius",
     }
   }
@@ -233,6 +255,7 @@ function parseRounded(
     type: "rounded",
     value: roundedPart,
     isNegative,
+    isImportant,
     category: "border-radius",
   }
 }
@@ -240,6 +263,7 @@ function parseRounded(
 function parseInset(
   cleanClass: string,
   isNegative: boolean,
+  isImportant: boolean,
 ): ParseResult | null {
   if (!cleanClass.startsWith("inset-")) return null
 
@@ -251,6 +275,7 @@ function parseInset(
       type: `inset-${directionMatch[1]}`,
       value: directionMatch[2],
       isNegative,
+      isImportant,
       category: "layout-inset",
     }
   }
@@ -259,6 +284,7 @@ function parseInset(
     type: "inset",
     value: insetPart,
     isNegative,
+    isImportant,
     category: "layout-inset",
   }
 }
@@ -266,6 +292,7 @@ function parseInset(
 function parsePosition(
   cleanClass: string,
   isNegative: boolean,
+  isImportant: boolean,
 ): ParseResult | null {
   const positionTypes = ["top", "bottom", "left", "right", "start", "end"]
   const firstPart = cleanClass.split("-")[0]
@@ -282,6 +309,7 @@ function parsePosition(
     type,
     value: classValue,
     isNegative,
+    isImportant,
     category: "layout-inset",
   }
 }
@@ -289,6 +317,7 @@ function parsePosition(
 function parseScrollMargin(
   cleanClass: string,
   isNegative: boolean,
+  isImportant: boolean,
 ): ParseResult | null {
   if (!cleanClass.startsWith("scroll-m")) return null
 
@@ -301,6 +330,7 @@ function parseScrollMargin(
       type: `scroll-m${directionMatch[1]}`,
       value: directionMatch[2],
       isNegative,
+      isImportant,
       category: "layout-scroll",
     }
   }
@@ -312,6 +342,7 @@ function parseScrollMargin(
       type: "scroll-m",
       value: nonDirectionalMatch[1],
       isNegative,
+      isImportant,
       category: "layout-scroll",
     }
   }
@@ -322,6 +353,7 @@ function parseScrollMargin(
 function parseScrollPadding(
   cleanClass: string,
   isNegative: boolean,
+  isImportant: boolean,
 ): ParseResult | null {
   if (!cleanClass.startsWith("scroll-p")) return null
 
@@ -334,6 +366,7 @@ function parseScrollPadding(
       type: `scroll-p${directionMatch[1]}`,
       value: directionMatch[2],
       isNegative,
+      isImportant,
       category: "layout-scroll",
     }
   }
@@ -345,6 +378,7 @@ function parseScrollPadding(
       type: "scroll-p",
       value: nonDirectionalMatch[1],
       isNegative,
+      isImportant,
       category: "layout-scroll",
     }
   }
@@ -352,7 +386,11 @@ function parseScrollPadding(
   return null
 }
 
-function parseGap(cleanClass: string, isNegative: boolean): ParseResult | null {
+function parseGap(
+  cleanClass: string,
+  isNegative: boolean,
+  isImportant: boolean,
+): ParseResult | null {
   if (!cleanClass.startsWith("gap-")) return null
 
   const gapPart = cleanClass.substring(4)
@@ -363,6 +401,7 @@ function parseGap(cleanClass: string, isNegative: boolean): ParseResult | null {
       type: `gap-${directionMatch[1]}`,
       value: directionMatch[2],
       isNegative,
+      isImportant,
       category: "layout-gap",
     }
   }
@@ -371,6 +410,7 @@ function parseGap(cleanClass: string, isNegative: boolean): ParseResult | null {
     type: "gap",
     value: gapPart,
     isNegative,
+    isImportant,
     category: "layout-gap",
   }
 }
@@ -378,6 +418,7 @@ function parseGap(cleanClass: string, isNegative: boolean): ParseResult | null {
 function parseGridFlexbox(
   cleanClass: string,
   isNegative: boolean,
+  isImportant: boolean,
 ): ParseResult | null {
   // Handle justify- prefixed classes
   if (cleanClass.startsWith("justify-")) {
@@ -388,6 +429,7 @@ function parseGridFlexbox(
         type: `justify-${typeMatch[1]}`,
         value: typeMatch[2],
         isNegative,
+        isImportant,
         category: "grid-flexbox",
       }
     }
@@ -402,6 +444,7 @@ function parseGridFlexbox(
         type: `align-${typeMatch[1]}`,
         value: typeMatch[2],
         isNegative,
+        isImportant,
         category: "grid-flexbox",
       }
     }
@@ -415,6 +458,7 @@ function parseGridFlexbox(
       type: `align-${shorthandMatch[1]}`,
       value: shorthandMatch[2],
       isNegative,
+      isImportant,
       category: "grid-flexbox",
     }
   }
@@ -427,6 +471,7 @@ function parseGridFlexbox(
       type: "justify-content",
       value: justifyMatch[1],
       isNegative,
+      isImportant,
       category: "grid-flexbox",
     }
   }
@@ -437,6 +482,7 @@ function parseGridFlexbox(
 function parseTransform(
   cleanClass: string,
   isNegative: boolean,
+  isImportant: boolean,
 ): ParseResult | null {
   const transformTypes = ["translate", "scale", "skew"]
   const transformType = transformTypes.find((type) =>
@@ -453,6 +499,7 @@ function parseTransform(
       type: `${transformType}-${transformMatch[1]}`,
       value: transformMatch[2],
       isNegative,
+      isImportant,
       category: "transform",
     }
   }
@@ -463,6 +510,7 @@ function parseTransform(
 function parseOverflow(
   cleanClass: string,
   isNegative: boolean,
+  isImportant: boolean,
 ): ParseResult | null {
   if (!cleanClass.startsWith("overflow-")) return null
 
@@ -474,6 +522,7 @@ function parseOverflow(
       type: `overflow-${directionMatch[1]}`,
       value: directionMatch[2],
       isNegative,
+      isImportant,
       category: "misc",
     }
   }
@@ -482,6 +531,7 @@ function parseOverflow(
     type: "overflow",
     value: overflowPart,
     isNegative,
+    isImportant,
     category: "misc",
   }
 }
@@ -489,6 +539,7 @@ function parseOverflow(
 function parseOverscroll(
   cleanClass: string,
   isNegative: boolean,
+  isImportant: boolean,
 ): ParseResult | null {
   if (!cleanClass.startsWith("overscroll-")) return null
 
@@ -500,6 +551,7 @@ function parseOverscroll(
       type: `overscroll-${directionMatch[1]}`,
       value: directionMatch[2],
       isNegative,
+      isImportant,
       category: "misc",
     }
   }
@@ -508,6 +560,7 @@ function parseOverscroll(
     type: "overscroll",
     value: overscrollPart,
     isNegative,
+    isImportant,
     category: "misc",
   }
 }
@@ -515,6 +568,7 @@ function parseOverscroll(
 function parseGeneric(
   cleanClass: string,
   isNegative: boolean,
+  isImportant: boolean,
 ): ParseResult | null {
   const dashIndex = cleanClass.indexOf("-")
   if (dashIndex === -1) return null
@@ -522,5 +576,10 @@ function parseGeneric(
   const type = cleanClass.substring(0, dashIndex)
   const classValue = cleanClass.substring(dashIndex + 1)
 
-  return { type, value: classValue, isNegative }
+  return {
+    type,
+    value: classValue,
+    isNegative,
+    isImportant,
+  }
 }

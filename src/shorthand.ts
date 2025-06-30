@@ -15,6 +15,7 @@ type MatchResult = {
   commonPrefix: string
   commonValue: string
   commonNegative: boolean
+  commonImportant: boolean
 }
 
 type ParsedTransformResult = {
@@ -425,11 +426,15 @@ function findMatchingClasses(
 
       // Group classes by prefix combination
       for (const classInfo of classInfos) {
-        // For misc patterns, we need to match the original class name without prefix
+        // For misc patterns, we need to match the original class name without prefix and important
         // because parseGeneric splits "overflow-hidden" into type="overflow", value="hidden"
-        const baseClass = classInfo.original.replace(/^.*:/, "")
+        let baseClass = classInfo.original.replace(/^.*:/, "")
+        // Remove important modifier for pattern matching
+        if (baseClass.endsWith("!")) {
+          baseClass = baseClass.slice(0, -1)
+        }
         if (pattern.includes(baseClass)) {
-          const key = `${classInfo.prefix}|${classInfo.isNegative}`
+          const key = `${classInfo.prefix}|${classInfo.isNegative}|${classInfo.isImportant}`
           if (!classGroups.has(key)) {
             classGroups.set(key, [])
           }
@@ -442,13 +447,19 @@ function findMatchingClasses(
 
       // Check each group to see if it contains all required types
       for (const [key, groupClasses] of classGroups) {
-        const [prefix, isNegativeStr] = key.split("|")
+        const [prefix, isNegativeStr, isImportantStr] = key.split("|")
         const isNegative = isNegativeStr === "true"
+        const isImportant = isImportantStr === "true"
 
         // Check if this group has all required types
         const foundTypes = new Set(
           groupClasses.map((c) => {
-            return c.original.replace(/^.*:/, "")
+            let baseClass = c.original.replace(/^.*:/, "")
+            // Remove important modifier for pattern matching
+            if (baseClass.endsWith("!")) {
+              baseClass = baseClass.slice(0, -1)
+            }
+            return baseClass
           }),
         )
         const hasAllTypes = pattern.every((requiredType) =>
@@ -462,7 +473,11 @@ function findMatchingClasses(
 
           for (const requiredType of pattern) {
             const classInfo = groupClasses.find((c) => {
-              const baseClass = c.original.replace(/^.*:/, "")
+              let baseClass = c.original.replace(/^.*:/, "")
+              // Remove important modifier for pattern matching
+              if (baseClass.endsWith("!")) {
+                baseClass = baseClass.slice(0, -1)
+              }
               return baseClass === requiredType
             })
             if (classInfo) {
@@ -490,6 +505,7 @@ function findMatchingClasses(
             commonPrefix: prefix,
             commonValue: "", // Misc patterns don't have values
             commonNegative: isNegative,
+            commonImportant: isImportant,
           }
         }
       }
@@ -500,7 +516,7 @@ function findMatchingClasses(
       // Group classes by prefix-value combination
       for (const classInfo of classInfos) {
         if (pattern.includes(classInfo.type)) {
-          const key = `${classInfo.prefix}|${classInfo.value}|${classInfo.isNegative}`
+          const key = `${classInfo.prefix}|${classInfo.value}|${classInfo.isNegative}|${classInfo.isImportant}`
           if (!classGroups.has(key)) {
             classGroups.set(key, [])
           }
@@ -513,8 +529,9 @@ function findMatchingClasses(
 
       // Check each group to see if it contains all required types
       for (const [key, groupClasses] of classGroups) {
-        const [prefix, value, isNegativeStr] = key.split("|")
+        const [prefix, value, isNegativeStr, isImportantStr] = key.split("|")
         const isNegative = isNegativeStr === "true"
+        const isImportant = isImportantStr === "true"
 
         // Check if this group has all required types
         const foundTypes = new Set(groupClasses.map((c) => c.type))
@@ -554,6 +571,7 @@ function findMatchingClasses(
             commonPrefix: prefix,
             commonValue: value,
             commonNegative: isNegative,
+            commonImportant: isImportant,
           }
         }
       }
@@ -676,7 +694,8 @@ function createShorthandFromMatchResult(
   matchResult: MatchResult,
   shorthandType: string,
 ): { shorthandClass: string; shorthandClassInfo: ClassInfo } {
-  const { commonPrefix, commonValue, commonNegative } = matchResult
+  const { commonPrefix, commonValue, commonNegative, commonImportant } =
+    matchResult
 
   // Create shorthand class name using the common function
   const shorthandClass = buildShorthandClassName(
@@ -684,6 +703,7 @@ function createShorthandFromMatchResult(
     shorthandType,
     commonValue,
     commonNegative,
+    commonImportant,
   )
 
   // Directly construct ClassInfo without string parsing
@@ -693,6 +713,7 @@ function createShorthandFromMatchResult(
     type: shorthandType,
     value: commonValue,
     isNegative: commonNegative,
+    isImportant: commonImportant,
   }
 
   return { shorthandClass, shorthandClassInfo }
@@ -703,10 +724,12 @@ function buildShorthandClassName(
   shorthandType: string,
   value = "",
   isNegative = false,
+  isImportant = false,
 ): string {
   const negativePrefix = isNegative ? "-" : ""
   const valuePart = value === "" ? "" : `-${value}`
-  return `${prefix}${negativePrefix}${shorthandType}${valuePart}`
+  const importantSuffix = isImportant ? "!" : ""
+  return `${prefix}${negativePrefix}${shorthandType}${valuePart}${importantSuffix}`
 }
 
 function applyTransformationToClassInfos(

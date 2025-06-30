@@ -179,6 +179,100 @@ describe("shorthand", () => {
     )
   })
 
+  describe("important modifier", () => {
+    it("should handle important modifier in shorthand", () => {
+      const result = applyShorthands("px-4! py-4!")
+      expect(result.applied).toBe(true)
+      expect(result.value).toBe("p-4!")
+      expect(result.transformations).toHaveLength(1)
+      expect(result.transformations[0].shorthand).toBe("p-4!")
+    })
+
+    it("should handle important modifier with prefixes", () => {
+      const result = applyShorthands("md:px-4! md:py-4!")
+      expect(result.applied).toBe(true)
+      expect(result.value).toBe("md:p-4!")
+      expect(result.transformations).toHaveLength(1)
+      expect(result.transformations[0].shorthand).toBe("md:p-4!")
+    })
+
+    it("should handle important modifier with negative values", () => {
+      const result = applyShorthands("-mx-4! -my-4!")
+      expect(result.applied).toBe(true)
+      expect(result.value).toBe("-m-4!")
+      expect(result.transformations).toHaveLength(1)
+      expect(result.transformations[0].shorthand).toBe("-m-4!")
+    })
+
+    it("should not create shorthand when only some classes have important", () => {
+      const result = applyShorthands("px-4! py-4")
+      expect(result.applied).toBe(false)
+      expect(result.value).toBe("px-4! py-4")
+    })
+
+    it("should not create shorthand when important modifier is mixed", () => {
+      const result = applyShorthands("mt-2! mb-2 ml-2! mr-2")
+      expect(result.applied).toBe(false)
+      expect(result.value).toBe("mt-2! mb-2 ml-2! mr-2")
+    })
+
+    it("should handle multiple important shorthand patterns", () => {
+      const result = applyShorthands("px-4! py-4! w-8! h-8!")
+      expect(result.applied).toBe(true)
+      expect(result.value).toBe("p-4! size-8!")
+      expect(result.transformations).toHaveLength(2)
+    })
+
+    it("should handle border patterns with important", () => {
+      const result = applyShorthands(
+        "border-t-2! border-b-2! border-l-2! border-r-2!",
+      )
+      expect(result.applied).toBe(true)
+      expect(result.value).toBe("border-2!")
+      expect(result.transformations).toHaveLength(1)
+      expect(result.transformations[0].shorthand).toBe("border-2!")
+    })
+
+    it("should handle rounded patterns with important", () => {
+      const result = applyShorthands("rounded-tl-lg! rounded-tr-lg!")
+      expect(result.applied).toBe(true)
+      expect(result.value).toBe("rounded-t-lg!")
+      expect(result.transformations).toHaveLength(1)
+      expect(result.transformations[0].shorthand).toBe("rounded-t-lg!")
+    })
+
+    it("should handle transform patterns with important", () => {
+      const result = applyShorthands("translate-x-4! translate-y-4!")
+      expect(result.applied).toBe(true)
+      expect(result.value).toBe("translate-4!")
+      expect(result.transformations).toHaveLength(1)
+      expect(result.transformations[0].shorthand).toBe("translate-4!")
+    })
+
+    it("should handle misc patterns with important", () => {
+      const result = applyShorthands(
+        "overflow-hidden! text-ellipsis! whitespace-nowrap!",
+      )
+      expect(result.applied).toBe(true)
+      expect(result.value).toBe("truncate!")
+      expect(result.transformations).toHaveLength(1)
+      expect(result.transformations[0].shorthand).toBe("truncate!")
+    })
+
+    it("should handle complex combinations with mixed important", () => {
+      const result = applyShorthands("px-4! py-4! mx-2 my-2")
+      expect(result.applied).toBe(true)
+      expect(result.value).toBe("p-4! m-2")
+      expect(result.transformations).toHaveLength(2)
+    })
+
+    it("should preserve order with important classes", () => {
+      const result = applyShorthands("bg-red-500 px-4! py-4! text-lg")
+      expect(result.applied).toBe(true)
+      expect(result.value).toBe("bg-red-500 p-4! text-lg")
+    })
+  })
+
   describe("performance comparison", () => {
     it("should handle large class lists efficiently", () => {
       // Create a class list with pairs that can be shortened

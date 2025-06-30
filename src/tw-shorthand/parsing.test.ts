@@ -11,6 +11,7 @@ describe("parseClasses", () => {
         type: "bg",
         value: "red-500",
         isNegative: false,
+        isImportant: false,
       },
     ],
     [
@@ -21,6 +22,7 @@ describe("parseClasses", () => {
         type: "text",
         value: "lg",
         isNegative: false,
+        isImportant: false,
       },
     ],
     [
@@ -31,6 +33,7 @@ describe("parseClasses", () => {
         type: "border",
         value: "2",
         isNegative: false,
+        isImportant: false,
         category: "border-width-color",
       },
     ],
@@ -42,6 +45,7 @@ describe("parseClasses", () => {
         type: "m",
         value: "4",
         isNegative: true,
+        isImportant: false,
       },
     ],
     [
@@ -52,6 +56,7 @@ describe("parseClasses", () => {
         type: "rounded",
         value: "full",
         isNegative: false,
+        isImportant: false,
         category: "border-radius",
       },
     ],
@@ -63,6 +68,7 @@ describe("parseClasses", () => {
         type: "inset",
         value: "0",
         isNegative: false,
+        isImportant: false,
         category: "layout-inset",
       },
     ],
@@ -74,6 +80,7 @@ describe("parseClasses", () => {
         type: "top",
         value: "4",
         isNegative: false,
+        isImportant: false,
         category: "layout-inset",
       },
     ],
@@ -85,6 +92,7 @@ describe("parseClasses", () => {
         type: "scroll-m",
         value: "8",
         isNegative: false,
+        isImportant: false,
         category: "layout-scroll",
       },
     ],
@@ -96,6 +104,7 @@ describe("parseClasses", () => {
         type: "gap-x",
         value: "2",
         isNegative: false,
+        isImportant: false,
         category: "layout-gap",
       },
     ],
@@ -107,6 +116,7 @@ describe("parseClasses", () => {
         type: "grid",
         value: "cols-3",
         isNegative: false,
+        isImportant: false,
       },
     ],
     [
@@ -117,6 +127,7 @@ describe("parseClasses", () => {
         type: "transform",
         value: "gpu",
         isNegative: false,
+        isImportant: false,
       },
     ],
     [
@@ -127,6 +138,7 @@ describe("parseClasses", () => {
         type: "overflow",
         value: "hidden",
         isNegative: false,
+        isImportant: false,
         category: "misc",
       },
     ],
@@ -138,6 +150,7 @@ describe("parseClasses", () => {
         type: "overscroll",
         value: "auto",
         isNegative: false,
+        isImportant: false,
         category: "misc",
       },
     ],
@@ -149,6 +162,7 @@ describe("parseClasses", () => {
         type: "p",
         value: "4",
         isNegative: false,
+        isImportant: false,
       },
     ],
   ])("should parse %s correctly", (original, expected) => {
@@ -167,6 +181,7 @@ describe("parseClasses", () => {
       type: "m",
       value: "4",
       isNegative: false,
+      isImportant: false,
     })
     expect(result[1]).toEqual({
       original: "p-2",
@@ -174,6 +189,7 @@ describe("parseClasses", () => {
       type: "p",
       value: "2",
       isNegative: false,
+      isImportant: false,
     })
     expect(result[2]).toEqual({
       original: "bg-red-500",
@@ -181,6 +197,7 @@ describe("parseClasses", () => {
       type: "bg",
       value: "red-500",
       isNegative: false,
+      isImportant: false,
     })
   })
 
@@ -192,6 +209,7 @@ describe("parseClasses", () => {
       type: "unknown",
       value: "class",
       isNegative: false,
+      isImportant: false,
     })
   })
 
@@ -203,6 +221,7 @@ describe("parseClasses", () => {
       type: "block",
       value: "",
       isNegative: false,
+      isImportant: false,
     })
   })
 
@@ -214,6 +233,7 @@ describe("parseClasses", () => {
       type: "m",
       value: "4",
       isNegative: false,
+      isImportant: false,
     })
   })
 
@@ -225,6 +245,131 @@ describe("parseClasses", () => {
       type: "m",
       value: "8",
       isNegative: true,
+      isImportant: false,
+    })
+  })
+
+  // Test cases for important modifier
+  describe("important modifier", () => {
+    it.each<[string, ClassInfo]>([
+      [
+        "bg-red-500!",
+        {
+          original: "bg-red-500!",
+          prefix: "",
+          type: "bg",
+          value: "red-500",
+          isNegative: false,
+          isImportant: true,
+        },
+      ],
+      [
+        "hover:bg-red-500!",
+        {
+          original: "hover:bg-red-500!",
+          prefix: "hover:",
+          type: "bg",
+          value: "red-500",
+          isNegative: false,
+          isImportant: true,
+        },
+      ],
+      [
+        "md:lg:text-xl!",
+        {
+          original: "md:lg:text-xl!",
+          prefix: "md:lg:",
+          type: "text",
+          value: "xl",
+          isNegative: false,
+          isImportant: true,
+        },
+      ],
+      [
+        "-m-4!",
+        {
+          original: "-m-4!",
+          prefix: "",
+          type: "m",
+          value: "4",
+          isNegative: true,
+          isImportant: true,
+        },
+      ],
+      [
+        "hover:-translate-x-2!",
+        {
+          original: "hover:-translate-x-2!",
+          prefix: "hover:",
+          type: "translate-x",
+          value: "2",
+          isNegative: true,
+          isImportant: true,
+          category: "transform",
+        },
+      ],
+      [
+        "border-x-4!",
+        {
+          original: "border-x-4!",
+          prefix: "",
+          type: "border-x",
+          value: "4",
+          isNegative: false,
+          isImportant: true,
+          category: "border-width-color",
+        },
+      ],
+      [
+        "rounded-lg!",
+        {
+          original: "rounded-lg!",
+          prefix: "",
+          type: "rounded",
+          value: "lg",
+          isNegative: false,
+          isImportant: true,
+          category: "border-radius",
+        },
+      ],
+      [
+        "justify-center!",
+        {
+          original: "justify-center!",
+          prefix: "",
+          type: "justify-content",
+          value: "center",
+          isNegative: false,
+          isImportant: true,
+          category: "grid-flexbox",
+        },
+      ],
+    ])("should parse %s correctly", (original, expected) => {
+      const result = parseClass(original)
+      expect(result).toEqual(expected)
+    })
+
+    it("should handle edge cases for important modifier", () => {
+      // Double exclamation - only last one is considered important
+      const result1 = parseClass("bg-red-500!!")
+      expect(result1.isImportant).toBe(true)
+      expect(result1.value).toBe("red-500!")
+
+      // Exclamation at start - treated as part of class name
+      const result2 = parseClass("!bg-red-500")
+      expect(result2.isImportant).toBe(false)
+      expect(result2.type).toBe("!bg")
+
+      // Empty string with exclamation
+      const result3 = parseClass("!")
+      expect(result3.isImportant).toBe(true)
+      expect(result3.type).toBe("")
+
+      // Prefix with just exclamation
+      const result4 = parseClass("hover:!")
+      expect(result4.isImportant).toBe(true)
+      expect(result4.prefix).toBe("hover:")
+      expect(result4.type).toBe("")
     })
   })
 })
