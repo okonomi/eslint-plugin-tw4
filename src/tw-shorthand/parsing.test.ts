@@ -357,8 +357,8 @@ describe("parseClasses", () => {
 
       // Exclamation at start - treated as part of class name
       const result2 = parseClass("!bg-red-500")
-      expect(result2.isImportant).toBe(false)
-      expect(result2.type).toBe("!bg")
+      expect(result2.isImportant).toBe(true)
+      expect(result2.type).toBe("bg")
 
       // Empty string with exclamation
       const result3 = parseClass("!")
@@ -370,6 +370,56 @@ describe("parseClasses", () => {
       expect(result4.isImportant).toBe(true)
       expect(result4.prefix).toBe("hover:")
       expect(result4.type).toBe("")
+    })
+
+    // Test cases for leading important modifier
+    it("should parse leading important modifier", () => {
+      const result = parseClass("!bg-red-500")
+      expect(result).toEqual({
+        original: "!bg-red-500",
+        prefix: "",
+        type: "bg",
+        value: "red-500",
+        isNegative: false,
+        isImportant: true,
+      })
+    })
+
+    it("should parse leading important modifier with prefix", () => {
+      const result = parseClass("hover:sm:!overflow-hidden")
+      expect(result).toEqual({
+        original: "hover:sm:!overflow-hidden",
+        prefix: "hover:sm:",
+        type: "overflow",
+        value: "hidden",
+        isNegative: false,
+        isImportant: true,
+        category: "misc",
+      })
+    })
+
+    it("should handle both leading and trailing important as invalid", () => {
+      const result = parseClass("!bg-red-500!")
+      expect(result).toEqual({
+        original: "!bg-red-500!",
+        prefix: "",
+        type: "!bg-red-500!",
+        value: "",
+        isNegative: false,
+        isImportant: false,
+      })
+    })
+
+    it("should handle both leading and trailing important with prefix as invalid", () => {
+      const result = parseClass("hover:!bg-red-500!")
+      expect(result).toEqual({
+        original: "hover:!bg-red-500!",
+        prefix: "",
+        type: "hover:!bg-red-500!",
+        value: "",
+        isNegative: false,
+        isImportant: false,
+      })
     })
   })
 })

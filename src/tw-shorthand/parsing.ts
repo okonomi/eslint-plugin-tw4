@@ -45,6 +45,28 @@ export function parseClasses(classes: string[]): ClassInfo[] {
  */
 export function parseClass(className: string): ClassInfo {
   const { prefix, baseClass, isImportant } = splitPrefixAndBase(className)
+
+  // Check for invalid case where both leading and trailing important are present
+  // splitPrefixAndBase returns { prefix: "", baseClass: className, isImportant: false } for invalid cases
+  // We can detect this by checking if baseClass contains both leading and trailing important
+  const isInvalidCase =
+    prefix === "" &&
+    baseClass === className &&
+    !isImportant &&
+    className.includes("!") &&
+    className.indexOf("!") !== className.lastIndexOf("!")
+
+  if (isInvalidCase) {
+    return {
+      original: className,
+      prefix: "",
+      type: className,
+      value: "",
+      isNegative: false,
+      isImportant: false,
+    }
+  }
+
   const baseInfo = parseBaseClass(baseClass, isImportant)
 
   return {
@@ -67,16 +89,37 @@ function splitPrefixAndBase(className: string): {
   isImportant: boolean
 } {
   // Check for important modifier (!) at the end
-  const isImportant = className.endsWith("!")
-  const classWithoutImportant = isImportant ? className.slice(0, -1) : className
+  const hasTrailingImportant = className.endsWith("!")
+  const classWithoutTrailingImportant = hasTrailingImportant
+    ? className.slice(0, -1)
+    : className
 
-  const colonIndex = classWithoutImportant.lastIndexOf(":")
+  const colonIndex = classWithoutTrailingImportant.lastIndexOf(":")
+  let prefix = ""
+  let baseClassWithPrefix = classWithoutTrailingImportant
+
   if (colonIndex !== -1) {
-    const prefix = classWithoutImportant.substring(0, colonIndex + 1)
-    const baseClass = classWithoutImportant.substring(colonIndex + 1)
-    return { prefix, baseClass, isImportant }
+    prefix = classWithoutTrailingImportant.substring(0, colonIndex + 1)
+    baseClassWithPrefix = classWithoutTrailingImportant.substring(
+      colonIndex + 1,
+    )
   }
-  return { prefix: "", baseClass: classWithoutImportant, isImportant }
+
+  // Check for important modifier (!) at the beginning of base class
+  const hasLeadingImportant = baseClassWithPrefix.startsWith("!")
+  const baseClass = hasLeadingImportant
+    ? baseClassWithPrefix.slice(1)
+    : baseClassWithPrefix
+
+  // Check for invalid case: both leading and trailing important
+  if (hasLeadingImportant && hasTrailingImportant) {
+    // Invalid case: both !class-name! - return the whole thing as unparseable
+    return { prefix: "", baseClass: className, isImportant: false }
+  }
+
+  const isImportant = hasLeadingImportant || hasTrailingImportant
+
+  return { prefix, baseClass, isImportant }
 }
 
 /**

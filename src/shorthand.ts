@@ -409,6 +409,34 @@ export function applyShorthands(value: string) {
 // Core Transformation Functions
 // =============================================================================
 
+/**
+ * Check if all important modifiers use the same style (leading vs trailing)
+ */
+function hasConsistentImportantStyle(classInfos: ClassInfo[]): boolean {
+  const importantClasses = classInfos.filter((c) => c.isImportant)
+  if (importantClasses.length <= 1) return true
+
+  // Check the style of the first important class
+  const firstClass = importantClasses[0]
+  const colonIndex = firstClass.original.lastIndexOf(":")
+  const baseClassPart =
+    colonIndex !== -1
+      ? firstClass.original.substring(colonIndex + 1)
+      : firstClass.original
+  const isFirstLeading = baseClassPart.startsWith("!")
+
+  // Check if all other important classes use the same style
+  return importantClasses.every((classInfo) => {
+    const colonIndex = classInfo.original.lastIndexOf(":")
+    const baseClassPart =
+      colonIndex !== -1
+        ? classInfo.original.substring(colonIndex + 1)
+        : classInfo.original
+    const isLeading = baseClassPart.startsWith("!")
+    return isLeading === isFirstLeading
+  })
+}
+
 function findMatchingClasses(
   patterns: string[][],
   classInfos: ClassInfo[],
@@ -429,9 +457,12 @@ function findMatchingClasses(
         // For misc patterns, we need to match the original class name without prefix and important
         // because parseGeneric splits "overflow-hidden" into type="overflow", value="hidden"
         let baseClass = classInfo.original.replace(/^.*:/, "")
-        // Remove important modifier for pattern matching
+        // Remove important modifier for pattern matching (both trailing and leading)
         if (baseClass.endsWith("!")) {
           baseClass = baseClass.slice(0, -1)
+        }
+        if (baseClass.startsWith("!")) {
+          baseClass = baseClass.slice(1)
         }
         if (pattern.includes(baseClass)) {
           const key = `${classInfo.prefix}|${classInfo.isNegative}|${classInfo.isImportant}`
@@ -455,9 +486,12 @@ function findMatchingClasses(
         const foundTypes = new Set(
           groupClasses.map((c) => {
             let baseClass = c.original.replace(/^.*:/, "")
-            // Remove important modifier for pattern matching
+            // Remove important modifier for pattern matching (both trailing and leading)
             if (baseClass.endsWith("!")) {
               baseClass = baseClass.slice(0, -1)
+            }
+            if (baseClass.startsWith("!")) {
+              baseClass = baseClass.slice(1)
             }
             return baseClass
           }),
@@ -467,6 +501,11 @@ function findMatchingClasses(
         )
 
         if (hasAllTypes && groupClasses.length === pattern.length) {
+          // Check for consistent important modifier style before creating match
+          if (!hasConsistentImportantStyle(groupClasses)) {
+            continue // Skip this group if important styles are inconsistent
+          }
+
           // Found a complete match
           const matches: { [key: string]: string } = {}
           const matchedClassInfos: ClassInfo[] = []
@@ -474,9 +513,12 @@ function findMatchingClasses(
           for (const requiredType of pattern) {
             const classInfo = groupClasses.find((c) => {
               let baseClass = c.original.replace(/^.*:/, "")
-              // Remove important modifier for pattern matching
+              // Remove important modifier for pattern matching (both trailing and leading)
               if (baseClass.endsWith("!")) {
                 baseClass = baseClass.slice(0, -1)
+              }
+              if (baseClass.startsWith("!")) {
+                baseClass = baseClass.slice(1)
               }
               return baseClass === requiredType
             })
@@ -540,6 +582,11 @@ function findMatchingClasses(
         )
 
         if (hasAllTypes && groupClasses.length === pattern.length) {
+          // Check for consistent important modifier style before creating match
+          if (!hasConsistentImportantStyle(groupClasses)) {
+            continue // Skip this group if important styles are inconsistent
+          }
+
           // Found a complete match
           const matches: { [key: string]: string } = {}
           const matchedClassInfos: ClassInfo[] = []
@@ -694,8 +741,28 @@ function createShorthandFromMatchResult(
   matchResult: MatchResult,
   shorthandType: string,
 ): { shorthandClass: string; shorthandClassInfo: ClassInfo } {
-  const { commonPrefix, commonValue, commonNegative, commonImportant } =
-    matchResult
+  const {
+    commonPrefix,
+    commonValue,
+    commonNegative,
+    commonImportant,
+    matchedClasses,
+  } = matchResult
+
+  // Determine the important modifier style from the first matched class
+  let importantStyle: "none" | "trailing" | "leading" = "none"
+  if (commonImportant && matchedClasses.length > 0) {
+    const firstClass = matchedClasses[0]
+    // Check if the first class uses leading important (after prefix)
+    const colonIndex = firstClass.lastIndexOf(":")
+    const baseClassPart =
+      colonIndex !== -1 ? firstClass.substring(colonIndex + 1) : firstClass
+    if (baseClassPart.startsWith("!")) {
+      importantStyle = "leading"
+    } else if (firstClass.endsWith("!")) {
+      importantStyle = "trailing"
+    }
+  }
 
   // Create shorthand class name using the common function
   const shorthandClass = buildShorthandClassName(
@@ -704,6 +771,7 @@ function createShorthandFromMatchResult(
     commonValue,
     commonNegative,
     commonImportant,
+    importantStyle,
   )
 
   // Directly construct ClassInfo without string parsing
@@ -725,11 +793,20 @@ function buildShorthandClassName(
   value = "",
   isNegative = false,
   isImportant = false,
+  importantStyle: "none" | "trailing" | "leading" = "trailing",
 ): string {
   const negativePrefix = isNegative ? "-" : ""
   const valuePart = value === "" ? "" : `-${value}`
-  const importantSuffix = isImportant ? "!" : ""
-  return `${prefix}${negativePrefix}${shorthandType}${valuePart}${importantSuffix}`
+
+  if (isImportant) {
+    if (importantStyle === "leading") {
+      return `${prefix}!${negativePrefix}${shorthandType}${valuePart}`
+    }
+    // Default to trailing for backward compatibility
+    return `${prefix}${negativePrefix}${shorthandType}${valuePart}!`
+  }
+
+  return `${prefix}${negativePrefix}${shorthandType}${valuePart}`
 }
 
 function applyTransformationToClassInfos(

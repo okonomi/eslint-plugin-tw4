@@ -271,6 +271,52 @@ describe("shorthand", () => {
       expect(result.applied).toBe(true)
       expect(result.value).toBe("bg-red-500 p-4! text-lg")
     })
+
+    it("should handle leading important modifier", () => {
+      const result = applyShorthands("!px-4 !py-4")
+      expect(result.applied).toBe(true)
+      expect(result.value).toBe("!p-4")
+      expect(result.transformations).toHaveLength(1)
+      expect(result.transformations[0].shorthand).toBe("!p-4")
+    })
+
+    it("should handle leading important modifier with prefixes", () => {
+      const result = applyShorthands("md:!px-4 md:!py-4")
+      expect(result.applied).toBe(true)
+      expect(result.value).toBe("md:!p-4")
+      expect(result.transformations).toHaveLength(1)
+      expect(result.transformations[0].shorthand).toBe("md:!p-4")
+    })
+
+    it("should handle mixed leading and trailing important (no conversion)", () => {
+      const result = applyShorthands("!px-4 py-4!")
+      expect(result.applied).toBe(false)
+      expect(result.value).toBe("!px-4 py-4!")
+    })
+
+    it("should handle leading important with negative values", () => {
+      const result = applyShorthands("!-mx-4 !-my-4")
+      expect(result.applied).toBe(true)
+      expect(result.value).toBe("!-m-4")
+      expect(result.transformations).toHaveLength(1)
+      expect(result.transformations[0].shorthand).toBe("!-m-4")
+    })
+
+    it("should handle leading important with misc patterns", () => {
+      const result = applyShorthands(
+        "!overflow-hidden !text-ellipsis !whitespace-nowrap",
+      )
+      expect(result.applied).toBe(true)
+      expect(result.value).toBe("!truncate")
+      expect(result.transformations).toHaveLength(1)
+      expect(result.transformations[0].shorthand).toBe("!truncate")
+    })
+
+    it("should handle invalid double important (no conversion)", () => {
+      const result = applyShorthands("!px-4! !py-4!")
+      expect(result.applied).toBe(false)
+      expect(result.value).toBe("!px-4! !py-4!")
+    })
   })
 
   describe("performance comparison", () => {
