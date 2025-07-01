@@ -2,8 +2,12 @@
 // Shorthand Functions - Using Improved ClassInfo Structure
 // =============================================================================
 
-import { emitBaseClassName, emitClassName } from "./tw-shorthand/class-detail"
-import { type ClassInfo, parseClasses } from "./tw-shorthand/parsing"
+import {
+  emitBaseClassName,
+  emitClassName,
+} from "./tw-shorthand/class-info/emit"
+import { parseClasses } from "./tw-shorthand/class-info/parse"
+import type { ClassInfo } from "./tw-shorthand/class-info/type"
 
 type ShorthandPattern = {
   patterns: string[][]
@@ -365,9 +369,9 @@ export function applyShorthands(value: string) {
       // Find a class that could represent the combined functionality
       const removedClassInfo = parseClasses(redundancyResult.removedClasses)[0]
       return (
-        c.prefix === removedClassInfo.prefix &&
-        c.value === removedClassInfo.value &&
-        c.isNegative === removedClassInfo.isNegative
+        c.detail.prefix === removedClassInfo.detail.prefix &&
+        c.detail.value === removedClassInfo.detail.value &&
+        c.detail.isNegative === removedClassInfo.detail.isNegative
       )
     })
 
@@ -414,15 +418,15 @@ export function applyShorthands(value: string) {
  * Check if all important modifiers use the same style (leading vs trailing)
  */
 function hasConsistentImportantStyle(classInfos: ClassInfo[]): boolean {
-  const importantClasses = classInfos.filter((c) => c.important !== null)
+  const importantClasses = classInfos.filter((c) => c.detail.important !== null)
   if (importantClasses.length <= 1) return true
 
   // Check the style of the first important class
-  const firstImportantStyle = importantClasses[0].important
+  const firstImportantStyle = importantClasses[0].detail.important
 
   // Check if all other important classes use the same style
   return importantClasses.every(
-    (classInfo) => classInfo.important === firstImportantStyle,
+    (classInfo) => classInfo.detail.important === firstImportantStyle,
   )
 }
 
@@ -448,7 +452,7 @@ function findMatchingClasses(
         const baseClass = classInfo.baseClass
 
         if (pattern.includes(baseClass)) {
-          const key = `${classInfo.prefix}|${classInfo.isNegative}|${classInfo.important ?? "null"}`
+          const key = `${classInfo.detail.prefix}|${classInfo.detail.isNegative}|${classInfo.detail.important ?? "null"}`
           if (!classGroups.has(key)) {
             classGroups.set(key, [])
           }
@@ -523,8 +527,8 @@ function findMatchingClasses(
 
       // Group classes by prefix-value combination
       for (const classInfo of classInfos) {
-        if (pattern.includes(classInfo.type)) {
-          const key = `${classInfo.prefix}|${classInfo.value}|${classInfo.isNegative}|${classInfo.important ?? "null"}`
+        if (pattern.includes(classInfo.detail.type)) {
+          const key = `${classInfo.detail.prefix}|${classInfo.detail.value}|${classInfo.detail.isNegative}|${classInfo.detail.important ?? "null"}`
           if (!classGroups.has(key)) {
             classGroups.set(key, [])
           }
@@ -545,7 +549,7 @@ function findMatchingClasses(
             : (importantStr as "leading" | "trailing")
 
         // Check if this group has all required types
-        const foundTypes = new Set(groupClasses.map((c) => c.type))
+        const foundTypes = new Set(groupClasses.map((c) => c.detail.type))
         const hasAllTypes = pattern.every((requiredType) =>
           foundTypes.has(requiredType),
         )
@@ -561,7 +565,9 @@ function findMatchingClasses(
           const matchedClassInfos: ClassInfo[] = []
 
           for (const requiredType of pattern) {
-            const classInfo = groupClasses.find((c) => c.type === requiredType)
+            const classInfo = groupClasses.find(
+              (c) => c.detail.type === requiredType,
+            )
             if (classInfo) {
               matches[requiredType] = classInfo.original
               matchedClassInfos.push(classInfo)
@@ -732,12 +738,14 @@ function createShorthandFromMatchResult(
   // Directly construct ClassInfo without string parsing
   const shorthandClassInfo: ClassInfo = {
     original: shorthandClass,
-    prefix: commonPrefix,
-    type: shorthandType,
-    value: commonValue,
-    isNegative: commonNegative,
-    important: commonImportant,
     baseClass: baseClass,
+    detail: {
+      prefix: commonPrefix,
+      type: shorthandType,
+      value: commonValue,
+      isNegative: commonNegative,
+      important: commonImportant,
+    },
   }
 
   return { shorthandClass, shorthandClassInfo }
@@ -978,7 +986,7 @@ function removeRedundantClasses(classInfos: ClassInfo[]): {
     // Group classes by prefix and value
     const classGroups = new Map<string, ClassInfo[]>()
     for (const classInfo of filteredClasses) {
-      const key = `${classInfo.prefix}|${classInfo.value}|${classInfo.isNegative}`
+      const key = `${classInfo.detail.prefix}|${classInfo.detail.value}|${classInfo.detail.isNegative}`
       if (!classGroups.has(key)) {
         classGroups.set(key, [])
       }
@@ -990,11 +998,11 @@ function removeRedundantClasses(classInfos: ClassInfo[]): {
 
     for (const [_, groupClasses] of classGroups) {
       // Check if base class exists in this group
-      const baseClass = groupClasses.find((c) => c.type === rule.base)
+      const baseClass = groupClasses.find((c) => c.detail.type === rule.base)
       if (baseClass) {
         // Remove redundant classes from the same group
         const redundantClassesToRemove = groupClasses.filter(
-          (c) => rule.redundant.includes(c.type) && c !== baseClass,
+          (c) => rule.redundant.includes(c.detail.type) && c !== baseClass,
         )
 
         for (const redundantClass of redundantClassesToRemove) {

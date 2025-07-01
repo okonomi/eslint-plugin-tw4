@@ -2,27 +2,7 @@
 // Improved Parser - Flattened Structure
 // =============================================================================
 
-/**
- * Improved class info structure - flattened and type-safe
- */
-export type ClassInfo = {
-  /** Original class name as provided */
-  original: string
-  /** Prefix part (e.g., "md:", "hover:", "lg:") */
-  prefix: string
-  /** Parsed class type (e.g., "m", "p", "border") */
-  type: string
-  /** Class value (e.g., "4" in "m-4", "red-500" in "bg-red-500") */
-  value: string
-  /** Whether this class has negative modifier */
-  isNegative: boolean
-  /** Important modifier type: 'leading' (!class), 'trailing' (class!), or null */
-  important: "leading" | "trailing" | null
-  /** Base class name without prefix and important modifiers */
-  baseClass: string
-  /** Optional category for grouping related classes */
-  category?: string
-}
+import type { ClassInfo } from "./type"
 
 /**
  * Result type for base class parsing
@@ -68,12 +48,14 @@ export function parseClass(className: string): ClassInfo {
   if (isInvalidCase) {
     return {
       original: className,
-      prefix: "",
-      type: className,
-      value: "",
-      isNegative: false,
-      important: null,
       baseClass: className,
+      detail: {
+        prefix: "",
+        type: className,
+        value: "",
+        isNegative: false,
+        important: null,
+      },
     }
   }
 
@@ -81,13 +63,15 @@ export function parseClass(className: string): ClassInfo {
 
   return {
     original: className,
-    prefix,
-    type: baseInfo.type,
-    value: baseInfo.value,
-    isNegative: baseInfo.isNegative,
-    important: important,
     baseClass: baseClass,
     category: baseInfo.category,
+    detail: {
+      prefix,
+      type: baseInfo.type,
+      value: baseInfo.value,
+      isNegative: baseInfo.isNegative,
+      important: important,
+    },
   }
 }
 
