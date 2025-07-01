@@ -406,6 +406,31 @@ export function applyShorthands(value: string) {
 }
 
 // =============================================================================
+// Utility Functions for ClassInfo Processing
+// =============================================================================
+
+/**
+ * Get original class name without prefix and important modifiers for misc patterns
+ */
+function getOriginalClassNameWithoutModifiers(classInfo: ClassInfo): string {
+  let result = classInfo.original
+
+  // Remove prefix
+  if (classInfo.prefix) {
+    result = result.substring(classInfo.prefix.length)
+  }
+
+  // Remove important modifiers
+  if (classInfo.important === "trailing" && result.endsWith("!")) {
+    result = result.slice(0, -1)
+  } else if (classInfo.important === "leading" && result.startsWith("!")) {
+    result = result.slice(1)
+  }
+
+  return result
+}
+
+// =============================================================================
 // Core Transformation Functions
 // =============================================================================
 
@@ -444,14 +469,8 @@ function findMatchingClasses(
       for (const classInfo of classInfos) {
         // For misc patterns, we need to match the original class name without prefix and important
         // because parseGeneric splits "overflow-hidden" into type="overflow", value="hidden"
-        let baseClass = classInfo.original.replace(/^.*:/, "")
-        // Remove important modifier for pattern matching (both trailing and leading)
-        if (baseClass.endsWith("!")) {
-          baseClass = baseClass.slice(0, -1)
-        }
-        if (baseClass.startsWith("!")) {
-          baseClass = baseClass.slice(1)
-        }
+        const baseClass = getOriginalClassNameWithoutModifiers(classInfo)
+
         if (pattern.includes(baseClass)) {
           const key = `${classInfo.prefix}|${classInfo.isNegative}|${classInfo.important ?? "null"}`
           if (!classGroups.has(key)) {
@@ -475,17 +494,7 @@ function findMatchingClasses(
 
         // Check if this group has all required types
         const foundTypes = new Set(
-          groupClasses.map((c) => {
-            let baseClass = c.original.replace(/^.*:/, "")
-            // Remove important modifier for pattern matching (both trailing and leading)
-            if (baseClass.endsWith("!")) {
-              baseClass = baseClass.slice(0, -1)
-            }
-            if (baseClass.startsWith("!")) {
-              baseClass = baseClass.slice(1)
-            }
-            return baseClass
-          }),
+          groupClasses.map((c) => getOriginalClassNameWithoutModifiers(c)),
         )
         const hasAllTypes = pattern.every((requiredType) =>
           foundTypes.has(requiredType),
@@ -502,17 +511,9 @@ function findMatchingClasses(
           const matchedClassInfos: ClassInfo[] = []
 
           for (const requiredType of pattern) {
-            const classInfo = groupClasses.find((c) => {
-              let baseClass = c.original.replace(/^.*:/, "")
-              // Remove important modifier for pattern matching (both trailing and leading)
-              if (baseClass.endsWith("!")) {
-                baseClass = baseClass.slice(0, -1)
-              }
-              if (baseClass.startsWith("!")) {
-                baseClass = baseClass.slice(1)
-              }
-              return baseClass === requiredType
-            })
+            const classInfo = groupClasses.find(
+              (c) => getOriginalClassNameWithoutModifiers(c) === requiredType,
+            )
             if (classInfo) {
               matches[requiredType] = classInfo.original
               matchedClassInfos.push(classInfo)
