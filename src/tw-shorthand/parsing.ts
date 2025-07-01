@@ -18,6 +18,8 @@ export type ClassInfo = {
   isNegative: boolean
   /** Important modifier type: 'leading' (!class), 'trailing' (class!), or null */
   important: "leading" | "trailing" | null
+  /** Base class name without prefix and important modifiers */
+  baseClass: string
   /** Optional category for grouping related classes */
   category?: string
 }
@@ -71,6 +73,7 @@ export function parseClass(className: string): ClassInfo {
       value: "",
       isNegative: false,
       important: null,
+      baseClass: className,
     }
   }
 
@@ -83,6 +86,7 @@ export function parseClass(className: string): ClassInfo {
     value: baseInfo.value,
     isNegative: baseInfo.isNegative,
     important: important,
+    baseClass: baseClass,
     category: baseInfo.category,
   }
 }

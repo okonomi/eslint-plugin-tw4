@@ -406,31 +406,6 @@ export function applyShorthands(value: string) {
 }
 
 // =============================================================================
-// Utility Functions for ClassInfo Processing
-// =============================================================================
-
-/**
- * Get original class name without prefix and important modifiers for misc patterns
- */
-function getOriginalClassNameWithoutModifiers(classInfo: ClassInfo): string {
-  let result = classInfo.original
-
-  // Remove prefix
-  if (classInfo.prefix) {
-    result = result.substring(classInfo.prefix.length)
-  }
-
-  // Remove important modifiers
-  if (classInfo.important === "trailing" && result.endsWith("!")) {
-    result = result.slice(0, -1)
-  } else if (classInfo.important === "leading" && result.startsWith("!")) {
-    result = result.slice(1)
-  }
-
-  return result
-}
-
-// =============================================================================
 // Core Transformation Functions
 // =============================================================================
 
@@ -469,7 +444,7 @@ function findMatchingClasses(
       for (const classInfo of classInfos) {
         // For misc patterns, we need to match the original class name without prefix and important
         // because parseGeneric splits "overflow-hidden" into type="overflow", value="hidden"
-        const baseClass = getOriginalClassNameWithoutModifiers(classInfo)
+        const baseClass = classInfo.baseClass
 
         if (pattern.includes(baseClass)) {
           const key = `${classInfo.prefix}|${classInfo.isNegative}|${classInfo.important ?? "null"}`
@@ -493,9 +468,7 @@ function findMatchingClasses(
             : (importantStr as "leading" | "trailing")
 
         // Check if this group has all required types
-        const foundTypes = new Set(
-          groupClasses.map((c) => getOriginalClassNameWithoutModifiers(c)),
-        )
+        const foundTypes = new Set(groupClasses.map((c) => c.baseClass))
         const hasAllTypes = pattern.every((requiredType) =>
           foundTypes.has(requiredType),
         )
@@ -512,7 +485,7 @@ function findMatchingClasses(
 
           for (const requiredType of pattern) {
             const classInfo = groupClasses.find(
-              (c) => getOriginalClassNameWithoutModifiers(c) === requiredType,
+              (c) => c.baseClass === requiredType,
             )
             if (classInfo) {
               matches[requiredType] = classInfo.original
@@ -748,6 +721,17 @@ function createShorthandFromMatchResult(
     commonImportant,
   )
 
+  // Calculate baseClass for the shorthand (remove prefix and important modifiers)
+  let baseClass = shorthandClass
+  if (commonPrefix) {
+    baseClass = baseClass.substring(commonPrefix.length)
+  }
+  if (commonImportant === "trailing" && baseClass.endsWith("!")) {
+    baseClass = baseClass.slice(0, -1)
+  } else if (commonImportant === "leading" && baseClass.startsWith("!")) {
+    baseClass = baseClass.slice(1)
+  }
+
   // Directly construct ClassInfo without string parsing
   const shorthandClassInfo: ClassInfo = {
     original: shorthandClass,
@@ -756,6 +740,7 @@ function createShorthandFromMatchResult(
     value: commonValue,
     isNegative: commonNegative,
     important: commonImportant,
+    baseClass: baseClass,
   }
 
   return { shorthandClass, shorthandClassInfo }
