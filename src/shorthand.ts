@@ -744,8 +744,7 @@ function createShorthandFromMatchResult(
     shorthandType,
     commonValue,
     commonNegative,
-    commonImportant !== null,
-    commonImportant === "leading" ? "leading" : "trailing",
+    commonImportant,
   )
 
   // Directly construct ClassInfo without string parsing
@@ -766,17 +765,15 @@ function buildShorthandClassName(
   shorthandType: string,
   value = "",
   isNegative = false,
-  isImportant = false,
-  importantStyle: "none" | "trailing" | "leading" = "trailing",
+  important: "leading" | "trailing" | null = null,
 ): string {
   const negativePrefix = isNegative ? "-" : ""
   const valuePart = value === "" ? "" : `-${value}`
 
-  if (isImportant) {
-    if (importantStyle === "leading") {
-      return `${prefix}!${negativePrefix}${shorthandType}${valuePart}`
-    }
-    // Default to trailing for backward compatibility
+  if (important === "leading") {
+    return `${prefix}!${negativePrefix}${shorthandType}${valuePart}`
+  }
+  if (important === "trailing") {
     return `${prefix}${negativePrefix}${shorthandType}${valuePart}!`
   }
 
