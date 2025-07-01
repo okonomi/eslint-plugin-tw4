@@ -2,6 +2,7 @@
 // Shorthand Functions - Using Improved ClassInfo Structure
 // =============================================================================
 
+import { emitBaseClassName, emitClassName } from "./tw-shorthand/class-detail"
 import { type ClassInfo, parseClasses } from "./tw-shorthand/parsing"
 
 type ShorthandPattern = {
@@ -712,25 +713,21 @@ function createShorthandFromMatchResult(
   const { commonPrefix, commonValue, commonNegative, commonImportant } =
     matchResult
 
-  // Create shorthand class name using the common function
-  const shorthandClass = buildShorthandClassName(
-    commonPrefix,
-    shorthandType,
-    commonValue,
-    commonNegative,
-    commonImportant,
-  )
+  const shorthandClass = emitClassName({
+    prefix: commonPrefix,
+    type: shorthandType,
+    value: commonValue,
+    isNegative: commonNegative,
+    important: commonImportant,
+  })
 
-  // Calculate baseClass for the shorthand (remove prefix and important modifiers)
-  let baseClass = shorthandClass
-  if (commonPrefix) {
-    baseClass = baseClass.substring(commonPrefix.length)
-  }
-  if (commonImportant === "trailing" && baseClass.endsWith("!")) {
-    baseClass = baseClass.slice(0, -1)
-  } else if (commonImportant === "leading" && baseClass.startsWith("!")) {
-    baseClass = baseClass.slice(1)
-  }
+  const baseClass = emitBaseClassName({
+    prefix: commonPrefix,
+    type: shorthandType,
+    value: commonValue,
+    isNegative: commonNegative,
+    important: commonImportant,
+  })
 
   // Directly construct ClassInfo without string parsing
   const shorthandClassInfo: ClassInfo = {
@@ -744,26 +741,6 @@ function createShorthandFromMatchResult(
   }
 
   return { shorthandClass, shorthandClassInfo }
-}
-
-function buildShorthandClassName(
-  prefix: string,
-  shorthandType: string,
-  value = "",
-  isNegative = false,
-  important: "leading" | "trailing" | null = null,
-): string {
-  const negativePrefix = isNegative ? "-" : ""
-  const valuePart = value === "" ? "" : `-${value}`
-
-  if (important === "leading") {
-    return `${prefix}!${negativePrefix}${shorthandType}${valuePart}`
-  }
-  if (important === "trailing") {
-    return `${prefix}${negativePrefix}${shorthandType}${valuePart}!`
-  }
-
-  return `${prefix}${negativePrefix}${shorthandType}${valuePart}`
 }
 
 function applyTransformationToClassInfos(
