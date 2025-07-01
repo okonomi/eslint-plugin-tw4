@@ -11,7 +11,7 @@ describe("parseClasses", () => {
         type: "bg",
         value: "red-500",
         isNegative: false,
-        isImportant: false,
+        important: null,
       },
     ],
     [
@@ -22,7 +22,7 @@ describe("parseClasses", () => {
         type: "text",
         value: "lg",
         isNegative: false,
-        isImportant: false,
+        important: null,
       },
     ],
     [
@@ -33,7 +33,7 @@ describe("parseClasses", () => {
         type: "border",
         value: "2",
         isNegative: false,
-        isImportant: false,
+        important: null,
         category: "border-width-color",
       },
     ],
@@ -45,7 +45,7 @@ describe("parseClasses", () => {
         type: "m",
         value: "4",
         isNegative: true,
-        isImportant: false,
+        important: null,
       },
     ],
     [
@@ -56,7 +56,7 @@ describe("parseClasses", () => {
         type: "rounded",
         value: "full",
         isNegative: false,
-        isImportant: false,
+        important: null,
         category: "border-radius",
       },
     ],
@@ -68,7 +68,7 @@ describe("parseClasses", () => {
         type: "inset",
         value: "0",
         isNegative: false,
-        isImportant: false,
+        important: null,
         category: "layout-inset",
       },
     ],
@@ -80,7 +80,7 @@ describe("parseClasses", () => {
         type: "top",
         value: "4",
         isNegative: false,
-        isImportant: false,
+        important: null,
         category: "layout-inset",
       },
     ],
@@ -92,7 +92,7 @@ describe("parseClasses", () => {
         type: "scroll-m",
         value: "8",
         isNegative: false,
-        isImportant: false,
+        important: null,
         category: "layout-scroll",
       },
     ],
@@ -104,7 +104,7 @@ describe("parseClasses", () => {
         type: "gap-x",
         value: "2",
         isNegative: false,
-        isImportant: false,
+        important: null,
         category: "layout-gap",
       },
     ],
@@ -116,7 +116,7 @@ describe("parseClasses", () => {
         type: "grid",
         value: "cols-3",
         isNegative: false,
-        isImportant: false,
+        important: null,
       },
     ],
     [
@@ -127,7 +127,7 @@ describe("parseClasses", () => {
         type: "transform",
         value: "gpu",
         isNegative: false,
-        isImportant: false,
+        important: null,
       },
     ],
     [
@@ -138,7 +138,7 @@ describe("parseClasses", () => {
         type: "overflow",
         value: "hidden",
         isNegative: false,
-        isImportant: false,
+        important: null,
         category: "misc",
       },
     ],
@@ -150,7 +150,7 @@ describe("parseClasses", () => {
         type: "overscroll",
         value: "auto",
         isNegative: false,
-        isImportant: false,
+        important: null,
         category: "misc",
       },
     ],
@@ -162,7 +162,7 @@ describe("parseClasses", () => {
         type: "p",
         value: "4",
         isNegative: false,
-        isImportant: false,
+        important: null,
       },
     ],
   ])("should parse %s correctly", (original, expected) => {
@@ -181,7 +181,7 @@ describe("parseClasses", () => {
       type: "m",
       value: "4",
       isNegative: false,
-      isImportant: false,
+      important: null,
     })
     expect(result[1]).toEqual({
       original: "p-2",
@@ -189,7 +189,7 @@ describe("parseClasses", () => {
       type: "p",
       value: "2",
       isNegative: false,
-      isImportant: false,
+      important: null,
     })
     expect(result[2]).toEqual({
       original: "bg-red-500",
@@ -197,7 +197,7 @@ describe("parseClasses", () => {
       type: "bg",
       value: "red-500",
       isNegative: false,
-      isImportant: false,
+      important: null,
     })
   })
 
@@ -209,7 +209,7 @@ describe("parseClasses", () => {
       type: "unknown",
       value: "class",
       isNegative: false,
-      isImportant: false,
+      important: null,
     })
   })
 
@@ -221,7 +221,7 @@ describe("parseClasses", () => {
       type: "block",
       value: "",
       isNegative: false,
-      isImportant: false,
+      important: null,
     })
   })
 
@@ -233,7 +233,7 @@ describe("parseClasses", () => {
       type: "m",
       value: "4",
       isNegative: false,
-      isImportant: false,
+      important: null,
     })
   })
 
@@ -245,7 +245,7 @@ describe("parseClasses", () => {
       type: "m",
       value: "8",
       isNegative: true,
-      isImportant: false,
+      important: null,
     })
   })
 
@@ -260,7 +260,7 @@ describe("parseClasses", () => {
           type: "bg",
           value: "red-500",
           isNegative: false,
-          isImportant: true,
+          important: "trailing",
         },
       ],
       [
@@ -271,7 +271,7 @@ describe("parseClasses", () => {
           type: "bg",
           value: "red-500",
           isNegative: false,
-          isImportant: true,
+          important: "trailing",
         },
       ],
       [
@@ -282,7 +282,7 @@ describe("parseClasses", () => {
           type: "text",
           value: "xl",
           isNegative: false,
-          isImportant: true,
+          important: "trailing",
         },
       ],
       [
@@ -293,7 +293,7 @@ describe("parseClasses", () => {
           type: "m",
           value: "4",
           isNegative: true,
-          isImportant: true,
+          important: "trailing",
         },
       ],
       [
@@ -304,7 +304,7 @@ describe("parseClasses", () => {
           type: "translate-x",
           value: "2",
           isNegative: true,
-          isImportant: true,
+          important: "trailing",
           category: "transform",
         },
       ],
@@ -316,7 +316,7 @@ describe("parseClasses", () => {
           type: "border-x",
           value: "4",
           isNegative: false,
-          isImportant: true,
+          important: "trailing",
           category: "border-width-color",
         },
       ],
@@ -328,7 +328,7 @@ describe("parseClasses", () => {
           type: "rounded",
           value: "lg",
           isNegative: false,
-          isImportant: true,
+          important: "trailing",
           category: "border-radius",
         },
       ],
@@ -340,7 +340,7 @@ describe("parseClasses", () => {
           type: "justify-content",
           value: "center",
           isNegative: false,
-          isImportant: true,
+          important: "trailing",
           category: "grid-flexbox",
         },
       ],
@@ -352,22 +352,22 @@ describe("parseClasses", () => {
     it("should handle edge cases for important modifier", () => {
       // Double exclamation - only last one is considered important
       const result1 = parseClass("bg-red-500!!")
-      expect(result1.isImportant).toBe(true)
+      expect(result1.important).toBe("trailing")
       expect(result1.value).toBe("red-500!")
 
       // Exclamation at start - treated as part of class name
       const result2 = parseClass("!bg-red-500")
-      expect(result2.isImportant).toBe(true)
+      expect(result2.important).toBe("leading")
       expect(result2.type).toBe("bg")
 
       // Empty string with exclamation
       const result3 = parseClass("!")
-      expect(result3.isImportant).toBe(true)
+      expect(result3.important).toBe("trailing")
       expect(result3.type).toBe("")
 
       // Prefix with just exclamation
       const result4 = parseClass("hover:!")
-      expect(result4.isImportant).toBe(true)
+      expect(result4.important).toBe("trailing")
       expect(result4.prefix).toBe("hover:")
       expect(result4.type).toBe("")
     })
@@ -381,7 +381,7 @@ describe("parseClasses", () => {
         type: "bg",
         value: "red-500",
         isNegative: false,
-        isImportant: true,
+        important: "leading",
       })
     })
 
@@ -393,7 +393,7 @@ describe("parseClasses", () => {
         type: "overflow",
         value: "hidden",
         isNegative: false,
-        isImportant: true,
+        important: "leading",
         category: "misc",
       })
     })
@@ -406,7 +406,7 @@ describe("parseClasses", () => {
         type: "!bg-red-500!",
         value: "",
         isNegative: false,
-        isImportant: false,
+        important: null,
       })
     })
 
@@ -418,7 +418,7 @@ describe("parseClasses", () => {
         type: "hover:!bg-red-500!",
         value: "",
         isNegative: false,
-        isImportant: false,
+        important: null,
       })
     })
   })

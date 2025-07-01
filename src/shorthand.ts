@@ -15,7 +15,7 @@ type MatchResult = {
   commonPrefix: string
   commonValue: string
   commonNegative: boolean
-  commonImportant: boolean
+  commonImportant: "leading" | "trailing" | null
 }
 
 type ParsedTransformResult = {
@@ -413,28 +413,16 @@ export function applyShorthands(value: string) {
  * Check if all important modifiers use the same style (leading vs trailing)
  */
 function hasConsistentImportantStyle(classInfos: ClassInfo[]): boolean {
-  const importantClasses = classInfos.filter((c) => c.isImportant)
+  const importantClasses = classInfos.filter((c) => c.important !== null)
   if (importantClasses.length <= 1) return true
 
   // Check the style of the first important class
-  const firstClass = importantClasses[0]
-  const colonIndex = firstClass.original.lastIndexOf(":")
-  const baseClassPart =
-    colonIndex !== -1
-      ? firstClass.original.substring(colonIndex + 1)
-      : firstClass.original
-  const isFirstLeading = baseClassPart.startsWith("!")
+  const firstImportantStyle = importantClasses[0].important
 
   // Check if all other important classes use the same style
-  return importantClasses.every((classInfo) => {
-    const colonIndex = classInfo.original.lastIndexOf(":")
-    const baseClassPart =
-      colonIndex !== -1
-        ? classInfo.original.substring(colonIndex + 1)
-        : classInfo.original
-    const isLeading = baseClassPart.startsWith("!")
-    return isLeading === isFirstLeading
-  })
+  return importantClasses.every(
+    (classInfo) => classInfo.important === firstImportantStyle,
+  )
 }
 
 function findMatchingClasses(
@@ -465,7 +453,7 @@ function findMatchingClasses(
           baseClass = baseClass.slice(1)
         }
         if (pattern.includes(baseClass)) {
-          const key = `${classInfo.prefix}|${classInfo.isNegative}|${classInfo.isImportant}`
+          const key = `${classInfo.prefix}|${classInfo.isNegative}|${classInfo.important ?? "null"}`
           if (!classGroups.has(key)) {
             classGroups.set(key, [])
           }
@@ -478,9 +466,12 @@ function findMatchingClasses(
 
       // Check each group to see if it contains all required types
       for (const [key, groupClasses] of classGroups) {
-        const [prefix, isNegativeStr, isImportantStr] = key.split("|")
+        const [prefix, isNegativeStr, importantStr] = key.split("|")
         const isNegative = isNegativeStr === "true"
-        const isImportant = isImportantStr === "true"
+        const important: "leading" | "trailing" | null =
+          importantStr === "null"
+            ? null
+            : (importantStr as "leading" | "trailing")
 
         // Check if this group has all required types
         const foundTypes = new Set(
@@ -547,7 +538,7 @@ function findMatchingClasses(
             commonPrefix: prefix,
             commonValue: "", // Misc patterns don't have values
             commonNegative: isNegative,
-            commonImportant: isImportant,
+            commonImportant: important,
           }
         }
       }
@@ -558,7 +549,7 @@ function findMatchingClasses(
       // Group classes by prefix-value combination
       for (const classInfo of classInfos) {
         if (pattern.includes(classInfo.type)) {
-          const key = `${classInfo.prefix}|${classInfo.value}|${classInfo.isNegative}|${classInfo.isImportant}`
+          const key = `${classInfo.prefix}|${classInfo.value}|${classInfo.isNegative}|${classInfo.important ?? "null"}`
           if (!classGroups.has(key)) {
             classGroups.set(key, [])
           }
@@ -571,9 +562,12 @@ function findMatchingClasses(
 
       // Check each group to see if it contains all required types
       for (const [key, groupClasses] of classGroups) {
-        const [prefix, value, isNegativeStr, isImportantStr] = key.split("|")
+        const [prefix, value, isNegativeStr, importantStr] = key.split("|")
         const isNegative = isNegativeStr === "true"
-        const isImportant = isImportantStr === "true"
+        const important: "leading" | "trailing" | null =
+          importantStr === "null"
+            ? null
+            : (importantStr as "leading" | "trailing")
 
         // Check if this group has all required types
         const foundTypes = new Set(groupClasses.map((c) => c.type))
@@ -618,7 +612,7 @@ function findMatchingClasses(
             commonPrefix: prefix,
             commonValue: value,
             commonNegative: isNegative,
-            commonImportant: isImportant,
+            commonImportant: important,
           }
         }
       }
@@ -741,28 +735,8 @@ function createShorthandFromMatchResult(
   matchResult: MatchResult,
   shorthandType: string,
 ): { shorthandClass: string; shorthandClassInfo: ClassInfo } {
-  const {
-    commonPrefix,
-    commonValue,
-    commonNegative,
-    commonImportant,
-    matchedClasses,
-  } = matchResult
-
-  // Determine the important modifier style from the first matched class
-  let importantStyle: "none" | "trailing" | "leading" = "none"
-  if (commonImportant && matchedClasses.length > 0) {
-    const firstClass = matchedClasses[0]
-    // Check if the first class uses leading important (after prefix)
-    const colonIndex = firstClass.lastIndexOf(":")
-    const baseClassPart =
-      colonIndex !== -1 ? firstClass.substring(colonIndex + 1) : firstClass
-    if (baseClassPart.startsWith("!")) {
-      importantStyle = "leading"
-    } else if (firstClass.endsWith("!")) {
-      importantStyle = "trailing"
-    }
-  }
+  const { commonPrefix, commonValue, commonNegative, commonImportant } =
+    matchResult
 
   // Create shorthand class name using the common function
   const shorthandClass = buildShorthandClassName(
@@ -770,8 +744,8 @@ function createShorthandFromMatchResult(
     shorthandType,
     commonValue,
     commonNegative,
-    commonImportant,
-    importantStyle,
+    commonImportant !== null,
+    commonImportant === "leading" ? "leading" : "trailing",
   )
 
   // Directly construct ClassInfo without string parsing
@@ -781,7 +755,7 @@ function createShorthandFromMatchResult(
     type: shorthandType,
     value: commonValue,
     isNegative: commonNegative,
-    isImportant: commonImportant,
+    important: commonImportant,
   }
 
   return { shorthandClass, shorthandClassInfo }

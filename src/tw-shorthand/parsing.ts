@@ -16,8 +16,8 @@ export type ClassInfo = {
   value: string
   /** Whether this class has negative modifier */
   isNegative: boolean
-  /** Whether this class has important modifier */
-  isImportant: boolean
+  /** Important modifier type: 'leading' (!class), 'trailing' (class!), or null */
+  important: "leading" | "trailing" | null
   /** Optional category for grouping related classes */
   category?: string
 }
@@ -51,15 +51,15 @@ export function parseClasses(classes: string[]): ClassInfo[] {
  * Parse a single class into improved structure
  */
 export function parseClass(className: string): ClassInfo {
-  const { prefix, baseClass, isImportant } = splitPrefixAndBase(className)
+  const { prefix, baseClass, important } = splitPrefixAndBase(className)
 
   // Check for invalid case where both leading and trailing important are present
-  // splitPrefixAndBase returns { prefix: "", baseClass: className, isImportant: false } for invalid cases
+  // splitPrefixAndBase returns { prefix: "", baseClass: className, important: null } for invalid cases
   // We can detect this by checking if baseClass contains both leading and trailing important
   const isInvalidCase =
     prefix === "" &&
     baseClass === className &&
-    !isImportant &&
+    important === null &&
     className.includes("!") &&
     className.indexOf("!") !== className.lastIndexOf("!")
 
@@ -70,7 +70,7 @@ export function parseClass(className: string): ClassInfo {
       type: className,
       value: "",
       isNegative: false,
-      isImportant: false,
+      important: null,
     }
   }
 
@@ -82,7 +82,7 @@ export function parseClass(className: string): ClassInfo {
     type: baseInfo.type,
     value: baseInfo.value,
     isNegative: baseInfo.isNegative,
-    isImportant: isImportant,
+    important: important,
     category: baseInfo.category,
   }
 }
@@ -93,7 +93,7 @@ export function parseClass(className: string): ClassInfo {
 function splitPrefixAndBase(className: string): {
   prefix: string
   baseClass: string
-  isImportant: boolean
+  important: "leading" | "trailing" | null
 } {
   // Check for important modifier (!) at the end
   const hasTrailingImportant = className.endsWith("!")
@@ -121,12 +121,16 @@ function splitPrefixAndBase(className: string): {
   // Check for invalid case: both leading and trailing important
   if (hasLeadingImportant && hasTrailingImportant) {
     // Invalid case: both !class-name! - return the whole thing as unparseable
-    return { prefix: "", baseClass: className, isImportant: false }
+    return { prefix: "", baseClass: className, important: null }
   }
 
-  const isImportant = hasLeadingImportant || hasTrailingImportant
+  const important: "leading" | "trailing" | null = hasLeadingImportant
+    ? "leading"
+    : hasTrailingImportant
+      ? "trailing"
+      : null
 
-  return { prefix, baseClass, isImportant }
+  return { prefix, baseClass, important }
 }
 
 /**
