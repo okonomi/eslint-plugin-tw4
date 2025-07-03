@@ -158,6 +158,36 @@ export default createRule({
             processClassNames(classValue, firstElement, `'${classValue}'`)
           }
         }
+
+        // Phase 2: Object with class names as keys: functionName({'class-names': true})
+        if (firstArg.type === "ObjectExpression") {
+          for (const property of firstArg.properties) {
+            // Only process properties that are not spread elements
+            if (property.type === "Property") {
+              let classValue: string | null = null
+
+              // Handle string literal keys: {'class-names': value}
+              if (
+                property.key.type === "Literal" &&
+                typeof property.key.value === "string"
+              ) {
+                classValue = property.key.value
+              }
+              // Handle identifier keys: {classNames: value} (when not computed)
+              else if (
+                property.key.type === "Identifier" &&
+                !property.computed
+              ) {
+                classValue = property.key.name
+              }
+
+              // Process the class value if found
+              if (classValue) {
+                processClassNames(classValue, property.key, `'${classValue}'`)
+              }
+            }
+          }
+        }
       },
 
       JSXAttribute(node) {

@@ -431,4 +431,117 @@ describe("enforces-shorthand", () => {
       })
     })
   })
+
+  describe("callExpression - Phase 2", () => {
+    describe("object with class names as keys", () => {
+      it.each([
+        {
+          code: `classnames({'w-1 h-1': true})`,
+          output: `classnames({'size-1': true})`,
+          errors: [generateError(["w-1", "h-1"], "size-1")],
+          options: [{ callees: ["classnames"] }],
+        },
+        {
+          code: `classnames({'px-4 py-4': true})`,
+          output: `classnames({'p-4': true})`,
+          errors: [generateError(["px-4", "py-4"], "p-4")],
+          options: [{ callees: ["classnames"] }],
+        },
+        {
+          code: `classnames({'mt-2 mb-2': false})`,
+          output: `classnames({'my-2': false})`,
+          errors: [generateError(["mt-2", "mb-2"], "my-2")],
+          options: [{ callees: ["classnames"] }],
+        },
+        {
+          code: `clsx({'border-l-0 border-r-0': condition})`,
+          output: `clsx({'border-x-0': condition})`,
+          errors: [generateError(["border-l-0", "border-r-0"], "border-x-0")],
+          options: [{ callees: ["clsx"] }],
+        },
+        {
+          code: `classnames({'overflow-x-auto overflow-y-auto': true})`,
+          output: `classnames({'overflow-auto': true})`,
+          errors: [
+            generateError(
+              ["overflow-x-auto", "overflow-y-auto"],
+              "overflow-auto",
+            ),
+          ],
+          options: [{ callees: ["classnames"] }],
+        },
+      ])(
+        "should transform object keys: $code",
+        async ({ code, output, errors, options }) => {
+          const { result } = await invalid({ code, output, errors, options })
+          expect(result.output).toEqual(output)
+        },
+      )
+    })
+
+    describe("object with important classes", () => {
+      it.each([
+        {
+          code: `classnames({'!py-8 !px-8': true})`,
+          output: `classnames({'!p-8': true})`,
+          errors: [generateError(["!py-8", "!px-8"], "!p-8")],
+          options: [{ callees: ["classnames"] }],
+        },
+        {
+          code: `classnames({'!pt-8 !pb-8 !pr-8 !pl-8': true})`,
+          output: `classnames({'!p-8': true})`,
+          errors: [generateError(["!pt-8", "!pb-8", "!pr-8", "!pl-8"], "!p-8")],
+          options: [{ callees: ["classnames"] }],
+        },
+      ])(
+        "should transform important classes in object keys: $code",
+        async ({ code, output, errors, options }) => {
+          const { result } = await invalid({ code, output, errors, options })
+          expect(result.output).toEqual(output)
+        },
+      )
+    })
+
+    describe("object with mixed properties", () => {
+      it("should only transform relevant object keys", async () => {
+        const { result } = await invalid({
+          code: `classnames({'w-1 h-1': true, 'block': true, variable: false})`,
+          output: `classnames({'size-1': true, 'block': true, variable: false})`,
+          errors: [generateError(["w-1", "h-1"], "size-1")],
+          options: [{ callees: ["classnames"] }],
+        })
+        expect(result.output).toEqual(
+          `classnames({'size-1': true, 'block': true, variable: false})`,
+        )
+      })
+    })
+
+    describe("valid cases - no transformation needed", () => {
+      it.each([
+        {
+          code: `classnames({'w-1 h-2': true})`, // Different values
+          options: [{ callees: ["classnames"] }],
+        },
+        {
+          code: `classnames({'w-1': true})`, // Single class
+          options: [{ callees: ["classnames"] }],
+        },
+        {
+          code: "classnames({})", // Empty object
+          options: [{ callees: ["classnames"] }],
+        },
+        {
+          code: "classnames({[variable]: true})", // Computed property
+          options: [{ callees: ["classnames"] }],
+        },
+        {
+          code: "classnames({...spread})", // Spread properties
+          options: [{ callees: ["classnames"] }],
+        },
+      ])("should not transform: $code", async ({ code, options }) => {
+        const { result } = await valid({ code, options })
+        expect(result.output).toEqual(code)
+      })
+    })
+  })
 })
