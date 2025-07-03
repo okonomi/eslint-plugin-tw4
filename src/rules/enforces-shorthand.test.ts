@@ -341,4 +341,94 @@ describe("enforces-shorthand", () => {
       })
     })
   })
+
+  describe("callExpression - Phase 1.2", () => {
+    describe("array with string as first element", () => {
+      it.each([
+        {
+          code: `classnames(['w-1 h-1'])`,
+          output: `classnames(['size-1'])`,
+          errors: [generateError(["w-1", "h-1"], "size-1")],
+          options: [{ callees: ["classnames"] }],
+        },
+        {
+          code: `clsx(['px-4 py-4'])`,
+          output: `clsx(['p-4'])`,
+          errors: [generateError(["px-4", "py-4"], "p-4")],
+          options: [{ callees: ["clsx"] }],
+        },
+        {
+          code: `classnames(['mt-2 mb-2'])`,
+          output: `classnames(['my-2'])`,
+          errors: [generateError(["mt-2", "mb-2"], "my-2")],
+          options: [{ callees: ["classnames"] }],
+        },
+        {
+          code: `classnames(['border-l-0 border-r-0'])`,
+          output: `classnames(['border-x-0'])`,
+          errors: [generateError(["border-l-0", "border-r-0"], "border-x-0")],
+          options: [{ callees: ["classnames"] }],
+        },
+        {
+          code: `classnames(['overflow-x-auto overflow-y-auto'])`,
+          output: `classnames(['overflow-auto'])`,
+          errors: [
+            generateError(
+              ["overflow-x-auto", "overflow-y-auto"],
+              "overflow-auto",
+            ),
+          ],
+          options: [{ callees: ["classnames"] }],
+        },
+      ])(
+        "should transform array with string: $code",
+        async ({ code, output, errors, options }) => {
+          const { result } = await invalid({ code, output, errors, options })
+          expect(result.output).toEqual(output)
+        },
+      )
+    })
+
+    describe("array with multiple elements", () => {
+      it("should only transform first element when it's a string", async () => {
+        const { result } = await invalid({
+          code: `classnames(['w-1 h-1', 'block', condition && 'active'])`,
+          output: `classnames(['size-1', 'block', condition && 'active'])`,
+          errors: [generateError(["w-1", "h-1"], "size-1")],
+          options: [{ callees: ["classnames"] }],
+        })
+        expect(result.output).toEqual(
+          `classnames(['size-1', 'block', condition && 'active'])`,
+        )
+      })
+    })
+
+    describe("valid cases - no transformation needed", () => {
+      it.each([
+        {
+          code: `classnames(['w-1 h-2'])`, // Different values
+          options: [{ callees: ["classnames"] }],
+        },
+        {
+          code: `classnames(['w-1'])`, // Single class
+          options: [{ callees: ["classnames"] }],
+        },
+        {
+          code: "classnames([])", // Empty array
+          options: [{ callees: ["classnames"] }],
+        },
+        {
+          code: "classnames([variable])", // Non-literal first element
+          options: [{ callees: ["classnames"] }],
+        },
+        {
+          code: `classnames([condition && 'w-1 h-1'])`, // Non-literal first element
+          options: [{ callees: ["classnames"] }],
+        },
+      ])("should not transform: $code", async ({ code, options }) => {
+        const { result } = await valid({ code, options })
+        expect(result.output).toEqual(code)
+      })
+    })
+  })
 })

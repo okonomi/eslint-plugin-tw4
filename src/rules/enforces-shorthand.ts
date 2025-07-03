@@ -138,6 +138,26 @@ export default createRule({
 
           processClassNames(classValue, firstArg, `'${classValue}'`)
         }
+
+        // Handle array as first argument: functionName(['class-names'])
+        // Phase 1.2: Array with string as first element
+        if (
+          firstArg.type === "ArrayExpression" &&
+          firstArg.elements.length > 0
+        ) {
+          const firstElement = firstArg.elements[0]
+
+          // Only process if first element is a string literal
+          if (
+            firstElement &&
+            firstElement.type === "Literal" &&
+            typeof firstElement.value === "string"
+          ) {
+            const classValue = firstElement.value
+
+            processClassNames(classValue, firstElement, `'${classValue}'`)
+          }
+        }
       },
 
       JSXAttribute(node) {

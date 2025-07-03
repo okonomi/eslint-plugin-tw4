@@ -47,19 +47,27 @@
 
 **推定工数**: 1時間
 
-#### 1.2 配列の第一要素が文字列の場合
+#### 1.2 配列の第一要素が文字列の場合 ✅ **完了**
 **目標**: `classnames(['py-8 px-8 w-48 h-48 text-white'])` に対応
 
 **対象テストケース**:
-- `classnames(['py-8 px-8 w-48 h-48 text-white'])`
+- ✅ `classnames(['w-1 h-1'])` → `classnames(['size-1'])`
+- ✅ `clsx(['px-4 py-4'])` → `clsx(['p-4'])`
+- ✅ `classnames(['mt-2 mb-2'])` → `classnames(['my-2'])`
+- ✅ `classnames(['border-l-0 border-r-0'])` → `classnames(['border-x-0'])`
+- ✅ `classnames(['overflow-x-auto overflow-y-auto'])` → `classnames(['overflow-auto'])`
+- ✅ 複数要素配列での第一要素のみ変換
+- ✅ 有効性検証（変換不要なケース）
 
 **実装内容**:
-- [ ] ArrayExpression内の最初の要素をチェック
-- [ ] 文字列リテラルの場合のみ処理
-- [ ] fix関数で配列内の文字列を適切に置換
-- [ ] テスト実行・デバッグ
+- ✅ ArrayExpression内の最初の要素をチェック
+- ✅ 文字列リテラルの場合のみ処理
+- ✅ fix関数で配列内の文字列を適切に置換
+- ✅ テスト実行・デバッグ
 
-**推定工数**: 1-2時間
+**結果**: 配列の第一要素が文字列の場合の処理は完全に実装完了。
+
+**推定工数**: 1-2時間 → **実際**: 30分
 
 ### Phase 2: オブジェクト表記への対応
 #### 2.1 オブジェクトのキーとしてのクラス名
@@ -190,7 +198,8 @@
 - 単純なオブジェクト・配列処理 (Phase 2)
 
 ## 成功指標
-- ✅ Phase 1基本完了: 単位テストの基本的なCallExpression関連エラーが2件以下（27/29テスト通過）
+- ✅ Phase 1.1基本完了: 単位テストの基本的なCallExpression関連エラーが2件以下（27/29テスト通過）
+- ✅ Phase 1.2完了: 配列の第一要素文字列処理完了（38/40テスト通過、残り2件はprefix/separator設定）
 - [ ] Phase 1完了: 互換性テストの基本的なCallExpression関連エラーが5件以下
 - [ ] Phase 2完了: オブジェクト表記関連エラーが0件
 - [ ] Phase 3完了: CVA関連エラーが0件
