@@ -47,6 +47,7 @@ export default createRule({
   create(context) {
     const options = context.options[0] || {}
     const callees = (options as { callees?: string[] }).callees || []
+    const tags = (options as { tags?: string[] }).tags || []
     // const config = (options as { config?: object }).config
 
     // Helper function to process class names and report errors
@@ -98,6 +99,54 @@ export default createRule({
       }
     }
 
+    // Helper function to process template literals
+    function processTemplateLiteral(
+      templateLiteral: TSESTree.TemplateLiteral,
+    ): void {
+      // Check if template literal has only static content (no expressions)
+      if (
+        templateLiteral.expressions.length === 0 &&
+        templateLiteral.quasis.length === 1
+      ) {
+        // Simple template literal with no variables: `class-names`
+        const staticContent = templateLiteral.quasis[0].value.cooked
+        if (staticContent) {
+          processClassNames(
+            staticContent,
+            templateLiteral,
+            `\`${staticContent}\``,
+          )
+        }
+      } else if (templateLiteral.quasis.length > 0) {
+        // Template literal with expressions: handle static parts only
+        for (const quasi of templateLiteral.quasis) {
+          const staticContent = quasi.value.cooked
+          if (staticContent?.trim()) {
+            // Process only if the static part contains classes
+            const result = applyShorthands(staticContent)
+            if (result.applied) {
+              // For mixed template literals, we need to be careful with fix
+              // For now, report but don't auto-fix complex template literals
+              if (result.transformations.length > 0) {
+                for (const transformation of result.transformations) {
+                  context.report({
+                    node: templateLiteral,
+                    messageId: "useShorthand",
+                    data: {
+                      shorthand: transformation.shorthand,
+                      classnames: transformation.classnames,
+                    },
+                    // TODO: Implement complex template literal fix
+                    // fix(fixer) { ... }
+                  })
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
     // Helper function to check if a function name matches callees option
     function isTargetCallee(node: TSESTree.CallExpression): boolean {
       if (callees.length === 0) return false
@@ -118,7 +167,84 @@ export default createRule({
       return false
     }
 
+    // Helper function to check if a tag matches tags option
+    function isTargetTag(node: TSESTree.TaggedTemplateExpression): boolean {
+      if (tags.length === 0) return false
+
+      // Handle simple tags: tagName`...`
+      if (node.tag.type === "Identifier") {
+        return tags.includes(node.tag.name)
+      }
+
+      // Handle member expressions: obj.tagName`...`
+      if (
+        node.tag.type === "MemberExpression" &&
+        node.tag.property.type === "Identifier"
+      ) {
+        return tags.includes(node.tag.property.name)
+      }
+
+      return false
+    }
+
+    // Helper function to recursively search for class names in nested structures
+    function processNestedStructure(node: TSESTree.Node): void {
+      if (node.type === "ArrayExpression") {
+        // Process each element in the array
+        for (const element of node.elements) {
+          if (
+            element &&
+            element.type === "Literal" &&
+            typeof element.value === "string"
+          ) {
+            const classValue = element.value
+            processClassNames(classValue, element, `'${classValue}'`)
+          } else if (element) {
+            // Recursively process nested structures
+            processNestedStructure(element)
+          }
+        }
+      } else if (node.type === "ObjectExpression") {
+        // Process each property in the object
+        for (const property of node.properties) {
+          if (property.type === "Property") {
+            // Check if the key is a class name
+            let classValue: string | null = null
+
+            if (
+              property.key.type === "Literal" &&
+              typeof property.key.value === "string"
+            ) {
+              classValue = property.key.value
+            } else if (
+              property.key.type === "Identifier" &&
+              !property.computed
+            ) {
+              classValue = property.key.name
+            }
+
+            if (classValue) {
+              processClassNames(classValue, property.key, `'${classValue}'`)
+            }
+
+            // Recursively process the property value
+            processNestedStructure(property.value)
+          }
+        }
+      }
+    }
+
     return {
+      TaggedTemplateExpression(node: TSESTree.TaggedTemplateExpression) {
+        // Check if this is a target tagged template
+        if (!isTargetTag(node)) {
+          return
+        }
+
+        // Process the template literal part
+        processTemplateLiteral(node.quasi)
+      },
+
       CallExpression(node: TSESTree.CallExpression) {
         // Check if this is a target function call
         if (!isTargetCallee(node)) {
@@ -139,54 +265,21 @@ export default createRule({
           processClassNames(classValue, firstArg, `'${classValue}'`)
         }
 
-        // Handle array as first argument: functionName(['class-names'])
-        // Phase 1.2: Array with string as first element
-        if (
-          firstArg.type === "ArrayExpression" &&
-          firstArg.elements.length > 0
-        ) {
-          const firstElement = firstArg.elements[0]
-
-          // Only process if first element is a string literal
-          if (
-            firstElement &&
-            firstElement.type === "Literal" &&
-            typeof firstElement.value === "string"
-          ) {
-            const classValue = firstElement.value
-
-            processClassNames(classValue, firstElement, `'${classValue}'`)
-          }
+        // Handle template literal as first argument: functionName(`class-names`)
+        if (firstArg.type === "TemplateLiteral") {
+          processTemplateLiteral(firstArg)
         }
 
-        // Phase 2: Object with class names as keys: functionName({'class-names': true})
-        if (firstArg.type === "ObjectExpression") {
-          for (const property of firstArg.properties) {
-            // Only process properties that are not spread elements
-            if (property.type === "Property") {
-              let classValue: string | null = null
-
-              // Handle string literal keys: {'class-names': value}
-              if (
-                property.key.type === "Literal" &&
-                typeof property.key.value === "string"
-              ) {
-                classValue = property.key.value
-              }
-              // Handle identifier keys: {classNames: value} (when not computed)
-              else if (
-                property.key.type === "Identifier" &&
-                !property.computed
-              ) {
-                classValue = property.key.name
-              }
-
-              // Process the class value if found
-              if (classValue) {
-                processClassNames(classValue, property.key, `'${classValue}'`)
-              }
-            }
-          }
+        // Phase 1.2, 2 & 3: Process arrays, objects and nested structures
+        // This unified approach handles:
+        // - Simple arrays: ['class-names']
+        // - Simple objects: {'class-names': true}
+        // - Complex nested CVA patterns: {variants: {size: ['class-names']}}
+        if (
+          firstArg.type === "ArrayExpression" ||
+          firstArg.type === "ObjectExpression"
+        ) {
+          processNestedStructure(firstArg)
         }
       },
 
@@ -196,6 +289,15 @@ export default createRule({
           !node.value
         ) {
           return
+        }
+
+        // Template literal: className={`class-names`}
+        if (
+          node.value.type === "JSXExpressionContainer" &&
+          node.value.expression.type === "TemplateLiteral"
+        ) {
+          const templateLiteral = node.value.expression
+          processTemplateLiteral(templateLiteral)
         }
 
         // string literal
