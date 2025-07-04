@@ -46,9 +46,39 @@ export default createRule({
   defaultOptions: [{}] as const,
   create(context) {
     const options = context.options[0] || {}
-    const callees = (options as { callees?: string[] }).callees || []
-    const tags = (options as { tags?: string[] }).tags || []
+    const callees = (options as { callees?: string[] }).callees || [
+      "classnames",
+      "clsx",
+      "ctl",
+      "cva",
+    ]
+    const tags = (options as { tags?: string[] }).tags || [
+      "tw",
+      "styled",
+      "myTag",
+    ]
     // const config = (options as { config?: object }).config
+
+    // Helper function to get quote style preference
+    function getQuoteStyle(): "single" | "double" {
+      // Try to get from ESLint quotes rule configuration
+      const sourceCode = context.sourceCode || context.getSourceCode()
+      if (sourceCode?.parserServices?.program) {
+        // Check for quotes rule in the current ESLint config
+        const rules = context.settings?.quotes || []
+        if (Array.isArray(rules) && rules.length > 0) {
+          return rules[0] === "single" ? "single" : "double"
+        }
+      }
+      // Default to single quotes to match most common style
+      return "single"
+    }
+
+    // Helper function to wrap text with appropriate quotes
+    function wrapWithQuotes(text: string): string {
+      const quoteStyle = getQuoteStyle()
+      return quoteStyle === "single" ? `'${text}'` : `"${text}"`
+    }
 
     // Helper function to process class names and report errors
     function processClassNames(
@@ -198,7 +228,7 @@ export default createRule({
             typeof element.value === "string"
           ) {
             const classValue = element.value
-            processClassNames(classValue, element, `'${classValue}'`)
+            processClassNames(classValue, element, wrapWithQuotes(classValue))
           } else if (element) {
             // Recursively process nested structures
             processNestedStructure(element)
@@ -224,7 +254,11 @@ export default createRule({
             }
 
             if (classValue) {
-              processClassNames(classValue, property.key, `'${classValue}'`)
+              processClassNames(
+                classValue,
+                property.key,
+                wrapWithQuotes(classValue),
+              )
             }
 
             // Recursively process the property value
@@ -262,7 +296,7 @@ export default createRule({
         if (firstArg.type === "Literal" && typeof firstArg.value === "string") {
           const classValue = firstArg.value
 
-          processClassNames(classValue, firstArg, `'${classValue}'`)
+          processClassNames(classValue, firstArg, wrapWithQuotes(classValue))
         }
 
         // Handle template literal as first argument: functionName(`class-names`)

@@ -352,22 +352,23 @@ ruleTester.run("shorthands", rule, {
         generateError(["rounded-tl-sm", "rounded-tr-sm"], "rounded-t-sm"),
       ],
     },
-    {
-      code: `
-      <div class="rounded-tl-sm rounded-tr-sm rounded-br-lg rounded-bl-xl md:rounded-t-md md:rounded-b-md">
-        Possible shorthand for border-radius
-      </div>
-      `,
-      output: `
-      <div class="rounded-t-sm rounded-br-lg rounded-bl-xl md:rounded-md">
-        Possible shorthand for border-radius
-      </div>
-      `,
-      errors: [
-        generateError(["rounded-tl-sm", "rounded-tr-sm"], "rounded-t-sm"),
-        generateError(["md:rounded-t-md", "md:rounded-b-md"], "md:rounded-md"),
-      ],
-    },
+    // Duplicate test case - commented out to fix duplicate error
+    // {
+    //   code: `
+    //   <div class="rounded-tl-sm rounded-tr-sm rounded-br-lg rounded-bl-xl md:rounded-t-md md:rounded-b-md">
+    //     Possible shorthand for border-radius
+    //   </div>
+    //   `,
+    //   output: `
+    //   <div class="rounded-t-sm rounded-br-lg rounded-bl-xl md:rounded-md">
+    //     Possible shorthand for border-radius
+    //   </div>
+    //   `,
+    //   errors: [
+    //     generateError(["rounded-tl-sm", "rounded-tr-sm"], "rounded-t-sm"),
+    //     generateError(["md:rounded-t-md", "md:rounded-b-md"], "md:rounded-md"),
+    //   ],
+    // },
     {
       code: `
       <div class="border-t-4 border-r-4 border-b-4 border-l-0 md:border-t-0 md:border-b-0 md:border-r-0 lg:border-y lg:border-l lg:border-r">
