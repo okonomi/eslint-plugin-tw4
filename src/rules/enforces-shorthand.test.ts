@@ -174,12 +174,23 @@ describe("enforces-shorthand", () => {
                 height: "h",
               },
             },
-            skipClassAttribute: true,
+            skipClassAttribute: false, // Changed to false to allow className processing
             tags: ["div", "span"],
           },
         ],
       })
       expect(result.output).toEqual(`<div className="p-1" />`)
+    })
+
+    it("should skip className processing when skipClassAttribute is true", async () => {
+      await valid({
+        code: `<div className="px-1 py-1" />`,
+        options: [
+          {
+            skipClassAttribute: true,
+          },
+        ],
+      })
     })
   })
 

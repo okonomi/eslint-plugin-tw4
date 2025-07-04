@@ -1,9 +1,9 @@
 import type { TSESTree } from "@typescript-eslint/utils"
 import { ESLintUtils } from "@typescript-eslint/utils"
-import { CallExpressionHandler } from "./enforces-shorthand/handlers/call-expression-handler"
-import { JSXAttributeHandler } from "./enforces-shorthand/handlers/jsx-attribute-handler"
-import { TaggedTemplateHandler } from "./enforces-shorthand/handlers/tagged-template-handler"
-import { parseOptions } from "./enforces-shorthand/options"
+import { CallExpressionHandler } from "./handlers/call-expression-handler"
+import { JSXAttributeHandler } from "./handlers/jsx-attribute-handler"
+import { TaggedTemplateHandler } from "./handlers/tagged-template-handler"
+import { parseOptions } from "./options"
 
 const createRule = ESLintUtils.RuleCreator(
   (name) => `https://example.com/rule/${name}`,
