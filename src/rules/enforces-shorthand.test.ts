@@ -1,7 +1,7 @@
 import { createRuleTester } from "eslint-vitest-rule-tester"
 import { describe, expect, it } from "vitest"
 
-import rule from "./enforces-shorthand"
+import rule from "./enforces-shorthand/"
 
 function generateError(classnames: string[], shorthand: string) {
   return {
