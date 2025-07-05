@@ -18,7 +18,9 @@
   },
   "scripts": {
     "build": "tsup src/index.ts --format cjs,esm --dts --out-dir dist --clean",
-    "lint": "biome check",
+    "lint": "run-p lint:*",
+    "lint:biome": "biome check",
+    "lint:tsc": "tsc --build",
     "lint-fix": "biome check --write --unsafe",
     "test": "vitest run",
     "test:unit": "vitest run src/",
@@ -36,6 +38,7 @@
     "@typescript-eslint/rule-tester": "^8.34.1",
     "dedent": "^1.6.0",
     "eslint-vitest-rule-tester": "^2.2.0",
+    "npm-run-all2": "^8.0.4",
     "tsup": "^8.5.0",
     "typescript": "^5.8.3",
     "vitest": "^3.2.3",
