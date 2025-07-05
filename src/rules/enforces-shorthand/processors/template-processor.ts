@@ -28,30 +28,79 @@ export function processTemplateLiteral(
       })
     }
   } else if (templateLiteral.quasis.length > 0) {
-    // Template literal with expressions: handle static parts only
-    for (const quasi of templateLiteral.quasis) {
-      const staticContent = quasi.value.cooked
-      if (staticContent?.trim()) {
-        // Process only if the static part contains classes
-        const result = processClassNames(staticContent)
-        if (result.applied) {
-          // For mixed template literals, we need to be careful with fix
-          // For now, report but don't auto-fix complex template literals
-          if (result.transformations.length > 0) {
-            for (const transformation of result.transformations) {
-              context.report({
-                node: templateLiteral,
-                messageId: "useShorthand",
-                data: {
-                  shorthand: transformation.shorthand,
-                  classnames: transformation.classnames,
-                },
-                // TODO: Implement complex template literal fix
-                // fix(fixer) { ... }
-              })
-            }
-          }
+    // Template literal with expressions: handle static parts with fix
+    const processedParts: { staticContent: string; result: any; quasiIndex: number }[] = []
+    let hasTransformations = false
+    
+    // Process each static part (quasi)
+    for (let i = 0; i < templateLiteral.quasis.length; i++) {
+      const quasi = templateLiteral.quasis[i]
+      const staticContent = quasi.value.cooked || ""
+      const result = processClassNames(staticContent)
+      
+      processedParts.push({ staticContent, result, quasiIndex: i })
+      
+      if (result.applied) {
+        hasTransformations = true
+      }
+    }
+    
+    if (hasTransformations) {
+      // Collect all transformations for reporting
+      const allTransformations: Array<{ shorthand: string; classnames: string }> = []
+      
+      for (const part of processedParts) {
+        if (part.result.applied && part.result.transformations.length > 0) {
+          allTransformations.push(...part.result.transformations)
         }
+      }
+      
+      // Report each transformation with fix
+      for (const transformation of allTransformations) {
+        context.report({
+          node: templateLiteral,
+          messageId: "useShorthand",
+          data: {
+            shorthand: transformation.shorthand,
+            classnames: transformation.classnames,
+          },
+          fix(fixer) {
+            // Reconstruct the entire template literal with fixes
+            let fixedTemplate = "`"
+            
+            for (let i = 0; i < templateLiteral.quasis.length; i++) {
+              const part = processedParts[i]
+              
+              // Use transformed content if available, otherwise original
+              let contentToUse = part.result.applied ? part.result.value : part.staticContent
+              
+              // Preserve leading/trailing spaces if they exist in original content
+              if (part.result.applied && part.staticContent !== contentToUse) {
+                const originalTrimmed = part.staticContent.trim()
+                const transformedTrimmed = contentToUse.trim()
+                
+                // If the transformation changed the trimmed content, preserve spaces
+                if (originalTrimmed !== transformedTrimmed) {
+                  const leadingSpaces = part.staticContent.match(/^\s*/)?.[0] || ""
+                  const trailingSpaces = part.staticContent.match(/\s*$/)?.[0] || ""
+                  contentToUse = leadingSpaces + transformedTrimmed + trailingSpaces
+                }
+              }
+              
+              fixedTemplate += contentToUse
+              
+              // Add expression back if this is not the last quasi
+              if (i < templateLiteral.expressions.length) {
+                const sourceCode = context.sourceCode || context.getSourceCode()
+                const expressionText = sourceCode.getText(templateLiteral.expressions[i])
+                fixedTemplate += "${" + expressionText + "}"
+              }
+            }
+            
+            fixedTemplate += "`"
+            return fixer.replaceText(templateLiteral, fixedTemplate)
+          }
+        })
       }
     }
   }

@@ -605,21 +605,19 @@ function findMatchingClasses(
 function findShorthandTransformation(
   classInfos: ClassInfo[],
 ): ParsedTransformResult {
+  // Handle sizing first as it's more specific than spacing patterns
+  const sizingResult = handleSizing(classInfos)
+  if (sizingResult.applied) return sizingResult
+
   // Try each pattern set
   for (const [_name, patterns] of Object.entries(PATTERN_SETS)) {
     const result = applyPatternTransformation(patterns, classInfos)
     if (result.applied) return result
   }
 
-  // Special cases that need custom handling
-  const specialResults = [
-    handleSizing(classInfos),
-    handleTransforms(classInfos),
-  ]
-
-  for (const result of specialResults) {
-    if (result.applied) return result
-  }
+  // Other special cases that need custom handling
+  const transformResult = handleTransforms(classInfos)
+  if (transformResult.applied) return transformResult
 
   return { applied: false, classInfos }
 }

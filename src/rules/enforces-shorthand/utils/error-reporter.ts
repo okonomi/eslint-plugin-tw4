@@ -1,5 +1,6 @@
 import type { RuleContext } from "@typescript-eslint/utils/ts-eslint"
 import type { ErrorReportData } from "../types"
+import { replaceWithQuotePreservation } from "./quote-utils"
 
 /**
  * Centralized error reporting logic
@@ -26,10 +27,8 @@ export function reportErrors(
           classnames: transformation.classnames,
         },
         fix(fixer) {
-          return fixer.replaceText(
-            targetNode,
-            fixText.replace(originalValue, result.value),
-          )
+          const fixedText = replaceWithQuotePreservation(fixText, originalValue, result.value)
+          return fixer.replaceText(targetNode, fixedText)
         },
       })
     }
@@ -46,10 +45,8 @@ export function reportErrors(
         classnames: originalClasses.join(", "),
       },
       fix(fixer) {
-        return fixer.replaceText(
-          targetNode,
-          fixText.replace(originalValue, result.value),
-        )
+        const fixedText = replaceWithQuotePreservation(fixText, originalValue, result.value)
+        return fixer.replaceText(targetNode, fixedText)
       },
     })
   }
