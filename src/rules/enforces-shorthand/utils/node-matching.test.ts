@@ -36,10 +36,11 @@ function createCallExpressionNode(options: {
 }
 
 function createTaggedTemplateNode(options: {
-  type: "Identifier" | "MemberExpression"
+  type: "Identifier" | "MemberExpression" | "CallExpression"
   name?: string
   object?: string
   property?: string
+  callee?: string
 }): TaggedTemplateNode {
   if (options.type === "Identifier") {
     return {
@@ -47,6 +48,19 @@ function createTaggedTemplateNode(options: {
       tag: {
         type: "Identifier",
         name: options.name || "test",
+      },
+    } as TaggedTemplateNode
+  }
+
+  if (options.type === "CallExpression") {
+    return {
+      type: "TaggedTemplateExpression",
+      tag: {
+        type: "CallExpression",
+        callee: {
+          type: "Identifier",
+          name: options.callee || "test",
+        },
       },
     } as TaggedTemplateNode
   }
@@ -254,6 +268,100 @@ describe("node-matching", () => {
       const result = isTargetTag(node, ["subTag"])
       expect(result).toBe(true)
     })
+
+    describe("member expression object matching", () => {
+      it("should match by object name in member expression", () => {
+        const node = createTaggedTemplateNode({
+          type: "MemberExpression",
+          object: "myTag",
+          property: "subTag",
+        })
+        const result = isTargetTag(node, ["myTag"])
+        expect(result).toBe(true)
+      })
+
+      it("should prioritize property name over object name", () => {
+        const node = createTaggedTemplateNode({
+          type: "MemberExpression",
+          object: "notInTags",
+          property: "myTag",
+        })
+        const result = isTargetTag(node, ["myTag"])
+        expect(result).toBe(true)
+      })
+
+      it("should match both object and property names", () => {
+        const node = createTaggedTemplateNode({
+          type: "MemberExpression",
+          object: "styled",
+          property: "div",
+        })
+        // Should match both "styled" (object) and "div" (property)
+        expect(isTargetTag(node, ["styled"])).toBe(true)
+        expect(isTargetTag(node, ["div"])).toBe(true)
+        expect(isTargetTag(node, ["styled", "div"])).toBe(true)
+      })
+
+      it("should return false when neither object nor property matches", () => {
+        const node = createTaggedTemplateNode({
+          type: "MemberExpression",
+          object: "other",
+          property: "span",
+        })
+        const result = isTargetTag(node, ["myTag", "div"])
+        expect(result).toBe(false)
+      })
+    })
+
+    describe("call expression tagged templates", () => {
+      it("should match call expression by callee name", () => {
+        const node = createTaggedTemplateNode({
+          type: "CallExpression",
+          callee: "myTag",
+        })
+        const result = isTargetTag(node, ["myTag"])
+        expect(result).toBe(true)
+      })
+
+      it("should return false for non-matching call expression", () => {
+        const node = createTaggedTemplateNode({
+          type: "CallExpression",
+          callee: "someOtherFunction",
+        })
+        const result = isTargetTag(node, ["myTag"])
+        expect(result).toBe(false)
+      })
+
+      it("should handle multiple call expression tags", () => {
+        const styledNode = createTaggedTemplateNode({
+          type: "CallExpression",
+          callee: "styled",
+        })
+        const twNode = createTaggedTemplateNode({
+          type: "CallExpression",
+          callee: "tw",
+        })
+        const unknownNode = createTaggedTemplateNode({
+          type: "CallExpression",
+          callee: "unknown",
+        })
+
+        const tags = ["styled", "tw", "myTag"]
+
+        expect(isTargetTag(styledNode, tags)).toBe(true)
+        expect(isTargetTag(twNode, tags)).toBe(true)
+        expect(isTargetTag(unknownNode, tags)).toBe(false)
+      })
+
+      it("should handle case-sensitive matching for call expressions", () => {
+        const node = createTaggedTemplateNode({
+          type: "CallExpression",
+          callee: "MyTag",
+        })
+        const result = isTargetTag(node, ["myTag"])
+        expect(result).toBe(false)
+      })
+    })
   })
 
   describe("edge cases", () => {
@@ -293,6 +401,54 @@ describe("node-matching", () => {
       })
       const result = isTargetTag(node, [])
       expect(result).toBe(false)
+    })
+
+    it("should handle empty tags array with call expression", () => {
+      const node = createTaggedTemplateNode({
+        type: "CallExpression",
+        callee: "myTag",
+      })
+      const result = isTargetTag(node, [])
+      expect(result).toBe(false)
+    })
+
+    it("should handle empty callee name in call expression", () => {
+      const node = createTaggedTemplateNode({
+        type: "CallExpression",
+        callee: "",
+      })
+      const result = isTargetTag(node, ["myTag"])
+      expect(result).toBe(false)
+    })
+
+    it("should handle empty object and property names in member expression", () => {
+      const node = createTaggedTemplateNode({
+        type: "MemberExpression",
+        object: "",
+        property: "",
+      })
+      const result = isTargetTag(node, ["myTag"])
+      expect(result).toBe(false)
+    })
+
+    it("should handle member expression with empty object name", () => {
+      const node = createTaggedTemplateNode({
+        type: "MemberExpression",
+        object: "",
+        property: "myTag",
+      })
+      const result = isTargetTag(node, ["myTag"])
+      expect(result).toBe(true)
+    })
+
+    it("should handle member expression with empty property name", () => {
+      const node = createTaggedTemplateNode({
+        type: "MemberExpression",
+        object: "myTag",
+        property: "",
+      })
+      const result = isTargetTag(node, ["myTag"])
+      expect(result).toBe(true)
     })
   })
 })

@@ -39,11 +39,27 @@ export function isTargetTag(node: TaggedTemplateNode, tags: string[]): boolean {
   }
 
   // Handle member expressions: obj.tagName`...`
+  // Check both the object name and property name
   if (
     node.tag.type === "MemberExpression" &&
     node.tag.property.type === "Identifier"
   ) {
-    return tags.includes(node.tag.property.name)
+    // First check if the property name matches
+    if (tags.includes(node.tag.property.name)) {
+      return true
+    }
+    // Then check if the object name matches (for cases like myTag.subTag where myTag is the target)
+    if (node.tag.object.type === "Identifier" && tags.includes(node.tag.object.name)) {
+      return true
+    }
+  }
+
+  // Handle call expressions: tagName(args)`...`
+  if (
+    node.tag.type === "CallExpression" &&
+    node.tag.callee.type === "Identifier"
+  ) {
+    return tags.includes(node.tag.callee.name)
   }
 
   return false

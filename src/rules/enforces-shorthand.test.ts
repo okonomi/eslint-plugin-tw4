@@ -811,8 +811,54 @@ describe("enforces-shorthand", () => {
           errors: [generateError(["w-1", "h-1"], "size-1")],
           options: [{ tags: ["div"] }],
         },
+        {
+          code: "myTag.subTag`w-1 h-1`",
+          output: "myTag.subTag`size-1`",
+          errors: [generateError(["w-1", "h-1"], "size-1")],
+          options: [{ tags: ["myTag"] }],
+        },
+        {
+          code: "lib.styled`px-4 py-4`",
+          output: "lib.styled`p-4`",
+          errors: [generateError(["px-4", "py-4"], "p-4")],
+          options: [{ tags: ["lib"] }],
+        },
       ])(
         "should transform member expression tagged template: $code",
+        async ({ code, output, errors, options }) => {
+          const { result } = await invalid({ code, output, errors, options })
+          expect(result.output).toEqual(output)
+        },
+      )
+    })
+
+    describe("call expression tagged templates", () => {
+      it.each([
+        {
+          code: "myTag(Component)`overflow-hidden text-ellipsis whitespace-nowrap`",
+          output: "myTag(Component)`truncate`",
+          errors: [
+            generateError(
+              ["overflow-hidden", "text-ellipsis", "whitespace-nowrap"],
+              "truncate",
+            ),
+          ],
+          options: [{ tags: ["myTag"] }],
+        },
+        {
+          code: "styled(Button)`w-1 h-1`",
+          output: "styled(Button)`size-1`",
+          errors: [generateError(["w-1", "h-1"], "size-1")],
+          options: [{ tags: ["styled"] }],
+        },
+        {
+          code: "tw(colors.blue)`px-2 py-2`",
+          output: "tw(colors.blue)`p-2`",
+          errors: [generateError(["px-2", "py-2"], "p-2")],
+          options: [{ tags: ["tw"] }],
+        },
+      ])(
+        "should transform call expression tagged template: $code",
         async ({ code, output, errors, options }) => {
           const { result } = await invalid({ code, output, errors, options })
           expect(result.output).toEqual(output)
@@ -837,6 +883,22 @@ describe("enforces-shorthand", () => {
         {
           code: "myTag`w-1 h-1`", // Tags option empty
           options: [{ tags: [] }],
+        },
+        {
+          code: "other.subTag`w-1 h-1`", // Object name not in tags
+          options: [{ tags: ["myTag"] }],
+        },
+        {
+          code: "myTag.subTag`w-1 h-2`", // Different values in member expression
+          options: [{ tags: ["myTag"] }],
+        },
+        {
+          code: "notInTags(Component)`w-1 h-1`", // Call expression function not in tags
+          options: [{ tags: ["myTag"] }],
+        },
+        {
+          code: "myTag(Component)`w-1 h-2`", // Different values in call expression
+          options: [{ tags: ["myTag"] }],
         },
       ])("should not transform: $code", async ({ code, options }) => {
         const { result } = await valid({ code, options })
