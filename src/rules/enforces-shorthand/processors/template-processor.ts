@@ -108,7 +108,7 @@ export function processTemplateLiteral(
                 const expressionText = sourceCode.getText(
                   templateLiteral.expressions[i],
                 )
-                fixedTemplate += "${" + expressionText + "}"
+                fixedTemplate += `\${${expressionText}}`
               }
             }
 

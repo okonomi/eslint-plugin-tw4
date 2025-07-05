@@ -35,7 +35,7 @@ export function detectQuoteStyle(originalText: string): QuoteStyle | null {
   // Check if the text contains quoted strings
   const doubleQuoteMatch = originalText.match(/"/g)
   const singleQuoteMatch = originalText.match(/'/g)
-  
+
   if (doubleQuoteMatch && !singleQuoteMatch) {
     return "double"
   }
@@ -48,7 +48,7 @@ export function detectQuoteStyle(originalText: string): QuoteStyle | null {
     const firstSingle = originalText.indexOf("'")
     return firstDouble < firstSingle ? "double" : "single"
   }
-  
+
   return null
 }
 
@@ -72,26 +72,24 @@ export function preserveQuoteStyle(
   fallbackContext?: RuleContext<string, readonly unknown[]>,
 ): string {
   const detectedStyle = detectQuoteStyle(originalText)
-  
+
   if (detectedStyle) {
     // If newText already has quotes, replace them with the detected style
     if (detectedStyle === "double") {
       return newText.replace(/'/g, '"')
-    } else {
-      return newText.replace(/"/g, "'")
     }
+    return newText.replace(/"/g, "'")
   }
-  
+
   // Fallback to context-based style
   if (fallbackContext) {
     const contextStyle = getQuoteStyle(fallbackContext)
     if (contextStyle === "double") {
       return newText.replace(/'/g, '"')
-    } else {
-      return newText.replace(/"/g, "'")
     }
+    return newText.replace(/"/g, "'")
   }
-  
+
   return newText
 }
 
@@ -104,16 +102,16 @@ export function replaceWithQuotePreservation(
   newValue: string,
 ): string {
   const detectedStyle = detectQuoteStyle(fullText)
-  
+
   if (detectedStyle) {
     // Wrap newValue with the same quote style as detected in fullText
     const wrappedNewValue = wrapWithQuotes(newValue, detectedStyle)
-    
+
     // Find and replace the quoted old value
     const quotedOldValue = wrapWithQuotes(oldValue, detectedStyle)
     return fullText.replace(quotedOldValue, wrappedNewValue)
   }
-  
+
   // Fallback: replace without quote consideration
   return fullText.replace(oldValue, newValue)
 }

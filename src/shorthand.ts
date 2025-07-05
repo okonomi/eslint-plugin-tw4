@@ -369,7 +369,10 @@ export function applyShorthands(value: string, config?: TailwindConfig) {
     // Find the remaining class that covers the removed functionality
     const remainingClass = redundancyResult.classInfos.find((c) => {
       // Find a class that could represent the combined functionality
-      const removedClassInfo = parseClasses(redundancyResult.removedClasses, config)[0]
+      const removedClassInfo = parseClasses(
+        redundancyResult.removedClasses,
+        config,
+      )[0]
       return (
         c.detail.prefix === removedClassInfo.detail.prefix &&
         c.detail.value === removedClassInfo.detail.value &&
@@ -657,69 +660,79 @@ function applyPatternTransformation(
 /**
  * Validates if size shorthand transformation is allowed based on config
  */
-function isSizeShorthandAllowed(sizingResult: MatchResult, config: TailwindConfig): boolean {
+function isSizeShorthandAllowed(
+  sizingResult: MatchResult,
+  config: TailwindConfig,
+): boolean {
   // Extract the value from width/height classes
   const customPrefix = config?.prefix || ""
-  const widthType = customPrefix + "w"
-  const heightType = customPrefix + "h"
-  
+  const widthType = `${customPrefix}w`
+  const heightType = `${customPrefix}h`
+
   const wClass = sizingResult.matches[widthType] || ""
   const hClass = sizingResult.matches[heightType] || ""
-  
+
   // Extract values (remove prefix and w-/h- parts)
   const wValue = wClass.replace(new RegExp(`^${customPrefix}w-`), "")
   const hValue = hClass.replace(new RegExp(`^${customPrefix}h-`), "")
-  
+
   // Must have same value for size shorthand
   if (wValue !== hValue) {
     return false
   }
-  
+
   const value = wValue
   const theme = config?.theme?.extend
-  
+
   if (!theme) {
     return true // No theme config, allow all transformations
   }
-  
+
   const hasWidthValue = theme.width?.[value] !== undefined
-  const hasHeightValue = theme.height?.[value] !== undefined  
+  const hasHeightValue = theme.height?.[value] !== undefined
   const hasSizeValue = theme.size?.[value] !== undefined
   const hasSpacingValue = theme.spacing?.[value] !== undefined
-  
+
   // Case 1: incompleteCustomWidthHeightOptions - has width.custom and height.custom but no size.custom
   if (hasWidthValue && hasHeightValue && !hasSizeValue) {
     return false // Don't transform if size.custom is not defined
   }
-  
+
   // Case 2: ambiguousOptions - width.ambiguous, height.ambiguous, size.ambiguous all exist but with different values
   if (hasWidthValue && hasHeightValue && hasSizeValue) {
     const widthValue = theme.width?.[value]
     const heightValue = theme.height?.[value]
     const sizeValue = theme.size?.[value]
-    
+
     // If all three exist but with different values, don't transform (ambiguous)
-    if (widthValue !== heightValue || widthValue !== sizeValue || heightValue !== sizeValue) {
+    if (
+      widthValue !== heightValue ||
+      widthValue !== sizeValue ||
+      heightValue !== sizeValue
+    ) {
       return false
     }
   }
-  
+
   // Case 3: customSizeOnlyOptions - only size.size exists, no width.custom or height.custom
   // If the custom value doesn't exist in width/height but exists in size, don't transform
   if (!hasWidthValue && !hasHeightValue && !hasSpacingValue) {
     return false // Don't transform if width/height/spacing values don't exist but size might
   }
-  
+
   return true // Allow transformation in all other cases
 }
 
-function handleSizing(classInfos: ClassInfo[], config?: TailwindConfig): ParsedTransformResult {
+function handleSizing(
+  classInfos: ClassInfo[],
+  config?: TailwindConfig,
+): ParsedTransformResult {
   // Build the sizing patterns based on the config prefix
   const customPrefix = config?.prefix || ""
-  const widthType = customPrefix + "w"
-  const heightType = customPrefix + "h"
+  const widthType = `${customPrefix}w`
+  const heightType = `${customPrefix}h`
   const sizingPatterns = [[widthType, heightType]]
-  
+
   const sizingResult = findMatchingClasses(sizingPatterns, classInfos)
   if (sizingResult) {
     const { matchedClasses } = sizingResult
@@ -730,7 +743,7 @@ function handleSizing(classInfos: ClassInfo[], config?: TailwindConfig): ParsedT
     }
 
     // Create shorthand class and ClassInfo with custom prefix
-    const shorthandType = customPrefix + "size"
+    const shorthandType = `${customPrefix}size`
     const { shorthandClass, shorthandClassInfo } =
       createShorthandFromMatchResult(sizingResult, shorthandType, config)
 
@@ -748,7 +761,10 @@ function handleSizing(classInfos: ClassInfo[], config?: TailwindConfig): ParsedT
   return { applied: false, classInfos }
 }
 
-function handleTransforms(classInfos: ClassInfo[], config?: TailwindConfig): ParsedTransformResult {
+function handleTransforms(
+  classInfos: ClassInfo[],
+  config?: TailwindConfig,
+): ParsedTransformResult {
   const transformTypes = ["translate", "scale", "skew"]
 
   for (const transformType of transformTypes) {
@@ -793,21 +809,27 @@ function createShorthandFromMatchResult(
   const { commonPrefix, commonValue, commonNegative, commonImportant } =
     matchResult
 
-  const shorthandClass = emitClassName({
-    prefix: commonPrefix,
-    type: shorthandType,
-    value: commonValue,
-    isNegative: commonNegative,
-    important: commonImportant,
-  }, config)
+  const shorthandClass = emitClassName(
+    {
+      prefix: commonPrefix,
+      type: shorthandType,
+      value: commonValue,
+      isNegative: commonNegative,
+      important: commonImportant,
+    },
+    config,
+  )
 
-  const baseClass = emitBaseClassName({
-    prefix: commonPrefix,
-    type: shorthandType,
-    value: commonValue,
-    isNegative: commonNegative,
-    important: commonImportant,
-  }, config)
+  const baseClass = emitBaseClassName(
+    {
+      prefix: commonPrefix,
+      type: shorthandType,
+      value: commonValue,
+      isNegative: commonNegative,
+      important: commonImportant,
+    },
+    config,
+  )
 
   // Directly construct ClassInfo without string parsing
   const shorthandClassInfo: ClassInfo = {

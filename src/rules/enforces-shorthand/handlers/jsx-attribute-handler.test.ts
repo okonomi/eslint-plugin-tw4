@@ -40,7 +40,11 @@ describe("jsx-attribute-handler", () => {
 
       handler.handle(node)
 
-      expect(processJSXAttribute).toHaveBeenCalledWith(node, mockContext, undefined)
+      expect(processJSXAttribute).toHaveBeenCalledWith(
+        node,
+        mockContext,
+        undefined,
+      )
       expect(processJSXAttribute).toHaveBeenCalledTimes(1)
     })
   })

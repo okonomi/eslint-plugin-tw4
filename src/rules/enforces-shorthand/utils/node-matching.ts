@@ -49,7 +49,10 @@ export function isTargetTag(node: TaggedTemplateNode, tags: string[]): boolean {
       return true
     }
     // Then check if the object name matches (for cases like myTag.subTag where myTag is the target)
-    if (node.tag.object.type === "Identifier" && tags.includes(node.tag.object.name)) {
+    if (
+      node.tag.object.type === "Identifier" &&
+      tags.includes(node.tag.object.name)
+    ) {
       return true
     }
   }

@@ -27,7 +27,11 @@ export function reportErrors(
           classnames: transformation.classnames,
         },
         fix(fixer) {
-          const fixedText = replaceWithQuotePreservation(fixText, originalValue, result.value)
+          const fixedText = replaceWithQuotePreservation(
+            fixText,
+            originalValue,
+            result.value,
+          )
           return fixer.replaceText(targetNode, fixedText)
         },
       })
@@ -45,7 +49,11 @@ export function reportErrors(
         classnames: originalClasses.join(", "),
       },
       fix(fixer) {
-        const fixedText = replaceWithQuotePreservation(fixText, originalValue, result.value)
+        const fixedText = replaceWithQuotePreservation(
+          fixText,
+          originalValue,
+          result.value,
+        )
         return fixer.replaceText(targetNode, fixedText)
       },
     })

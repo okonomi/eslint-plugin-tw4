@@ -55,12 +55,21 @@ export default createRule({
     const options = parseOptions(context.options[0] || {})
 
     // Extract config and ensure it's a TailwindConfig object (not string)
-    const config = typeof options.config === 'object' ? options.config : undefined
+    const config =
+      typeof options.config === "object" ? options.config : undefined
 
     // Create handlers with configured options
     const jsxHandler = new JSXAttributeHandler(context, config)
-    const callHandler = new CallExpressionHandler(context, options.callees, config)
-    const templateHandler = new TaggedTemplateHandler(context, options.tags, config)
+    const callHandler = new CallExpressionHandler(
+      context,
+      options.callees,
+      config,
+    )
+    const templateHandler = new TaggedTemplateHandler(
+      context,
+      options.tags,
+      config,
+    )
 
     return {
       TaggedTemplateExpression(node: TSESTree.TaggedTemplateExpression) {

@@ -25,14 +25,20 @@ type ParseFunc = (cleanClass: string) => ParseFuncResult | null
 /**
  * Parse classes into improved flattened structure
  */
-export function parseClasses(classes: string[], config?: { prefix?: string; separator?: string }): ClassInfo[] {
+export function parseClasses(
+  classes: string[],
+  config?: { prefix?: string; separator?: string },
+): ClassInfo[] {
   return classes.map((className) => parseClass(className, config))
 }
 
 /**
  * Parse a single class into improved structure
  */
-export function parseClass(className: string, config?: { prefix?: string; separator?: string }): ClassInfo {
+export function parseClass(
+  className: string,
+  config?: { prefix?: string; separator?: string },
+): ClassInfo {
   const { prefix, baseClass, important } = splitPrefixAndBase(className, config)
 
   // Check for invalid case where both leading and trailing important are present
@@ -78,7 +84,10 @@ export function parseClass(className: string, config?: { prefix?: string; separa
 /**
  * Split class name into prefix, base class, and important modifier
  */
-function splitPrefixAndBase(className: string, config?: { prefix?: string; separator?: string }): {
+function splitPrefixAndBase(
+  className: string,
+  config?: { prefix?: string; separator?: string },
+): {
   prefix: string
   baseClass: string
   important: "leading" | "trailing" | null
@@ -126,7 +135,10 @@ function splitPrefixAndBase(className: string, config?: { prefix?: string; separ
 /**
  * Parse base class into type, value, and other properties
  */
-function parseBaseClass(baseClass: string, config?: { prefix?: string; separator?: string }): ParseResult {
+function parseBaseClass(
+  baseClass: string,
+  config?: { prefix?: string; separator?: string },
+): ParseResult {
   // Handle custom prefix - remove it from the base class for parsing
   let workingClass = baseClass
   let customPrefix = ""

@@ -105,7 +105,10 @@ describe("jsx-processor", () => {
 
       processJSXAttribute(node, mockContext)
 
-      expect(processClassNames).toHaveBeenCalledWith("original-classes", undefined)
+      expect(processClassNames).toHaveBeenCalledWith(
+        "original-classes",
+        undefined,
+      )
       expect(mockContext.report).toHaveBeenCalled()
     })
   })

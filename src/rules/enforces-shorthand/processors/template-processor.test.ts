@@ -109,7 +109,10 @@ describe("template-processor", () => {
 
       processTemplateLiteral(templateLiteral, mockContext)
 
-      expect(processClassNames).toHaveBeenCalledWith("before-classes", undefined)
+      expect(processClassNames).toHaveBeenCalledWith(
+        "before-classes",
+        undefined,
+      )
       expect(processClassNames).toHaveBeenCalledWith("after-classes", undefined)
     })
   })

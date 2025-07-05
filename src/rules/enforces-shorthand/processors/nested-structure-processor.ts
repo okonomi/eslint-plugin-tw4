@@ -1,5 +1,5 @@
 import type { RuleContext } from "@typescript-eslint/utils/ts-eslint"
-import type { TargetNode, TailwindConfig } from "../types"
+import type { TailwindConfig, TargetNode } from "../types"
 import { reportErrors } from "../utils/error-reporter"
 import { processClassNames } from "./class-processor"
 
@@ -22,11 +22,11 @@ export function processNestedStructure(
       ) {
         const classValue = element.value
         const result = processClassNames(classValue, config)
-        
+
         // Get the source code to preserve original formatting
         const sourceCode = context.sourceCode || context.getSourceCode()
         const originalText = sourceCode.getText(element)
-        
+
         reportErrors(context, {
           targetNode: element,
           fixText: originalText,
@@ -56,11 +56,11 @@ export function processNestedStructure(
 
         if (classValue) {
           const result = processClassNames(classValue, config)
-          
+
           // Get the source code to preserve original formatting
           const sourceCode = context.sourceCode || context.getSourceCode()
           const originalText = sourceCode.getText(property.key)
-          
+
           reportErrors(context, {
             targetNode: property.key,
             fixText: originalText,
