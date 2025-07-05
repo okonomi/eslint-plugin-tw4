@@ -28,10 +28,10 @@ export function reportErrors(
         },
         fix(fixer) {
           // For template literals, use fixText directly to preserve formatting
-          if (fixText.startsWith('`') && fixText.endsWith('`')) {
+          if (fixText.startsWith("`") && fixText.endsWith("`")) {
             return fixer.replaceText(targetNode, fixText)
           }
-          
+
           const fixedText = replaceWithQuotePreservation(
             fixText,
             originalValue,
@@ -55,10 +55,10 @@ export function reportErrors(
       },
       fix(fixer) {
         // For template literals, use fixText directly to preserve formatting
-        if (fixText.startsWith('`') && fixText.endsWith('`')) {
+        if (fixText.startsWith("`") && fixText.endsWith("`")) {
           return fixer.replaceText(targetNode, fixText)
         }
-        
+
         const fixedText = replaceWithQuotePreservation(
           fixText,
           originalValue,

@@ -21,52 +21,74 @@ export function processTemplateLiteral(
     const staticContent = templateLiteral.quasis[0].value.cooked
     if (staticContent) {
       const result = processClassNames(staticContent, config)
-      
-      if (result.applied) {
+
+      if (result && result.applied) {
         const sourceCode = context.sourceCode || context.getSourceCode()
         const originalText = sourceCode.getText(templateLiteral)
+
+        // Check if this is a multiline template literal
+        const isMultiline = originalText.includes("\n")
         
-        // Replace only class names while preserving the original template structure
-        let fixedText = originalText
-        for (const transformation of result.transformations) {
-          const classNames = transformation.classnames.split(', ')
-          
-          // Find and replace all instances of the class names with shorthand
-          for (const className of classNames) {
-            const escapedClassName = className.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-            fixedText = fixedText.replace(new RegExp(`\\b${escapedClassName}\\b`, 'g'), '__TEMP_REMOVED__')
+        if (isMultiline) {
+          // Handle multiline templates with careful whitespace preservation
+          let fixedText = originalText
+          for (const transformation of result.transformations) {
+            const classNames = transformation.classnames.split(", ")
+
+            // Find and replace all instances of the class names with shorthand
+            for (const className of classNames) {
+              const escapedClassName = className.replace(
+                /[.*+?^${}()|[\]\\]/g,
+                "\\$&",
+              )
+              fixedText = fixedText.replace(
+                new RegExp(`\\b${escapedClassName}\\b`, "g"),
+                "__TEMP_REMOVED__",
+              )
+            }
+
+            // Replace the first occurrence with the shorthand, remove the rest
+            fixedText = fixedText.replace(
+              "__TEMP_REMOVED__",
+              transformation.shorthand,
+            )
+            fixedText = fixedText.replace(/__TEMP_REMOVED__/g, "")
           }
-          
-          // Replace the first occurrence with the shorthand, remove the rest
-          fixedText = fixedText.replace('__TEMP_REMOVED__', transformation.shorthand)
-          fixedText = fixedText.replace(/__TEMP_REMOVED__/g, '')
-        }
-        
-        // Clean up extra spaces but preserve line structure and indentation
-        // Split into lines to handle each line individually
-        const lines = fixedText.split('\n')
-        const cleanedLines = []
-        
-        for (let i = 0; i < lines.length; i++) {
-          // Remove multiple consecutive spaces only within content, preserve leading whitespace
-          const leadingWhitespace = lines[i].match(/^(\s*)/)?.[1] || ''
-          const content = lines[i].substring(leadingWhitespace.length)
-          const cleanedContent = content.replace(/\s+/g, ' ').trim()
-          
-          // Only keep lines that have content (skip empty lines created by removed classes)
-          if (cleanedContent || (i === 0 || i === lines.length - 1)) {
-            cleanedLines.push(leadingWhitespace + cleanedContent)
+
+          // Clean up extra spaces but preserve line structure and indentation
+          // Split into lines to handle each line individually
+          const lines = fixedText.split("\n")
+          const cleanedLines = []
+
+          for (let i = 0; i < lines.length; i++) {
+            // Remove multiple consecutive spaces only within content, preserve leading whitespace
+            const leadingWhitespace = lines[i].match(/^(\s*)/)?.[1] || ""
+            const content = lines[i].substring(leadingWhitespace.length)
+            const cleanedContent = content.replace(/\s+/g, " ").trim()
+
+            // Only keep lines that have content (skip empty lines created by removed classes)
+            if (cleanedContent || i === 0 || i === lines.length - 1) {
+              cleanedLines.push(leadingWhitespace + cleanedContent)
+            }
           }
+          fixedText = cleanedLines.join("\n")
+          
+          reportErrors(context, {
+            targetNode: templateLiteral,
+            fixText: fixedText,
+            originalValue: staticContent,
+            result,
+          })
+        } else {
+          // For simple single-line templates, use the result value directly
+          reportErrors(context, {
+            targetNode: templateLiteral,
+            fixText: `\`${result.value}\``,
+            originalValue: staticContent,
+            result,
+          })
         }
-        fixedText = cleanedLines.join('\n')
-        
-        reportErrors(context, {
-          targetNode: templateLiteral,
-          fixText: fixedText,
-          originalValue: staticContent,
-          result,
-        })
-      } else {
+      } else if (result) {
         reportErrors(context, {
           targetNode: templateLiteral,
           fixText: `\`${result.value}\``,

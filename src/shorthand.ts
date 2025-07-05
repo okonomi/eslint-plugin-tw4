@@ -634,18 +634,18 @@ function applyPatternTransformation(
   config?: TailwindConfig,
 ): ParsedTransformResult {
   const customPrefix = config?.prefix || ""
-  
+
   for (const { patterns: patternList, shorthand } of patterns) {
     // If there's a custom prefix, try to match with prefixed patterns
     let result = null
-    
+
     if (customPrefix) {
       // Create prefixed patterns by adding the custom prefix to each pattern element
-      const prefixedPatterns = patternList.map(pattern => 
-        pattern.map(type => `${customPrefix}${type}`)
+      const prefixedPatterns = patternList.map((pattern) =>
+        pattern.map((type) => `${customPrefix}${type}`),
       )
       result = findMatchingClasses(prefixedPatterns, classInfos)
-      
+
       // If prefixed pattern matches, create shorthand with prefix
       if (result) {
         const prefixedShorthand = `${customPrefix}${shorthand}`
@@ -664,7 +664,7 @@ function applyPatternTransformation(
         }
       }
     }
-    
+
     // Try original patterns (without prefix)
     result = findMatchingClasses(patternList, classInfos)
     if (result) {
