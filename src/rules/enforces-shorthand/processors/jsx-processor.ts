@@ -1,5 +1,5 @@
 import type { RuleContext } from "@typescript-eslint/utils/ts-eslint"
-import type { JSXAttributeNode } from "../types"
+import type { JSXAttributeNode, TailwindConfig } from "../types"
 import { processClassNames } from "./class-processor"
 import { processTemplateLiteral } from "./template-processor"
 
@@ -10,6 +10,7 @@ import { processTemplateLiteral } from "./template-processor"
 export function processJSXAttribute(
   node: JSXAttributeNode,
   context: RuleContext<"useShorthand", readonly unknown[]>,
+  config?: TailwindConfig,
 ): void {
   if (
     (node.name.name !== "className" && node.name.name !== "class") ||
@@ -24,12 +25,12 @@ export function processJSXAttribute(
     node.value.expression.type === "TemplateLiteral"
   ) {
     const templateLiteral = node.value.expression
-    processTemplateLiteral(templateLiteral, context)
+    processTemplateLiteral(templateLiteral, context, config)
   }
 
   // String literal: className="class-names"
   if (node.value.type === "Literal" && typeof node.value.value === "string") {
-    const result = processClassNames(node.value.value)
+    const result = processClassNames(node.value.value, config)
     if (result.applied) {
       if (result.transformations.length > 0) {
         // Report each transformation as a separate error

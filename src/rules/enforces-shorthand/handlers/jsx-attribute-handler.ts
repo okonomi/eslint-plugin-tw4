@@ -1,6 +1,6 @@
 import type { RuleContext } from "@typescript-eslint/utils/ts-eslint"
 import { processJSXAttribute } from "../processors/jsx-processor"
-import type { JSXAttributeNode } from "../types"
+import type { JSXAttributeNode, TailwindConfig } from "../types"
 
 /**
  * Handler for JSX attribute processing
@@ -8,12 +8,13 @@ import type { JSXAttributeNode } from "../types"
 export class JSXAttributeHandler {
   constructor(
     private context: RuleContext<"useShorthand", readonly unknown[]>,
+    private config?: TailwindConfig,
   ) {}
 
   /**
    * Handle JSX attribute nodes
    */
   handle(node: JSXAttributeNode): void {
-    processJSXAttribute(node, this.context)
+    processJSXAttribute(node, this.context, this.config)
   }
 }

@@ -325,7 +325,9 @@ const PATTERN_SETS = {
 // Main Functions
 // =============================================================================
 
-export function applyShorthands(value: string) {
+import type { TailwindConfig } from "./rules/enforces-shorthand/types"
+
+export function applyShorthands(value: string, config?: TailwindConfig) {
   // Step 1: Parse - Parse input classes once
   const originalClasses = value.split(/\s+/).filter(Boolean)
   let classInfos = parseClasses(originalClasses)
@@ -339,7 +341,7 @@ export function applyShorthands(value: string) {
 
   let hasChanges = true
   while (hasChanges) {
-    const result = findShorthandTransformation(classInfos)
+    const result = findShorthandTransformation(classInfos, config)
     if (result.applied && result.matchedClasses && result.shorthandClass) {
       // Find the position of the first matched class in the original value
       const firstMatchedClass = result.matchedClasses[0]
@@ -604,9 +606,10 @@ function findMatchingClasses(
 
 function findShorthandTransformation(
   classInfos: ClassInfo[],
+  config?: TailwindConfig,
 ): ParsedTransformResult {
   // Handle sizing first as it's more specific than spacing patterns
-  const sizingResult = handleSizing(classInfos)
+  const sizingResult = handleSizing(classInfos, config)
   if (sizingResult.applied) return sizingResult
 
   // Try each pattern set
@@ -650,10 +653,69 @@ function applyPatternTransformation(
   return { applied: false, classInfos }
 }
 
-function handleSizing(classInfos: ClassInfo[]): ParsedTransformResult {
+/**
+ * Validates if size shorthand transformation is allowed based on config
+ */
+function isSizeShorthandAllowed(sizingResult: MatchResult, config: TailwindConfig): boolean {
+  // Extract the value from width/height classes (e.g., "custom" from "w-custom" and "h-custom")
+  const wClass = sizingResult.matches.w || ""
+  const hClass = sizingResult.matches.h || ""
+  
+  // Extract values (remove w- and h- prefixes)
+  const wValue = wClass.replace(/^w-/, "")
+  const hValue = hClass.replace(/^h-/, "")
+  
+  // Must have same value for size shorthand
+  if (wValue !== hValue) {
+    return false
+  }
+  
+  const value = wValue
+  const theme = config?.theme?.extend
+  
+  if (!theme) {
+    return true // No theme config, allow all transformations
+  }
+  
+  const hasWidthValue = theme.width?.[value] !== undefined
+  const hasHeightValue = theme.height?.[value] !== undefined  
+  const hasSizeValue = theme.size?.[value] !== undefined
+  
+  // Case 1: incompleteCustomWidthHeightOptions - has width.custom and height.custom but no size.custom
+  if (hasWidthValue && hasHeightValue && !hasSizeValue) {
+    return false // Don't transform if size.custom is not defined
+  }
+  
+  // Case 2: ambiguousOptions - width.ambiguous, height.ambiguous, size.ambiguous all exist but with different values
+  if (hasWidthValue && hasHeightValue && hasSizeValue) {
+    const widthValue = theme.width?.[value]
+    const heightValue = theme.height?.[value]
+    const sizeValue = theme.size?.[value]
+    
+    // If all three exist but with different values, don't transform (ambiguous)
+    if (widthValue !== heightValue || widthValue !== sizeValue || heightValue !== sizeValue) {
+      return false
+    }
+  }
+  
+  // Case 3: customSizeOnlyOptions - only size.size exists, no width.custom or height.custom
+  // If the custom value doesn't exist in width/height but exists in size, don't transform
+  if (!hasWidthValue && !hasHeightValue) {
+    return false // Don't transform if width/height values don't exist but size might
+  }
+  
+  return true // Allow transformation in all other cases
+}
+
+function handleSizing(classInfos: ClassInfo[], config?: TailwindConfig): ParsedTransformResult {
   const sizingResult = findMatchingClasses([["w", "h"]], classInfos)
   if (sizingResult) {
     const { matchedClasses } = sizingResult
+
+    // Validate if size shorthand is allowed by config
+    if (config && !isSizeShorthandAllowed(sizingResult, config)) {
+      return { applied: false, classInfos }
+    }
 
     // Create shorthand class and ClassInfo
     const { shorthandClass, shorthandClassInfo } =

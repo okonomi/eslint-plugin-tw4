@@ -2,7 +2,7 @@ import type { RuleContext } from "@typescript-eslint/utils/ts-eslint"
 import { processClassNames } from "../processors/class-processor"
 import { processNestedStructure } from "../processors/nested-structure-processor"
 import { processTemplateLiteral } from "../processors/template-processor"
-import type { CallExpressionNode } from "../types"
+import type { CallExpressionNode, TailwindConfig } from "../types"
 import { reportErrors } from "../utils/error-reporter"
 import { isTargetCallee } from "../utils/node-matching"
 import { wrapWithQuotesFromContext } from "../utils/quote-utils"
@@ -14,6 +14,7 @@ export class CallExpressionHandler {
   constructor(
     private context: RuleContext<"useShorthand", readonly unknown[]>,
     private callees: string[],
+    private config?: TailwindConfig,
   ) {}
 
   /**
@@ -35,7 +36,7 @@ export class CallExpressionHandler {
     // Handle string literal as first argument: functionName('class-names')
     if (firstArg.type === "Literal" && typeof firstArg.value === "string") {
       const classValue = firstArg.value
-      const result = processClassNames(classValue)
+      const result = processClassNames(classValue, this.config)
       reportErrors(this.context, {
         targetNode: firstArg,
         fixText: wrapWithQuotesFromContext(classValue, this.context),
@@ -46,7 +47,7 @@ export class CallExpressionHandler {
 
     // Handle template literal as first argument: functionName(`class-names`)
     if (firstArg.type === "TemplateLiteral") {
-      processTemplateLiteral(firstArg, this.context)
+      processTemplateLiteral(firstArg, this.context, this.config)
     }
 
     // Process arrays, objects and nested structures
@@ -58,7 +59,7 @@ export class CallExpressionHandler {
       firstArg.type === "ArrayExpression" ||
       firstArg.type === "ObjectExpression"
     ) {
-      processNestedStructure(firstArg, this.context)
+      processNestedStructure(firstArg, this.context, this.config)
     }
   }
 }

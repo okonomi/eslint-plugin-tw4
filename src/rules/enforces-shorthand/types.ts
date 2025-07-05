@@ -1,13 +1,32 @@
 import type { TSESTree } from "@typescript-eslint/utils"
 
 /**
+ * Tailwind config theme structure for size validation
+ */
+export interface TailwindTheme {
+  extend?: {
+    width?: Record<string, string>
+    height?: Record<string, string>
+    size?: Record<string, string>
+  }
+}
+
+/**
+ * Tailwind config structure
+ */
+export interface TailwindConfig {
+  theme?: TailwindTheme
+  plugins?: unknown[]
+}
+
+/**
  * Rule options interface for enforces-shorthand rule
  */
 export interface RuleOptions {
   /** Array of function names to target for processing */
   callees?: string[]
   /** Configuration object or string for tailwind processing */
-  config?: object | string
+  config?: TailwindConfig | string
   /** Whether to skip processing className/class attributes */
   skipClassAttribute?: boolean
   /** Array of tagged template literals to target */

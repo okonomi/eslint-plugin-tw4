@@ -1,5 +1,5 @@
 import type { RuleContext } from "@typescript-eslint/utils/ts-eslint"
-import type { TargetNode } from "../types"
+import type { TargetNode, TailwindConfig } from "../types"
 import { reportErrors } from "../utils/error-reporter"
 import { processClassNames } from "./class-processor"
 
@@ -10,6 +10,7 @@ import { processClassNames } from "./class-processor"
 export function processNestedStructure(
   node: TargetNode,
   context: RuleContext<"useShorthand", readonly unknown[]>,
+  config?: TailwindConfig,
 ): void {
   if (node.type === "ArrayExpression") {
     // Process each element in the array
@@ -20,7 +21,7 @@ export function processNestedStructure(
         typeof element.value === "string"
       ) {
         const classValue = element.value
-        const result = processClassNames(classValue)
+        const result = processClassNames(classValue, config)
         
         // Get the source code to preserve original formatting
         const sourceCode = context.sourceCode || context.getSourceCode()
@@ -34,7 +35,7 @@ export function processNestedStructure(
         })
       } else if (element) {
         // Recursively process nested structures
-        processNestedStructure(element, context)
+        processNestedStructure(element, context, config)
       }
     }
   } else if (node.type === "ObjectExpression") {
@@ -54,7 +55,7 @@ export function processNestedStructure(
         }
 
         if (classValue) {
-          const result = processClassNames(classValue)
+          const result = processClassNames(classValue, config)
           
           // Get the source code to preserve original formatting
           const sourceCode = context.sourceCode || context.getSourceCode()
@@ -69,7 +70,7 @@ export function processNestedStructure(
         }
 
         // Recursively process the property value
-        processNestedStructure(property.value, context)
+        processNestedStructure(property.value, context, config)
       }
     }
   }
