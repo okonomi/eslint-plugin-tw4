@@ -1,4 +1,4 @@
-import enforceShorthandRule from "./rules/enforces-shorthand"
+import enforceShorthandRule from "./rules/enforces-shorthand/"
 
 export default {
   rules: {
