@@ -906,4 +906,159 @@ describe("enforces-shorthand", () => {
       })
     })
   })
+
+  describe("Handler/Processor Integration Tests", () => {
+    describe("call-expression-handler edge cases", () => {
+      it.each([
+        {
+          code: `cn()`, // No arguments
+          options: [{ callees: ["cn"] }],
+        },
+        {
+          code: `otherFunction("mt-4 mr-4 mb-4 ml-4")`, // Non-target callee
+          options: [{ callees: ["cn"] }],
+        },
+        {
+          code: `cn("flex", "items-center")`, // Multiple arguments - only first processed
+          output: `cn("flex", "items-center")`,
+          options: [{ callees: ["cn"] }],
+        },
+        {
+          code: `cn(123)`, // Non-string argument
+          options: [{ callees: ["cn"] }],
+        },
+      ])("should handle edge cases: $code", async ({ code, output, options }) => {
+        const { result } = await valid({ code, options })
+        expect(result.output).toEqual(output || code)
+      })
+
+      it.each([
+        {
+          code: `cn(["mt-4 mr-4 mb-4 ml-4", "flex"])`,
+          output: `cn(["m-4", "flex"])`,
+          errors: [generateError(["mt-4", "mr-4", "mb-4", "ml-4"], "m-4")],
+          options: [{ callees: ["cn"] }],
+        },
+        {
+          code: `cn({ "pt-2 pr-2 pb-2 pl-2": true, "flex": false })`,
+          output: `cn({ "p-2": true, "flex": false })`,
+          errors: [generateError(["pt-2", "pr-2", "pb-2", "pl-2"], "p-2")],
+          options: [{ callees: ["cn"] }],
+        },
+      ])("should process complex structures: $code", async ({ code, output, errors, options }) => {
+        const { result } = await invalid({ code, output, errors, options })
+        expect(result.output).toEqual(output)
+      })
+    })
+
+    describe("jsx-attribute-handler edge cases", () => {
+      it.each([
+        {
+          code: `<div id="mt-4 mr-4 mb-4 ml-4" />`, // Non-class attribute
+        },
+        {
+          code: `<div className />`, // Attribute without value
+        },
+        {
+          code: `<div className={variable} />`, // Variable expression
+        },
+        {
+          code: `<div className={123} />`, // Non-string expression
+        },
+      ])("should ignore non-applicable cases: $code", async ({ code }) => {
+        const { result } = await valid({ code })
+        expect(result.output).toEqual(code)
+      })
+
+      it.each([
+        {
+          code: `<div className="mt-4 mr-4 mb-4 ml-4" />`,
+          output: `<div className="m-4" />`,
+          errors: [generateError(["mt-4", "mr-4", "mb-4", "ml-4"], "m-4")],
+        },
+        {
+          code: `<div class="pt-2 pr-2 pb-2 pl-2" />`,
+          output: `<div class="p-2" />`,
+          errors: [generateError(["pt-2", "pr-2", "pb-2", "pl-2"], "p-2")],
+        },
+        {
+          code: `<div className={\`w-1 h-1\`} />`,
+          output: `<div className={\`size-1\`} />`,
+          errors: [generateError(["w-1", "h-1"], "size-1")],
+        },
+      ])("should process JSX attributes: $code", async ({ code, output, errors }) => {
+        const { result } = await invalid({ code, output, errors })
+        expect(result.output).toEqual(output)
+      })
+    })
+
+    describe("tagged-template-handler edge cases", () => {
+      it.each([
+        {
+          code: `notConfiguredTag\`mt-4 mr-4 mb-4 ml-4\``, // Non-target tag
+          options: [{ tags: ["tw"] }],
+        },
+        {
+          code: `tw()`, // Not a tagged template
+          options: [{ tags: ["tw"] }],
+        },
+        {
+          code: `tw\`\``, // Empty template
+          options: [{ tags: ["tw"] }],
+        },
+      ])("should ignore non-applicable cases: $code", async ({ code, options }) => {
+        const { result } = await valid({ code, options })
+        expect(result.output).toEqual(code)
+      })
+
+      it.each([
+        {
+          code: `tw\`mt-4 mr-4 mb-4 ml-4\``,
+          output: `tw\`m-4\``,
+          errors: [generateError(["mt-4", "mr-4", "mb-4", "ml-4"], "m-4")],
+          options: [{ tags: ["tw"] }],
+        },
+        {
+          code: `styled.div\`pt-2 pr-2 pb-2 pl-2\``,
+          output: `styled.div\`p-2\``,
+          errors: [generateError(["pt-2", "pr-2", "pb-2", "pl-2"], "p-2")],
+          options: [{ tags: ["styled"] }],
+        },
+        {
+          code: `css\`w-1 h-1 \${extraStyles}\``,
+          output: `css\`size-1 \${extraStyles}\``,
+          errors: [generateError(["w-1", "h-1"], "size-1")],
+          options: [{ tags: ["css"] }],
+        },
+      ])("should process tagged templates: $code", async ({ code, output, errors, options }) => {
+        const { result } = await invalid({ code, output, errors, options })
+        expect(result.output).toEqual(output)
+      })
+    })
+
+    describe("processor delegation verification", () => {
+      it.each([
+        {
+          code: `<div className="pl-2 pr-2" />`, // jsx-processor -> class-processor
+          output: `<div className="px-2" />`,
+          errors: [generateError(["pl-2", "pr-2"], "px-2")],
+        },
+        {
+          code: `cn(["mt-4 mr-4 mb-4 ml-4"])`, // call-expr -> nested-structure -> class-processor
+          output: `cn(["m-4"])`,
+          errors: [generateError(["mt-4", "mr-4", "mb-4", "ml-4"], "m-4")],
+          options: [{ callees: ["cn"] }],
+        },
+        {
+          code: `tw\`overflow-hidden text-ellipsis whitespace-nowrap\``, // tagged-template -> template-processor -> class-processor
+          output: `tw\`truncate\``,
+          errors: [generateError(["overflow-hidden", "text-ellipsis", "whitespace-nowrap"], "truncate")],
+          options: [{ tags: ["tw"] }],
+        },
+      ])("should delegate correctly through processor chain: $code", async ({ code, output, errors, options }) => {
+        const { result } = await invalid({ code, output, errors, options })
+        expect(result.output).toEqual(output)
+      })
+    })
+  })
 })
