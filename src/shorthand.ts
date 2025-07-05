@@ -685,6 +685,7 @@ function isSizeShorthandAllowed(sizingResult: MatchResult, config: TailwindConfi
   const hasWidthValue = theme.width?.[value] !== undefined
   const hasHeightValue = theme.height?.[value] !== undefined  
   const hasSizeValue = theme.size?.[value] !== undefined
+  const hasSpacingValue = theme.spacing?.[value] !== undefined
   
   // Case 1: incompleteCustomWidthHeightOptions - has width.custom and height.custom but no size.custom
   if (hasWidthValue && hasHeightValue && !hasSizeValue) {
@@ -705,8 +706,8 @@ function isSizeShorthandAllowed(sizingResult: MatchResult, config: TailwindConfi
   
   // Case 3: customSizeOnlyOptions - only size.size exists, no width.custom or height.custom
   // If the custom value doesn't exist in width/height but exists in size, don't transform
-  if (!hasWidthValue && !hasHeightValue) {
-    return false // Don't transform if width/height values don't exist but size might
+  if (!hasWidthValue && !hasHeightValue && !hasSpacingValue) {
+    return false // Don't transform if width/height/spacing values don't exist but size might
   }
   
   return true // Allow transformation in all other cases
