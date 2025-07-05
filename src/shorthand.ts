@@ -330,7 +330,7 @@ import type { TailwindConfig } from "./rules/enforces-shorthand/types"
 export function applyShorthands(value: string, config?: TailwindConfig) {
   // Step 1: Parse - Parse input classes once
   const originalClasses = value.split(/\s+/).filter(Boolean)
-  let classInfos = parseClasses(originalClasses)
+  let classInfos = parseClasses(originalClasses, config)
 
   // Step 2: Transform - Apply transformations iteratively on ClassInfo[]
   const transformations: Array<{
@@ -369,7 +369,7 @@ export function applyShorthands(value: string, config?: TailwindConfig) {
     // Find the remaining class that covers the removed functionality
     const remainingClass = redundancyResult.classInfos.find((c) => {
       // Find a class that could represent the combined functionality
-      const removedClassInfo = parseClasses(redundancyResult.removedClasses)[0]
+      const removedClassInfo = parseClasses(redundancyResult.removedClasses, config)[0]
       return (
         c.detail.prefix === removedClassInfo.detail.prefix &&
         c.detail.value === removedClassInfo.detail.value &&
@@ -614,12 +614,12 @@ function findShorthandTransformation(
 
   // Try each pattern set
   for (const [_name, patterns] of Object.entries(PATTERN_SETS)) {
-    const result = applyPatternTransformation(patterns, classInfos)
+    const result = applyPatternTransformation(patterns, classInfos, config)
     if (result.applied) return result
   }
 
   // Other special cases that need custom handling
-  const transformResult = handleTransforms(classInfos)
+  const transformResult = handleTransforms(classInfos, config)
   if (transformResult.applied) return transformResult
 
   return { applied: false, classInfos }
@@ -628,6 +628,7 @@ function findShorthandTransformation(
 function applyPatternTransformation(
   patterns: ShorthandPattern[],
   classInfos: ClassInfo[],
+  config?: TailwindConfig,
 ): ParsedTransformResult {
   for (const { patterns: patternList, shorthand } of patterns) {
     const result = findMatchingClasses(patternList, classInfos)
@@ -636,7 +637,7 @@ function applyPatternTransformation(
 
       // Create shorthand class and ClassInfo
       const { shorthandClass, shorthandClassInfo } =
-        createShorthandFromMatchResult(result, shorthand)
+        createShorthandFromMatchResult(result, shorthand, config)
 
       return {
         applied: true,
@@ -657,13 +658,17 @@ function applyPatternTransformation(
  * Validates if size shorthand transformation is allowed based on config
  */
 function isSizeShorthandAllowed(sizingResult: MatchResult, config: TailwindConfig): boolean {
-  // Extract the value from width/height classes (e.g., "custom" from "w-custom" and "h-custom")
-  const wClass = sizingResult.matches.w || ""
-  const hClass = sizingResult.matches.h || ""
+  // Extract the value from width/height classes
+  const customPrefix = config?.prefix || ""
+  const widthType = customPrefix + "w"
+  const heightType = customPrefix + "h"
   
-  // Extract values (remove w- and h- prefixes)
-  const wValue = wClass.replace(/^w-/, "")
-  const hValue = hClass.replace(/^h-/, "")
+  const wClass = sizingResult.matches[widthType] || ""
+  const hClass = sizingResult.matches[heightType] || ""
+  
+  // Extract values (remove prefix and w-/h- parts)
+  const wValue = wClass.replace(new RegExp(`^${customPrefix}w-`), "")
+  const hValue = hClass.replace(new RegExp(`^${customPrefix}h-`), "")
   
   // Must have same value for size shorthand
   if (wValue !== hValue) {
@@ -708,7 +713,13 @@ function isSizeShorthandAllowed(sizingResult: MatchResult, config: TailwindConfi
 }
 
 function handleSizing(classInfos: ClassInfo[], config?: TailwindConfig): ParsedTransformResult {
-  const sizingResult = findMatchingClasses([["w", "h"]], classInfos)
+  // Build the sizing patterns based on the config prefix
+  const customPrefix = config?.prefix || ""
+  const widthType = customPrefix + "w"
+  const heightType = customPrefix + "h"
+  const sizingPatterns = [[widthType, heightType]]
+  
+  const sizingResult = findMatchingClasses(sizingPatterns, classInfos)
   if (sizingResult) {
     const { matchedClasses } = sizingResult
 
@@ -717,9 +728,10 @@ function handleSizing(classInfos: ClassInfo[], config?: TailwindConfig): ParsedT
       return { applied: false, classInfos }
     }
 
-    // Create shorthand class and ClassInfo
+    // Create shorthand class and ClassInfo with custom prefix
+    const shorthandType = customPrefix + "size"
     const { shorthandClass, shorthandClassInfo } =
-      createShorthandFromMatchResult(sizingResult, "size")
+      createShorthandFromMatchResult(sizingResult, shorthandType, config)
 
     return {
       applied: true,
@@ -735,7 +747,7 @@ function handleSizing(classInfos: ClassInfo[], config?: TailwindConfig): ParsedT
   return { applied: false, classInfos }
 }
 
-function handleTransforms(classInfos: ClassInfo[]): ParsedTransformResult {
+function handleTransforms(classInfos: ClassInfo[], config?: TailwindConfig): ParsedTransformResult {
   const transformTypes = ["translate", "scale", "skew"]
 
   for (const transformType of transformTypes) {
@@ -750,7 +762,7 @@ function handleTransforms(classInfos: ClassInfo[]): ParsedTransformResult {
         // For transforms, we need to handle the prefix differently (no common prefix)
         const modifiedResult = { ...result, commonPrefix: "" }
         const { shorthandClass, shorthandClassInfo } =
-          createShorthandFromMatchResult(modifiedResult, transformType)
+          createShorthandFromMatchResult(modifiedResult, transformType, config)
 
         return {
           applied: true,
@@ -775,6 +787,7 @@ function handleTransforms(classInfos: ClassInfo[]): ParsedTransformResult {
 function createShorthandFromMatchResult(
   matchResult: MatchResult,
   shorthandType: string,
+  config?: TailwindConfig,
 ): { shorthandClass: string; shorthandClassInfo: ClassInfo } {
   const { commonPrefix, commonValue, commonNegative, commonImportant } =
     matchResult
@@ -785,7 +798,7 @@ function createShorthandFromMatchResult(
     value: commonValue,
     isNegative: commonNegative,
     important: commonImportant,
-  })
+  }, config)
 
   const baseClass = emitBaseClassName({
     prefix: commonPrefix,
@@ -793,7 +806,7 @@ function createShorthandFromMatchResult(
     value: commonValue,
     isNegative: commonNegative,
     important: commonImportant,
-  })
+  }, config)
 
   // Directly construct ClassInfo without string parsing
   const shorthandClassInfo: ClassInfo = {

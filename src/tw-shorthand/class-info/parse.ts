@@ -25,15 +25,15 @@ type ParseFunc = (cleanClass: string) => ParseFuncResult | null
 /**
  * Parse classes into improved flattened structure
  */
-export function parseClasses(classes: string[]): ClassInfo[] {
-  return classes.map((className) => parseClass(className))
+export function parseClasses(classes: string[], config?: { prefix?: string; separator?: string }): ClassInfo[] {
+  return classes.map((className) => parseClass(className, config))
 }
 
 /**
  * Parse a single class into improved structure
  */
-export function parseClass(className: string): ClassInfo {
-  const { prefix, baseClass, important } = splitPrefixAndBase(className)
+export function parseClass(className: string, config?: { prefix?: string; separator?: string }): ClassInfo {
+  const { prefix, baseClass, important } = splitPrefixAndBase(className, config)
 
   // Check for invalid case where both leading and trailing important are present
   // splitPrefixAndBase returns { prefix: "", baseClass: className, important: null } for invalid cases
@@ -59,7 +59,7 @@ export function parseClass(className: string): ClassInfo {
     }
   }
 
-  const baseInfo = parseBaseClass(baseClass)
+  const baseInfo = parseBaseClass(baseClass, config)
 
   return {
     original: className,
@@ -78,7 +78,7 @@ export function parseClass(className: string): ClassInfo {
 /**
  * Split class name into prefix, base class, and important modifier
  */
-function splitPrefixAndBase(className: string): {
+function splitPrefixAndBase(className: string, config?: { prefix?: string; separator?: string }): {
   prefix: string
   baseClass: string
   important: "leading" | "trailing" | null
@@ -89,14 +89,16 @@ function splitPrefixAndBase(className: string): {
     ? className.slice(0, -1)
     : className
 
-  const colonIndex = classWithoutTrailingImportant.lastIndexOf(":")
+  // Use custom separator if provided, otherwise default to colon
+  const separator = config?.separator || ":"
+  const separatorIndex = classWithoutTrailingImportant.lastIndexOf(separator)
   let prefix = ""
   let baseClassWithPrefix = classWithoutTrailingImportant
 
-  if (colonIndex !== -1) {
-    prefix = classWithoutTrailingImportant.substring(0, colonIndex + 1)
+  if (separatorIndex !== -1) {
+    prefix = classWithoutTrailingImportant.substring(0, separatorIndex + 1)
     baseClassWithPrefix = classWithoutTrailingImportant.substring(
-      colonIndex + 1,
+      separatorIndex + 1,
     )
   }
 
@@ -124,10 +126,18 @@ function splitPrefixAndBase(className: string): {
 /**
  * Parse base class into type, value, and other properties
  */
-function parseBaseClass(baseClass: string): ParseResult {
+function parseBaseClass(baseClass: string, config?: { prefix?: string; separator?: string }): ParseResult {
+  // Handle custom prefix - remove it from the base class for parsing
+  let workingClass = baseClass
+  let customPrefix = ""
+  if (config?.prefix && workingClass.startsWith(config.prefix)) {
+    customPrefix = config.prefix
+    workingClass = workingClass.substring(config.prefix.length)
+  }
+
   // Handle negative values
-  const isNegative = baseClass.startsWith("-")
-  const cleanClass = isNegative ? baseClass.substring(1) : baseClass
+  const isNegative = workingClass.startsWith("-")
+  const cleanClass = isNegative ? workingClass.substring(1) : workingClass
 
   // Define parsers for different class types
   const parsers: ParseFunc[] = [
@@ -151,6 +161,7 @@ function parseBaseClass(baseClass: string): ParseResult {
     if (result) {
       return {
         ...result,
+        type: customPrefix + result.type,
         isNegative,
       }
     }
@@ -158,7 +169,7 @@ function parseBaseClass(baseClass: string): ParseResult {
 
   // Fallback for unparseable classes
   return {
-    type: cleanClass,
+    type: customPrefix + cleanClass,
     value: "",
     isNegative,
   }

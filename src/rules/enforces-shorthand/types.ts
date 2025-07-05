@@ -17,6 +17,8 @@ export interface TailwindTheme {
 export interface TailwindConfig {
   theme?: TailwindTheme
   plugins?: unknown[]
+  prefix?: string
+  separator?: string
 }
 
 /**
