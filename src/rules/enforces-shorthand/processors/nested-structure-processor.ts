@@ -1,7 +1,6 @@
 import type { RuleContext } from "@typescript-eslint/utils/ts-eslint"
 import type { TargetNode } from "../types"
 import { reportErrors } from "../utils/error-reporter"
-import { wrapWithQuotesFromContext } from "../utils/quote-utils"
 import { processClassNames } from "./class-processor"
 
 /**
@@ -22,9 +21,14 @@ export function processNestedStructure(
       ) {
         const classValue = element.value
         const result = processClassNames(classValue)
+        
+        // Get the source code to preserve original formatting
+        const sourceCode = context.sourceCode || context.getSourceCode()
+        const originalText = sourceCode.getText(element)
+        
         reportErrors(context, {
           targetNode: element,
-          fixText: wrapWithQuotesFromContext(classValue, context),
+          fixText: originalText,
           originalValue: classValue,
           result,
         })
@@ -51,9 +55,14 @@ export function processNestedStructure(
 
         if (classValue) {
           const result = processClassNames(classValue)
+          
+          // Get the source code to preserve original formatting
+          const sourceCode = context.sourceCode || context.getSourceCode()
+          const originalText = sourceCode.getText(property.key)
+          
           reportErrors(context, {
             targetNode: property.key,
-            fixText: wrapWithQuotesFromContext(classValue, context),
+            fixText: originalText,
             originalValue: classValue,
             result,
           })

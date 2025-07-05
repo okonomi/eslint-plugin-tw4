@@ -561,19 +561,19 @@ describe("enforces-shorthand", () => {
       it.each([
         {
           code: `cva({primary: ["w-1 h-1"]})`,
-          output: `cva({primary: ['size-1']})`,
+          output: `cva({primary: ["size-1"]})`,
           errors: [generateError(["w-1", "h-1"], "size-1")],
           options: [{ callees: ["cva"] }],
         },
         {
           code: `cva({primary: ["border-l-0 border-r-0"]})`,
-          output: `cva({primary: ['border-x-0']})`,
+          output: `cva({primary: ["border-x-0"]})`,
           errors: [generateError(["border-l-0", "border-r-0"], "border-x-0")],
           options: [{ callees: ["cva"] }],
         },
         {
           code: `classnames({button: ["px-4 py-4"], card: ["mt-2 mb-2"]})`,
-          output: `classnames({button: ['p-4'], card: ['my-2']})`,
+          output: `classnames({button: ["p-4"], card: ["my-2"]})`,
           errors: [
             generateError(["px-4", "py-4"], "p-4"),
             generateError(["mt-2", "mb-2"], "my-2"),
@@ -582,7 +582,7 @@ describe("enforces-shorthand", () => {
         },
         {
           code: `variants({size: {sm: ["w-1 h-1"], lg: ["w-4 h-4"]}})`,
-          output: `variants({size: {sm: ['size-1'], lg: ['size-4']}})`,
+          output: `variants({size: {sm: ["size-1"], lg: ["size-4"]}})`,
           errors: [
             generateError(["w-1", "h-1"], "size-1"),
             generateError(["w-4", "h-4"], "size-4"),
@@ -602,7 +602,7 @@ describe("enforces-shorthand", () => {
       it("should handle multiple levels of nesting", async () => {
         const { result } = await invalid({
           code: `cva({variants: {size: {sm: ["w-1 h-1"], md: ["w-2 h-2"]}, color: {red: ["border-l-0 border-r-0"]}}})`,
-          output: `cva({variants: {size: {sm: ['size-1'], md: ['size-2']}, color: {red: ['border-x-0']}}})`,
+          output: `cva({variants: {size: {sm: ["size-1"], md: ["size-2"]}, color: {red: ["border-x-0"]}}})`,
           errors: [
             generateError(["w-1", "h-1"], "size-1"),
             generateError(["w-2", "h-2"], "size-2"),
@@ -611,7 +611,7 @@ describe("enforces-shorthand", () => {
           options: [{ callees: ["cva"] }],
         })
         expect(result.output).toEqual(
-          `cva({variants: {size: {sm: ['size-1'], md: ['size-2']}, color: {red: ['border-x-0']}}})`,
+          `cva({variants: {size: {sm: ["size-1"], md: ["size-2"]}, color: {red: ["border-x-0"]}}})`,
         )
       })
     })
@@ -620,7 +620,7 @@ describe("enforces-shorthand", () => {
       it("should handle objects with both direct class keys and nested arrays", async () => {
         const { result } = await invalid({
           code: `classnames({"px-2 py-2": true, variants: ["w-1 h-1"]})`,
-          output: `classnames({'p-2': true, variants: ['size-1']})`,
+          output: `classnames({"p-2": true, variants: ["size-1"]})`,
           errors: [
             generateError(["px-2", "py-2"], "p-2"),
             generateError(["w-1", "h-1"], "size-1"),
@@ -628,7 +628,7 @@ describe("enforces-shorthand", () => {
           options: [{ callees: ["classnames"] }],
         })
         expect(result.output).toEqual(
-          `classnames({'p-2': true, variants: ['size-1']})`,
+          `classnames({"p-2": true, variants: ["size-1"]})`,
         )
       })
     })
