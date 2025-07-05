@@ -27,7 +27,17 @@ describe("nested-structure-processor", () => {
     parserOptions: {},
     settings: {},
     getFilename: vi.fn(() => "test.tsx"),
-    getSourceCode: vi.fn(),
+    getSourceCode: vi.fn(() => ({
+      getText: vi.fn((node) => {
+        if (node.type === "Literal" && typeof node.value === "string") {
+          return `"${node.value}"`
+        }
+        if (node.type === "Identifier") {
+          return `"${node.name}"`
+        }
+        return `"${node.value || node.name || "unknown"}"`
+      }),
+    })),
   } as unknown as RuleContext<"useShorthand", readonly unknown[]>
 
   beforeEach(() => {
@@ -67,8 +77,8 @@ describe("nested-structure-processor", () => {
         processNestedStructure(arrayNode, mockContext)
 
         expect(processClassNames).toHaveBeenCalledTimes(2)
-        expect(processClassNames).toHaveBeenCalledWith("mt-4 mr-4 mb-4 ml-4")
-        expect(processClassNames).toHaveBeenCalledWith("flex items-center")
+        expect(processClassNames).toHaveBeenCalledWith("mt-4 mr-4 mb-4 ml-4", undefined)
+        expect(processClassNames).toHaveBeenCalledWith("flex items-center", undefined)
         expect(reportErrors).toHaveBeenCalledTimes(2)
       })
 
@@ -108,7 +118,7 @@ describe("nested-structure-processor", () => {
         processNestedStructure(arrayNode, mockContext)
 
         expect(processClassNames).toHaveBeenCalledTimes(1)
-        expect(processClassNames).toHaveBeenCalledWith("flex")
+        expect(processClassNames).toHaveBeenCalledWith("flex", undefined)
       })
 
       it("should recursively process nested structures in array", () => {
@@ -129,7 +139,7 @@ describe("nested-structure-processor", () => {
 
         processNestedStructure(arrayNode, mockContext)
 
-        expect(processClassNames).toHaveBeenCalledWith("nested-class")
+        expect(processClassNames).toHaveBeenCalledWith("nested-class", undefined)
       })
     })
 
@@ -167,7 +177,7 @@ describe("nested-structure-processor", () => {
 
         processNestedStructure(objectNode, mockContext)
 
-        expect(processClassNames).toHaveBeenCalledWith("mt-4 mr-4 mb-4 ml-4")
+        expect(processClassNames).toHaveBeenCalledWith("mt-4 mr-4 mb-4 ml-4", undefined)
         expect(reportErrors).toHaveBeenCalledWith(mockContext, {
           targetNode: (objectNode.properties[0] as TSESTree.Property).key,
           fixText: '"mt-4 mr-4 mb-4 ml-4"',
@@ -210,7 +220,7 @@ describe("nested-structure-processor", () => {
 
         processNestedStructure(objectNode, mockContext)
 
-        expect(processClassNames).toHaveBeenCalledWith("mt-4mr-4mb-4ml-4")
+        expect(processClassNames).toHaveBeenCalledWith("mt-4mr-4mb-4ml-4", undefined)
         expect(reportErrors).toHaveBeenCalledWith(mockContext, {
           targetNode: (objectNode.properties[0] as TSESTree.Property).key,
           fixText: '"mt-4mr-4mb-4ml-4"',
@@ -304,7 +314,7 @@ describe("nested-structure-processor", () => {
         processNestedStructure(objectNode, mockContext)
 
         // Should process the class in the nested array
-        expect(processClassNames).toHaveBeenCalledWith("mt-4 mr-4 mb-4 ml-4")
+        expect(processClassNames).toHaveBeenCalledWith("mt-4 mr-4 mb-4 ml-4", undefined)
       })
 
       it("should handle non-Property objects in properties array", () => {
@@ -406,15 +416,14 @@ describe("nested-structure-processor", () => {
 
         // Should process all keys and the final value
         expect(processClassNames).toHaveBeenCalledTimes(3)
-        expect(processClassNames).toHaveBeenCalledWith("variants")
-        expect(processClassNames).toHaveBeenCalledWith("size")
-        expect(processClassNames).toHaveBeenCalledWith("sm")
+        expect(processClassNames).toHaveBeenCalledWith("variants", undefined)
+        expect(processClassNames).toHaveBeenCalledWith("size", undefined)
+        expect(processClassNames).toHaveBeenCalledWith("sm", undefined)
       })
 
-      it("should use wrapWithQuotesFromContext for fix text", () => {
+      it("should use sourceCode.getText for fix text", () => {
         const mockResult = { applied: true, value: "m-4", transformations: [] }
         vi.mocked(processClassNames).mockReturnValue(mockResult)
-        vi.mocked(wrapWithQuotesFromContext).mockReturnValue('"test-class"')
 
         const arrayNode = {
           type: "ArrayExpression",
@@ -428,10 +437,7 @@ describe("nested-structure-processor", () => {
 
         processNestedStructure(arrayNode, mockContext)
 
-        expect(wrapWithQuotesFromContext).toHaveBeenCalledWith(
-          "test-class",
-          mockContext,
-        )
+        expect(processClassNames).toHaveBeenCalledWith("test-class", undefined)
         expect(reportErrors).toHaveBeenCalledWith(mockContext, {
           targetNode: arrayNode.elements[0],
           fixText: '"test-class"',

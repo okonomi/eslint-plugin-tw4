@@ -24,7 +24,7 @@ describe("jsx-attribute-handler", () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
-    handler = new JSXAttributeHandler(mockContext)
+    handler = new JSXAttributeHandler(mockContext, undefined)
   })
 
   describe("handle", () => {
@@ -40,7 +40,7 @@ describe("jsx-attribute-handler", () => {
 
       handler.handle(node)
 
-      expect(processJSXAttribute).toHaveBeenCalledWith(node, mockContext)
+      expect(processJSXAttribute).toHaveBeenCalledWith(node, mockContext, undefined)
       expect(processJSXAttribute).toHaveBeenCalledTimes(1)
     })
 
@@ -56,7 +56,7 @@ describe("jsx-attribute-handler", () => {
 
       handler.handle(node)
 
-      expect(processJSXAttribute).toHaveBeenCalledWith(node, mockContext)
+      expect(processJSXAttribute).toHaveBeenCalledWith(node, mockContext, undefined)
     })
 
     it("should handle class attribute", () => {
@@ -71,7 +71,7 @@ describe("jsx-attribute-handler", () => {
 
       handler.handle(node)
 
-      expect(processJSXAttribute).toHaveBeenCalledWith(node, mockContext)
+      expect(processJSXAttribute).toHaveBeenCalledWith(node, mockContext, undefined)
     })
 
     it("should handle JSX expression container", () => {
@@ -90,7 +90,7 @@ describe("jsx-attribute-handler", () => {
 
       handler.handle(node)
 
-      expect(processJSXAttribute).toHaveBeenCalledWith(node, mockContext)
+      expect(processJSXAttribute).toHaveBeenCalledWith(node, mockContext, undefined)
     })
 
     it("should handle attributes without values", () => {
@@ -102,7 +102,7 @@ describe("jsx-attribute-handler", () => {
 
       handler.handle(node)
 
-      expect(processJSXAttribute).toHaveBeenCalledWith(node, mockContext)
+      expect(processJSXAttribute).toHaveBeenCalledWith(node, mockContext, undefined)
     })
 
     it("should handle non-className attributes", () => {
@@ -117,7 +117,7 @@ describe("jsx-attribute-handler", () => {
 
       handler.handle(node)
 
-      expect(processJSXAttribute).toHaveBeenCalledWith(node, mockContext)
+      expect(processJSXAttribute).toHaveBeenCalledWith(node, mockContext, undefined)
     })
 
     it("should pass through complex JSX attribute structures", () => {
@@ -149,7 +149,7 @@ describe("jsx-attribute-handler", () => {
 
       handler.handle(node)
 
-      expect(processJSXAttribute).toHaveBeenCalledWith(node, mockContext)
+      expect(processJSXAttribute).toHaveBeenCalledWith(node, mockContext, undefined)
     })
 
     it("should handle JSX spread attributes", () => {
@@ -173,7 +173,7 @@ describe("jsx-attribute-handler", () => {
 
       handler.handle(node)
 
-      expect(processJSXAttribute).toHaveBeenCalledWith(node, mockContext)
+      expect(processJSXAttribute).toHaveBeenCalledWith(node, mockContext, undefined)
     })
 
     it("should maintain handler state correctly across multiple calls", () => {
@@ -193,12 +193,12 @@ describe("jsx-attribute-handler", () => {
       handler.handle(node2)
 
       expect(processJSXAttribute).toHaveBeenCalledTimes(2)
-      expect(processJSXAttribute).toHaveBeenNthCalledWith(1, node1, mockContext)
-      expect(processJSXAttribute).toHaveBeenNthCalledWith(2, node2, mockContext)
+      expect(processJSXAttribute).toHaveBeenNthCalledWith(1, node1, mockContext, undefined)
+      expect(processJSXAttribute).toHaveBeenNthCalledWith(2, node2, mockContext, undefined)
     })
 
     it("should work with different handler instances", () => {
-      const handler2 = new JSXAttributeHandler(mockContext)
+      const handler2 = new JSXAttributeHandler(mockContext, undefined)
 
       const node = {
         type: "JSXAttribute",

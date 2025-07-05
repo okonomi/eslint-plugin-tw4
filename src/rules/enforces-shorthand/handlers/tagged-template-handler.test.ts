@@ -32,7 +32,7 @@ describe("tagged-template-handler", () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
-    handler = new TaggedTemplateHandler(mockContext, tags)
+    handler = new TaggedTemplateHandler(mockContext, tags, undefined)
   })
 
   describe("handle", () => {
@@ -82,6 +82,7 @@ describe("tagged-template-handler", () => {
       expect(processTemplateLiteral).toHaveBeenCalledWith(
         templateLiteral,
         mockContext,
+        undefined,
       )
     })
 
@@ -111,6 +112,7 @@ describe("tagged-template-handler", () => {
       expect(processTemplateLiteral).toHaveBeenCalledWith(
         templateLiteral,
         mockContext,
+        undefined,
       )
     })
 
@@ -140,6 +142,7 @@ describe("tagged-template-handler", () => {
       expect(processTemplateLiteral).toHaveBeenCalledWith(
         templateLiteral,
         mockContext,
+        undefined,
       )
     })
 
@@ -169,6 +172,7 @@ describe("tagged-template-handler", () => {
       expect(processTemplateLiteral).toHaveBeenCalledWith(
         templateLiteral,
         mockContext,
+        undefined,
       )
     })
 
@@ -208,6 +212,7 @@ describe("tagged-template-handler", () => {
       expect(processTemplateLiteral).toHaveBeenCalledWith(
         templateLiteral,
         mockContext,
+        undefined,
       )
     })
 
@@ -242,6 +247,7 @@ describe("tagged-template-handler", () => {
       expect(processTemplateLiteral).toHaveBeenCalledWith(
         templateLiteral,
         mockContext,
+        undefined,
       )
     })
 
@@ -292,6 +298,7 @@ describe("tagged-template-handler", () => {
       expect(processTemplateLiteral).toHaveBeenCalledWith(
         templateLiteral,
         mockContext,
+        undefined,
       )
     })
 
@@ -326,6 +333,7 @@ describe("tagged-template-handler", () => {
       expect(processTemplateLiteral).toHaveBeenCalledWith(
         templateLiteral,
         mockContext,
+        undefined,
       )
     })
 
@@ -364,11 +372,13 @@ describe("tagged-template-handler", () => {
         1,
         templateLiteral1,
         mockContext,
+        undefined,
       )
       expect(processTemplateLiteral).toHaveBeenNthCalledWith(
         2,
         templateLiteral2,
         mockContext,
+        undefined,
       )
     })
   })

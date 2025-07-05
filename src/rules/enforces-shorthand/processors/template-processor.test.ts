@@ -58,7 +58,7 @@ describe("template-processor", () => {
 
       processTemplateLiteral(templateLiteral, mockContext)
 
-      expect(processClassNames).toHaveBeenCalledWith("mt-4 mr-4 mb-4 ml-4")
+      expect(processClassNames).toHaveBeenCalledWith("mt-4 mr-4 mb-4 ml-4", undefined)
       expect(reportErrors).toHaveBeenCalledWith(mockContext, {
         targetNode: templateLiteral,
         fixText: "`mt-4 mr-4 mb-4 ml-4`",
@@ -139,8 +139,8 @@ describe("template-processor", () => {
       processTemplateLiteral(templateLiteral, mockContext)
 
       expect(processClassNames).toHaveBeenCalledTimes(2)
-      expect(processClassNames).toHaveBeenCalledWith("mt-4 mr-4 mb-4 ml-4")
-      expect(processClassNames).toHaveBeenCalledWith(" pt-2 pr-2 pb-2 pl-2")
+      expect(processClassNames).toHaveBeenCalledWith("mt-4 mr-4 mb-4 ml-4", undefined)
+      expect(processClassNames).toHaveBeenCalledWith(" pt-2 pr-2 pb-2 pl-2", undefined)
     })
 
     it("should report errors for complex template literals with transformations", () => {
@@ -211,8 +211,8 @@ describe("template-processor", () => {
       processTemplateLiteral(templateLiteral, mockContext)
 
       // Now the implementation processes all static parts, including empty ones
-      expect(processClassNames).toHaveBeenCalledWith("   ")
-      expect(processClassNames).toHaveBeenCalledWith("")
+      expect(processClassNames).toHaveBeenCalledWith("   ", undefined)
+      expect(processClassNames).toHaveBeenCalledWith("", undefined)
       expect(mockContext.report).not.toHaveBeenCalled() // No transformations applied
     })
 
@@ -239,7 +239,7 @@ describe("template-processor", () => {
 
       processTemplateLiteral(templateLiteral, mockContext)
 
-      expect(processClassNames).toHaveBeenCalledWith("flex items-center")
+      expect(processClassNames).toHaveBeenCalledWith("flex items-center", undefined)
       expect(mockContext.report).not.toHaveBeenCalled()
     })
 
@@ -302,7 +302,7 @@ describe("template-processor", () => {
       processTemplateLiteral(templateLiteral, mockContext)
 
       // Null is converted to empty string by the implementation
-      expect(processClassNames).toHaveBeenCalledWith("")
+      expect(processClassNames).toHaveBeenCalledWith("", undefined)
       expect(mockContext.report).not.toHaveBeenCalled()
     })
 
@@ -329,7 +329,7 @@ describe("template-processor", () => {
 
       processTemplateLiteral(templateLiteral, mockContext)
 
-      expect(processClassNames).toHaveBeenCalledWith("flex items-center")
+      expect(processClassNames).toHaveBeenCalledWith("flex items-center", undefined)
       expect(reportErrors).toHaveBeenCalledWith(mockContext, {
         targetNode: templateLiteral,
         fixText: "`flex items-center`",

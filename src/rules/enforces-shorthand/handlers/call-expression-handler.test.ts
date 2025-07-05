@@ -119,7 +119,7 @@ describe("call-expression-handler", () => {
 
       handler.handle(node)
 
-      expect(processClassNames).toHaveBeenCalledWith("mt-4 mr-4 mb-4 ml-4")
+      expect(processClassNames).toHaveBeenCalledWith("mt-4 mr-4 mb-4 ml-4", undefined)
       expect(wrapWithQuotesFromContext).toHaveBeenCalledWith(
         "mt-4 mr-4 mb-4 ml-4",
         mockContext,
@@ -172,6 +172,7 @@ describe("call-expression-handler", () => {
       expect(processTemplateLiteral).toHaveBeenCalledWith(
         templateLiteral,
         mockContext,
+        undefined,
       )
     })
 
@@ -194,6 +195,7 @@ describe("call-expression-handler", () => {
       expect(processNestedStructure).toHaveBeenCalledWith(
         arrayExpression,
         mockContext,
+        undefined,
       )
     })
 
@@ -216,6 +218,7 @@ describe("call-expression-handler", () => {
       expect(processNestedStructure).toHaveBeenCalledWith(
         objectExpression,
         mockContext,
+        undefined,
       )
     })
 
@@ -264,7 +267,7 @@ describe("call-expression-handler", () => {
       handler.handle(node)
 
       expect(processClassNames).toHaveBeenCalledTimes(1)
-      expect(processClassNames).toHaveBeenCalledWith("flex")
+      expect(processClassNames).toHaveBeenCalledWith("flex", undefined)
     })
 
     it("should handle complex CVA-like object patterns", () => {
@@ -295,6 +298,7 @@ describe("call-expression-handler", () => {
       expect(processNestedStructure).toHaveBeenCalledWith(
         complexObject,
         mockContext,
+        undefined,
       )
     })
 

@@ -82,7 +82,7 @@ describe("jsx-processor", () => {
 
       processJSXAttribute(node, mockContext)
 
-      expect(processClassNames).toHaveBeenCalledWith("mt-4 mr-4 mb-4 ml-4")
+      expect(processClassNames).toHaveBeenCalledWith("mt-4 mr-4 mb-4 ml-4", undefined)
       expect(mockContext.report).toHaveBeenCalledWith({
         node: node.value,
         messageId: "useShorthand",
@@ -118,7 +118,7 @@ describe("jsx-processor", () => {
 
       processJSXAttribute(node, mockContext)
 
-      expect(processClassNames).toHaveBeenCalledWith("pt-2 pr-2 pb-2 pl-2")
+      expect(processClassNames).toHaveBeenCalledWith("pt-2 pr-2 pb-2 pl-2", undefined)
       expect(mockContext.report).toHaveBeenCalledWith({
         node: node.value,
         messageId: "useShorthand",
@@ -211,6 +211,7 @@ describe("jsx-processor", () => {
       expect(processTemplateLiteral).toHaveBeenCalledWith(
         templateLiteral,
         mockContext,
+        undefined,
       )
     })
 
