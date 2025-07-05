@@ -22,13 +22,13 @@ export function processTemplateLiteral(
     if (staticContent) {
       const result = processClassNames(staticContent, config)
 
-      if (result && result.applied) {
+      if (result?.applied) {
         const sourceCode = context.sourceCode || context.getSourceCode()
         const originalText = sourceCode.getText(templateLiteral)
 
         // Check if this is a multiline template literal
         const isMultiline = originalText.includes("\n")
-        
+
         if (isMultiline) {
           // Handle multiline templates with careful whitespace preservation
           let fixedText = originalText
@@ -72,7 +72,7 @@ export function processTemplateLiteral(
             }
           }
           fixedText = cleanedLines.join("\n")
-          
+
           reportErrors(context, {
             targetNode: templateLiteral,
             fixText: fixedText,

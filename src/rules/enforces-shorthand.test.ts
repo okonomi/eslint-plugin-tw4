@@ -1037,7 +1037,9 @@ describe("enforces-shorthand", () => {
           options: [{ tags: ["styled"] }],
         },
         {
+          // biome-ignore lint/suspicious/noTemplateCurlyInString: intentional template usage for test
           code: "css\`w-1 h-1 \${extraStyles}\`",
+          // biome-ignore lint/suspicious/noTemplateCurlyInString: intentional template usage for test
           output: "css\`size-1 \${extraStyles}\`",
           errors: [generateError(["w-1", "h-1"], "size-1")],
           options: [{ tags: ["css"] }],
