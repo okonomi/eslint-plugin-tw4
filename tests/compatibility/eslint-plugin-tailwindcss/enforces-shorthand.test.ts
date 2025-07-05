@@ -518,8 +518,8 @@ ruleTester.run("shorthands", rule, {
         Multilines
       </div>`,
       errors: [
-        generateError(["w-48", "h-48"], "size-48"),
         generateError(["py-8", "px-8"], "p-8"),
+        generateError(["w-48", "h-48"], "size-48"),
       ],
     },
     {
