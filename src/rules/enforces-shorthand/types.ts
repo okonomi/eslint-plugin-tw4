@@ -8,6 +8,7 @@ export interface TailwindTheme {
     width?: Record<string, string>
     height?: Record<string, string>
     size?: Record<string, string>
+    spacing?: Record<string, string>
   }
 }
 
