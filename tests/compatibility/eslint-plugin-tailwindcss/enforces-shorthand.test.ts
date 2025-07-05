@@ -526,8 +526,8 @@ ruleTester.run("shorthands", rule, {
       code: `classnames(['py-8 px-8 w-48 h-48 text-white'])`,
       output: `classnames(['p-8 size-48 text-white'])`,
       errors: [
-        generateError(["w-48", "h-48"], "size-48"),
         generateError(["py-8", "px-8"], "p-8"),
+        generateError(["w-48", "h-48"], "size-48"),
       ],
     },
     {
