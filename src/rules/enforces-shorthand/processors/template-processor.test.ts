@@ -178,10 +178,19 @@ describe("template-processor", () => {
           shorthand: "m-4",
           classnames: "mt-4, mr-4, mb-4, ml-4",
         },
+        fix: expect.any(Function),
       })
     })
 
-    it("should skip empty or whitespace-only static parts in complex templates", () => {
+    it("should process empty or whitespace-only static parts in complex templates", () => {
+      const mockResult = {
+        applied: false,
+        value: "",
+        transformations: [],
+      }
+
+      vi.mocked(processClassNames).mockReturnValue(mockResult)
+
       const templateLiteral = {
         type: "TemplateLiteral",
         expressions: [{}],
@@ -201,8 +210,10 @@ describe("template-processor", () => {
 
       processTemplateLiteral(templateLiteral, mockContext)
 
-      expect(processClassNames).not.toHaveBeenCalled()
-      expect(mockContext.report).not.toHaveBeenCalled()
+      // Now the implementation processes all static parts, including empty ones
+      expect(processClassNames).toHaveBeenCalledWith("   ")
+      expect(processClassNames).toHaveBeenCalledWith("")
+      expect(mockContext.report).not.toHaveBeenCalled() // No transformations applied
     })
 
     it("should not report when no transformations are applied in complex templates", () => {
@@ -268,6 +279,14 @@ describe("template-processor", () => {
     })
 
     it("should handle template literal with null cooked value in complex case", () => {
+      const mockResult = {
+        applied: false,
+        value: "",
+        transformations: [],
+      }
+
+      vi.mocked(processClassNames).mockReturnValue(mockResult)
+
       const templateLiteral = {
         type: "TemplateLiteral",
         expressions: [{}],
@@ -282,7 +301,8 @@ describe("template-processor", () => {
 
       processTemplateLiteral(templateLiteral, mockContext)
 
-      expect(processClassNames).not.toHaveBeenCalled()
+      // Null is converted to empty string by the implementation
+      expect(processClassNames).toHaveBeenCalledWith("")
       expect(mockContext.report).not.toHaveBeenCalled()
     })
 
