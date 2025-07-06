@@ -102,8 +102,9 @@ export default createRule({
             return
           }
 
-          // Check if this is a class attribute
-          const attributeName = n.key?.name || n.key?.argument?.name
+          // Check if this is a class attribute (static or dynamic)
+          const attributeName = n.key?.argument?.name || n.key?.name?.name || n.key?.name
+          
           if (attributeName === "class") {
             // For static class attributes, process directly
             if (!n.directive && n.value?.type === "VLiteral") {
@@ -128,22 +129,39 @@ export default createRule({
               }
             }
             // For dynamic class attributes (:class), treat as expressions
-            else if (n.directive && n.value?.expression) {
-              // Handle dynamic expressions similar to call expressions
-              const expression = n.value.expression
-              if (expression.type === "ArrayExpression") {
+            else if (n.directive && n.value) {
+              // Handle Vue dynamic expressions - check VExpressionContainer
+              const expression = n.value.type === "VExpressionContainer" 
+                ? n.value.expression 
+                : n.value.expression
+              
+              
+              if (expression && expression.type === "ArrayExpression") {
                 // Handle array syntax: :class="['class1', 'class2']"
                 for (const element of expression.elements) {
                   if (
                     element?.type === "Literal" &&
                     typeof element.value === "string"
                   ) {
-                    const mockCallNode = {
-                      type: "CallExpression",
-                      callee: { name: "class" },
-                      arguments: [element],
+                    // Process each string element directly
+                    const result = processClassNames(element.value, config)
+                    if (result.applied) {
+                      // Report transformations for Vue array elements with autofix
+                      for (const transformation of result.transformations) {
+                        context.report({
+                          node: element,
+                          messageId: "useShorthand",
+                          data: {
+                            shorthand: transformation.shorthand,
+                            classnames: transformation.classnames,
+                          },
+                          fix(fixer) {
+                            // Replace the array element with the transformed result
+                            return fixer.replaceText(element, `"${result.value}"`)
+                          },
+                        })
+                      }
                     }
-                    callHandler.handle(mockCallNode as any)
                   }
                 }
               } else if (expression.type === "ObjectExpression") {
