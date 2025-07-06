@@ -435,6 +435,180 @@ function hasConsistentImportantStyle(classInfos: ClassInfo[]): boolean {
   )
 }
 
+export function findAllMatchingClasses(
+  patterns: string[][],
+  classInfos: ClassInfo[],
+): MatchResult[] {
+  const results: MatchResult[] = []
+
+  for (const pattern of patterns) {
+    // Check if this is a misc pattern (contains complete class names that don't follow type-value pattern)
+    const isMiscPattern =
+      pattern.includes("overflow-hidden") ||
+      pattern.includes("text-ellipsis") ||
+      pattern.includes("whitespace-nowrap")
+
+    if (isMiscPattern) {
+      // Handle misc patterns that match full class names
+      const classGroups = new Map<string, ClassInfo[]>()
+
+      // Group classes by prefix combination
+      for (const classInfo of classInfos) {
+        // For misc patterns, we need to match the original class name without prefix and important
+        // because parseGeneric splits "overflow-hidden" into type="overflow", value="hidden"
+        const baseClass = classInfo.baseClass
+
+        if (pattern.includes(baseClass)) {
+          const key = `${classInfo.detail.prefix}|${classInfo.detail.isNegative}|${classInfo.detail.important ?? "null"}`
+          if (!classGroups.has(key)) {
+            classGroups.set(key, [])
+          }
+          const group = classGroups.get(key)
+          if (group) {
+            group.push(classInfo)
+          }
+        }
+      }
+
+      // Check each group to see if it contains all required types
+      for (const [key, groupClasses] of classGroups) {
+        const [prefix, isNegativeStr, importantStr] = key.split("|")
+        const isNegative = isNegativeStr === "true"
+        const important: "leading" | "trailing" | null =
+          importantStr === "null"
+            ? null
+            : (importantStr as "leading" | "trailing")
+
+        // Check if this group has all required types
+        const foundTypes = new Set(groupClasses.map((c) => c.baseClass))
+        const hasAllTypes = pattern.every((requiredType) =>
+          foundTypes.has(requiredType),
+        )
+
+        if (hasAllTypes && groupClasses.length === pattern.length) {
+          // Check for consistent important modifier style before creating match
+          if (!hasConsistentImportantStyle(groupClasses)) {
+            continue // Skip this group if important styles are inconsistent
+          }
+
+          // Found a complete match
+          const matches: { [key: string]: string } = {}
+          const matchedClassInfos: ClassInfo[] = []
+
+          for (const requiredType of pattern) {
+            const classInfo = groupClasses.find(
+              (c) => c.baseClass === requiredType,
+            )
+            if (classInfo) {
+              matches[requiredType] = classInfo.original
+              matchedClassInfos.push(classInfo)
+            }
+          }
+
+          // Sort matched classes by their original appearance order
+          matchedClassInfos.sort((a, b) => {
+            const aIndex = classInfos.findIndex(
+              (cls) => cls.original === a.original,
+            )
+            const bIndex = classInfos.findIndex(
+              (cls) => cls.original === b.original,
+            )
+            return aIndex - bIndex
+          })
+
+          const matchedClasses = matchedClassInfos.map((info) => info.original)
+
+          results.push({
+            matches,
+            matchedClasses,
+            commonPrefix: prefix,
+            commonValue: "", // Misc patterns don't have values
+            commonNegative: isNegative,
+            commonImportant: important,
+          })
+        }
+      }
+    } else {
+      // Handle regular patterns that match by type and value
+      const classGroups = new Map<string, ClassInfo[]>()
+
+      // Group classes by prefix-value combination
+      for (const classInfo of classInfos) {
+        if (pattern.includes(classInfo.detail.type)) {
+          const key = `${classInfo.detail.prefix}|${classInfo.detail.value}|${classInfo.detail.isNegative}|${classInfo.detail.important ?? "null"}`
+          if (!classGroups.has(key)) {
+            classGroups.set(key, [])
+          }
+          const group = classGroups.get(key)
+          if (group) {
+            group.push(classInfo)
+          }
+        }
+      }
+
+      // Check each group to see if it contains all required types
+      for (const [key, groupClasses] of classGroups) {
+        const [prefix, value, isNegativeStr, importantStr] = key.split("|")
+        const isNegative = isNegativeStr === "true"
+        const important: "leading" | "trailing" | null =
+          importantStr === "null"
+            ? null
+            : (importantStr as "leading" | "trailing")
+
+        // Check if this group has all required types
+        const foundTypes = new Set(groupClasses.map((c) => c.detail.type))
+        const hasAllTypes = pattern.every((requiredType) =>
+          foundTypes.has(requiredType),
+        )
+
+        if (hasAllTypes && groupClasses.length === pattern.length) {
+          // Check for consistent important modifier style before creating match
+          if (!hasConsistentImportantStyle(groupClasses)) {
+            continue // Skip this group if important styles are inconsistent
+          }
+
+          // Found a complete match
+          const matches: { [key: string]: string } = {}
+          const matchedClassInfos: ClassInfo[] = []
+
+          for (const requiredType of pattern) {
+            const classInfo = groupClasses.find(
+              (c) => c.detail.type === requiredType,
+            )
+            if (classInfo) {
+              matches[requiredType] = classInfo.original
+              matchedClassInfos.push(classInfo)
+            }
+          }
+
+          // Sort matched classes by their original appearance order
+          matchedClassInfos.sort((a, b) => {
+            const aIndex = classInfos.findIndex(
+              (cls) => cls.original === a.original,
+            )
+            const bIndex = classInfos.findIndex(
+              (cls) => cls.original === b.original,
+            )
+            return aIndex - bIndex
+          })
+
+          const matchedClasses = matchedClassInfos.map((info) => info.original)
+
+          results.push({
+            matches,
+            matchedClasses,
+            commonPrefix: prefix,
+            commonValue: value,
+            commonNegative: isNegative,
+            commonImportant: important,
+          })
+        }
+      }
+    }
+  }
+  return results
+}
+
 function findMatchingClasses(
   patterns: string[][],
   classInfos: ClassInfo[],
@@ -607,7 +781,7 @@ function findMatchingClasses(
   return null
 }
 
-function findShorthandTransformation(
+export function findShorthandTransformation(
   classInfos: ClassInfo[],
   config?: TailwindConfig,
 ): ParsedTransformResult {
@@ -704,9 +878,19 @@ function isSizeShorthandAllowed(
   const wClass = sizingResult.matches[widthType] || ""
   const hClass = sizingResult.matches[heightType] || ""
 
-  // Extract values (remove prefix and w-/h- parts)
-  const wValue = wClass.replace(new RegExp(`^${customPrefix}w-`), "")
-  const hValue = hClass.replace(new RegExp(`^${customPrefix}h-`), "")
+  // Extract values (remove responsive prefix and custom prefix w-/h- parts)
+  // Handle responsive prefixes like "sm:", then remove custom prefix like "pfx-"
+  const wValueWithoutResponsive = wClass.replace(/^[^:]*:/, "")
+  const hValueWithoutResponsive = hClass.replace(/^[^:]*:/, "")
+
+  const wValue = wValueWithoutResponsive.replace(
+    new RegExp(`^${customPrefix}w-`),
+    "",
+  )
+  const hValue = hValueWithoutResponsive.replace(
+    new RegExp(`^${customPrefix}h-`),
+    "",
+  )
 
   // Must have same value for size shorthand
   if (wValue !== hValue) {
@@ -765,13 +949,16 @@ function handleSizing(
   const heightType = `${customPrefix}h`
   const sizingPatterns = [[widthType, heightType]]
 
-  const sizingResult = findMatchingClasses(sizingPatterns, classInfos)
-  if (sizingResult) {
+  // Use findAllMatchingClasses to get all possible size transformations
+  const sizingResults = findAllMatchingClasses(sizingPatterns, classInfos)
+
+  // Return the first valid transformation (multiple transformations will be handled by the caller)
+  for (const sizingResult of sizingResults) {
     const { matchedClasses } = sizingResult
 
     // Validate if size shorthand is allowed by config
     if (config && !isSizeShorthandAllowed(sizingResult, config)) {
-      return { applied: false, classInfos }
+      continue // Try next result
     }
 
     // Create shorthand class and ClassInfo with custom prefix
@@ -790,6 +977,7 @@ function handleSizing(
       shorthandClass,
     }
   }
+
   return { applied: false, classInfos }
 }
 
