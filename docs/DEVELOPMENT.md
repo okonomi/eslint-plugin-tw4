@@ -10,7 +10,9 @@ This is an ESLint plugin for TailwindCSS v4 that focuses on formatting and optim
 
 ### Development Commands
 - `pnpm build` - Build the plugin using tsup (outputs to `dist/`)
-- `pnpm lint` - Run Biome linting
+- `pnpm lint` - Run all linting (Biome and TypeScript)
+- `pnpm lint:biome` - Run Biome linting
+- `pnpm lint:tsc` - Run TypeScript type checking
 - `pnpm lint-fix` - Run Biome linting with auto-fix
 - `pnpm test` - Run all tests using Vitest
 - `pnpm test:unit` - Run unit tests in `src/`
