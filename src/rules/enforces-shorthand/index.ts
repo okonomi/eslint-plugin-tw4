@@ -1,10 +1,11 @@
+// biome-ignore lint/suspicious/noExplicitAny: Vue AST nodes require any type
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { TSESTree } from "@typescript-eslint/utils"
 import { ESLintUtils } from "@typescript-eslint/utils"
 import { CallExpressionHandler } from "./handlers/call-expression-handler"
 import { JSXAttributeHandler } from "./handlers/jsx-attribute-handler"
 import { TaggedTemplateHandler } from "./handlers/tagged-template-handler"
 import { parseOptions } from "./options"
-import { processJSXAttribute } from "./processors/jsx-processor"
 import { processClassNames } from "./processors/class-processor"
 
 const createRule = ESLintUtils.RuleCreator(
@@ -73,7 +74,7 @@ export default createRule({
       config,
     )
 
-    const visitors: any = {
+    const visitors: Record<string, (node: any) => void> = {
       TaggedTemplateExpression(node: TSESTree.TaggedTemplateExpression) {
         templateHandler.handle(node)
       },
@@ -91,82 +92,92 @@ export default createRule({
     }
 
     // Add Vue support by handling VAttribute nodes via Program:exit
-    visitors["Program:exit"] = function(node: any) {
+    visitors["Program:exit"] = (node: any) => {
       // Walk the entire AST to find VAttribute nodes
       function walkForVueAttributes(n: any) {
         if (!n || typeof n !== "object") return
-        
-        if (n.type === 'VAttribute') {
-          
+
+        if (n.type === "VAttribute") {
           if (options.skipClassAttribute) {
             return
           }
-          
+
           // Check if this is a class attribute
           const attributeName = n.key?.name || n.key?.argument?.name
-          if (attributeName === 'class') {
+          if (attributeName === "class") {
             // For static class attributes, process directly
-            if (!n.directive && n.value?.type === 'VLiteral') {
-              console.log("Processing Vue static class:", n.value.value)
+            if (!n.directive && n.value?.type === "VLiteral") {
               // Process class string directly using class processor
-              processClassNames(
-                n.value.value,
-                n,
-                context,
-                config
-              )
-              console.log("Finished processing Vue class")
+              const result = processClassNames(n.value.value, config)
+              if (result.applied) {
+                // Report transformations for Vue static classes
+                for (const transformation of result.transformations) {
+                  context.report({
+                    node: n,
+                    messageId: "useShorthand",
+                    data: {
+                      shorthand: transformation.shorthand,
+                      classnames: transformation.classnames,
+                    },
+                  })
+                }
+              }
             }
             // For dynamic class attributes (:class), treat as expressions
             else if (n.directive && n.value?.expression) {
               // Handle dynamic expressions similar to call expressions
               const expression = n.value.expression
-              if (expression.type === 'ArrayExpression') {
+              if (expression.type === "ArrayExpression") {
                 // Handle array syntax: :class="['class1', 'class2']"
                 for (const element of expression.elements) {
-                  if (element?.type === 'Literal' && typeof element.value === 'string') {
+                  if (
+                    element?.type === "Literal" &&
+                    typeof element.value === "string"
+                  ) {
                     const mockCallNode = {
-                      type: 'CallExpression',
-                      callee: { name: 'class' },
-                      arguments: [element]
+                      type: "CallExpression",
+                      callee: { name: "class" },
+                      arguments: [element],
                     }
                     callHandler.handle(mockCallNode as any)
                   }
                 }
-              } else if (expression.type === 'ObjectExpression') {
+              } else if (expression.type === "ObjectExpression") {
                 // Handle object syntax: :class="{'class1': true, 'class2': false}"
                 for (const property of expression.properties) {
-                  if (property.type === 'Property' && 
-                      property.key?.type === 'Literal' && 
-                      typeof property.key.value === 'string') {
+                  if (
+                    property.type === "Property" &&
+                    property.key?.type === "Literal" &&
+                    typeof property.key.value === "string"
+                  ) {
                     const mockCallNode = {
-                      type: 'CallExpression',
-                      callee: { name: 'class' },
-                      arguments: [property.key]
+                      type: "CallExpression",
+                      callee: { name: "class" },
+                      arguments: [property.key],
                     }
                     callHandler.handle(mockCallNode as any)
                   }
                 }
-              } else if (expression.type === 'CallExpression') {
+              } else if (expression.type === "CallExpression") {
                 // Handle function call syntax: :class="ctl('class1 class2')"
                 callHandler.handle(expression)
               }
             }
           }
         }
-        
+
         // Recursively walk child nodes
         for (const key in n) {
           if (key === "parent") continue // Avoid circular references
           const child = n[key]
           if (Array.isArray(child)) {
-            child.forEach(item => walkForVueAttributes(item))
+            child.forEach((item) => walkForVueAttributes(item))
           } else {
             walkForVueAttributes(child)
           }
         }
       }
-      
+
       walkForVueAttributes(node)
     }
 

@@ -487,14 +487,16 @@ export function findAllMatchingClasses(
             : (importantStr as "leading" | "trailing")
 
         // Check if this group has all required types
-        const foundTypes = new Set(groupClasses.map((c) => {
-          let baseClass = c.baseClass
-          const customPrefix = config?.prefix || ""
-          if (customPrefix && baseClass.startsWith(customPrefix)) {
-            baseClass = baseClass.substring(customPrefix.length)
-          }
-          return baseClass
-        }))
+        const foundTypes = new Set(
+          groupClasses.map((c) => {
+            let baseClass = c.baseClass
+            const customPrefix = config?.prefix || ""
+            if (customPrefix && baseClass.startsWith(customPrefix)) {
+              baseClass = baseClass.substring(customPrefix.length)
+            }
+            return baseClass
+          }),
+        )
         const hasAllTypes = pattern.every((requiredType) =>
           foundTypes.has(requiredType),
         )
@@ -678,14 +680,16 @@ function findMatchingClasses(
             : (importantStr as "leading" | "trailing")
 
         // Check if this group has all required types
-        const foundTypes = new Set(groupClasses.map((c) => {
-          let baseClass = c.baseClass
-          const customPrefix = config?.prefix || ""
-          if (customPrefix && baseClass.startsWith(customPrefix)) {
-            baseClass = baseClass.substring(customPrefix.length)
-          }
-          return baseClass
-        }))
+        const foundTypes = new Set(
+          groupClasses.map((c) => {
+            let baseClass = c.baseClass
+            const customPrefix = config?.prefix || ""
+            if (customPrefix && baseClass.startsWith(customPrefix)) {
+              baseClass = baseClass.substring(customPrefix.length)
+            }
+            return baseClass
+          }),
+        )
         const hasAllTypes = pattern.every((requiredType) =>
           foundTypes.has(requiredType),
         )
@@ -886,19 +890,20 @@ function applyPatternTransformation(
       let finalShorthand = shorthand
       if (customPrefix && matchedClasses.length > 0) {
         // Check if this is a misc pattern by looking at the pattern structure
-        const isMiscPattern = patternList.some(pattern => 
-          pattern.includes("overflow-hidden") || 
-          pattern.includes("text-ellipsis") || 
-          pattern.includes("whitespace-nowrap")
+        const isMiscPattern = patternList.some(
+          (pattern) =>
+            pattern.includes("overflow-hidden") ||
+            pattern.includes("text-ellipsis") ||
+            pattern.includes("whitespace-nowrap"),
         )
-        
+
         if (isMiscPattern) {
           // Check if any matched class has the custom prefix in its baseClass
-          const hasCustomPrefixInClasses = matchedClasses.some(className => {
-            const classInfo = classInfos.find(c => c.original === className)
-            return classInfo && classInfo.baseClass.startsWith(customPrefix)
+          const hasCustomPrefixInClasses = matchedClasses.some((className) => {
+            const classInfo = classInfos.find((c) => c.original === className)
+            return classInfo?.baseClass.startsWith(customPrefix)
           })
-          
+
           if (hasCustomPrefixInClasses) {
             finalShorthand = `${customPrefix}${shorthand}`
           }
