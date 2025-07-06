@@ -10,6 +10,8 @@ export interface TailwindTheme {
     size?: Record<string, string>
     spacing?: Record<string, string>
   }
+  colors?: Record<string, string>
+  spacing?: Record<string, string>
 }
 
 /**
@@ -20,6 +22,7 @@ export interface TailwindConfig {
   plugins?: unknown[]
   prefix?: string
   separator?: string
+  custom?: unknown
 }
 
 /**
