@@ -20,7 +20,7 @@
     "build": "tsup src/index.ts --format cjs,esm --dts --out-dir dist --clean",
     "lint": "run-p lint:*",
     "lint:biome": "biome check",
-    "lint:tsc": "tsc --build",
+    "lint:tsc": "tsc --noEmit",
     "lint-fix": "biome check --write --unsafe",
     "test": "vitest run",
     "test:unit": "vitest run src/",
