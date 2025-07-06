@@ -103,8 +103,9 @@ export default createRule({
           }
 
           // Check if this is a class attribute (static or dynamic)
-          const attributeName = n.key?.argument?.name || n.key?.name?.name || n.key?.name
-          
+          const attributeName =
+            n.key?.argument?.name || n.key?.name?.name || n.key?.name
+
           if (attributeName === "class") {
             // For static class attributes, process directly
             if (!n.directive && n.value?.type === "VLiteral") {
@@ -122,9 +123,14 @@ export default createRule({
                     },
                     fix(fixer) {
                       // Preserve original quote style
-                      const originalText = context.getSourceCode().getText(n.value)
+                      const originalText = context
+                        .getSourceCode()
+                        .getText(n.value)
                       const quoteChar = originalText.startsWith("'") ? "'" : '"'
-                      return fixer.replaceText(n.value, `${quoteChar}${result.value}${quoteChar}`)
+                      return fixer.replaceText(
+                        n.value,
+                        `${quoteChar}${result.value}${quoteChar}`,
+                      )
                     },
                   })
                 }
@@ -133,11 +139,11 @@ export default createRule({
             // For dynamic class attributes (:class), treat as expressions
             else if (n.directive && n.value) {
               // Handle Vue dynamic expressions - check VExpressionContainer
-              const expression = n.value.type === "VExpressionContainer" 
-                ? n.value.expression 
-                : n.value.expression
-              
-              
+              const expression =
+                n.value.type === "VExpressionContainer"
+                  ? n.value.expression
+                  : n.value.expression
+
               if (expression && expression.type === "ArrayExpression") {
                 // Handle array syntax: :class="['class1', 'class2']"
                 for (const element of expression.elements) {
@@ -159,9 +165,16 @@ export default createRule({
                           },
                           fix(fixer) {
                             // Preserve original quote style
-                            const originalText = context.getSourceCode().getText(element)
-                            const quoteChar = originalText.startsWith("'") ? "'" : '"'
-                            return fixer.replaceText(element, `${quoteChar}${result.value}${quoteChar}`)
+                            const originalText = context
+                              .getSourceCode()
+                              .getText(element)
+                            const quoteChar = originalText.startsWith("'")
+                              ? "'"
+                              : '"'
+                            return fixer.replaceText(
+                              element,
+                              `${quoteChar}${result.value}${quoteChar}`,
+                            )
                           },
                         })
                       }
@@ -178,7 +191,10 @@ export default createRule({
                       typeof property.key.value === "string"
                     ) {
                       // Process each object key directly
-                      const result = processClassNames(property.key.value, config)
+                      const result = processClassNames(
+                        property.key.value,
+                        config,
+                      )
                       if (result.applied) {
                         // Report transformations for Vue object keys with autofix
                         for (const transformation of result.transformations) {
@@ -191,9 +207,16 @@ export default createRule({
                             },
                             fix(fixer) {
                               // Preserve original quote style
-                              const originalText = context.getSourceCode().getText(property.key)
-                              const quoteChar = originalText.startsWith("'") ? "'" : '"'
-                              return fixer.replaceText(property.key, `${quoteChar}${result.value}${quoteChar}`)
+                              const originalText = context
+                                .getSourceCode()
+                                .getText(property.key)
+                              const quoteChar = originalText.startsWith("'")
+                                ? "'"
+                                : '"'
+                              return fixer.replaceText(
+                                property.key,
+                                `${quoteChar}${result.value}${quoteChar}`,
+                              )
                             },
                           })
                         }
