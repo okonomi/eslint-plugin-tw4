@@ -1,3 +1,3 @@
 export default {
-  "pre-commit": "pnpm lint-fix",
+  "pre-commit": "pnpm lint-pre",
 }
