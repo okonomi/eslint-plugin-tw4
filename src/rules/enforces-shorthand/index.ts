@@ -110,7 +110,7 @@ export default createRule({
               // Process class string directly using class processor
               const result = processClassNames(n.value.value, config)
               if (result.applied) {
-                // Report transformations for Vue static classes
+                // Report transformations for Vue static classes with autofix
                 for (const transformation of result.transformations) {
                   context.report({
                     node: n,
@@ -118,6 +118,10 @@ export default createRule({
                     data: {
                       shorthand: transformation.shorthand,
                       classnames: transformation.classnames,
+                    },
+                    fix(fixer) {
+                      // Replace the class value with the transformed result
+                      return fixer.replaceText(n.value, `"${result.value}"`)
                     },
                   })
                 }
