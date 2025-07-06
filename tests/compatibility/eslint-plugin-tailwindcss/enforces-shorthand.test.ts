@@ -101,7 +101,7 @@ function generateError(classnames: string[], shorthand: string) {
 const ruleTester = new RuleTester({
   languageOptions: {
     ecmaVersion: 2019,
-    sourceType: "module",
+    sourceType: "module", 
     parserOptions: {
       ecmaFeatures: {
         jsx: true,
@@ -678,7 +678,9 @@ ruleTester.run("shorthands", rule, {
         generateError(["overflow-x-auto", "overflow-y-auto"], "overflow-auto"),
       ],
       filename: "test.vue",
-      parser: require.resolve("vue-eslint-parser"),
+      languageOptions: {
+        parser: require("vue-eslint-parser"),
+      },
     },
     {
       code: `
@@ -702,7 +704,9 @@ ruleTester.run("shorthands", rule, {
         ),
       ],
       filename: "test.vue",
-      parser: require.resolve("vue-eslint-parser"),
+      languageOptions: {
+        parser: require("vue-eslint-parser"),
+      },
     },
     {
       code: `
@@ -721,7 +725,9 @@ ruleTester.run("shorthands", rule, {
       `,
       errors: [generateError(["mt-0", "mb-0"], "my-0")],
       filename: "test.vue",
-      parser: require.resolve("vue-eslint-parser"),
+      languageOptions: {
+        parser: require("vue-eslint-parser"),
+      },
     },
     {
       code: `
@@ -740,7 +746,9 @@ ruleTester.run("shorthands", rule, {
       `,
       errors: [generateError(["-mt-1", "-mb-1"], "-my-1")],
       filename: "test.vue",
-      parser: require.resolve("vue-eslint-parser"),
+      languageOptions: {
+        parser: require("vue-eslint-parser"),
+      },
     },
     {
       code: `

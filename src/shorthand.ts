@@ -438,6 +438,7 @@ function hasConsistentImportantStyle(classInfos: ClassInfo[]): boolean {
 export function findAllMatchingClasses(
   patterns: string[][],
   classInfos: ClassInfo[],
+  config?: TailwindConfig,
 ): MatchResult[] {
   const results: MatchResult[] = []
 
@@ -456,7 +457,13 @@ export function findAllMatchingClasses(
       for (const classInfo of classInfos) {
         // For misc patterns, we need to match the original class name without prefix and important
         // because parseGeneric splits "overflow-hidden" into type="overflow", value="hidden"
-        const baseClass = classInfo.baseClass
+        let baseClass = classInfo.baseClass
+
+        // Remove custom prefix from baseClass for pattern matching
+        const customPrefix = config?.prefix || ""
+        if (customPrefix && baseClass.startsWith(customPrefix)) {
+          baseClass = baseClass.substring(customPrefix.length)
+        }
 
         if (pattern.includes(baseClass)) {
           const key = `${classInfo.detail.prefix}|${classInfo.detail.isNegative}|${classInfo.detail.important ?? "null"}`
@@ -480,7 +487,14 @@ export function findAllMatchingClasses(
             : (importantStr as "leading" | "trailing")
 
         // Check if this group has all required types
-        const foundTypes = new Set(groupClasses.map((c) => c.baseClass))
+        const foundTypes = new Set(groupClasses.map((c) => {
+          let baseClass = c.baseClass
+          const customPrefix = config?.prefix || ""
+          if (customPrefix && baseClass.startsWith(customPrefix)) {
+            baseClass = baseClass.substring(customPrefix.length)
+          }
+          return baseClass
+        }))
         const hasAllTypes = pattern.every((requiredType) =>
           foundTypes.has(requiredType),
         )
@@ -496,9 +510,14 @@ export function findAllMatchingClasses(
           const matchedClassInfos: ClassInfo[] = []
 
           for (const requiredType of pattern) {
-            const classInfo = groupClasses.find(
-              (c) => c.baseClass === requiredType,
-            )
+            const classInfo = groupClasses.find((c) => {
+              let baseClass = c.baseClass
+              const customPrefix = config?.prefix || ""
+              if (customPrefix && baseClass.startsWith(customPrefix)) {
+                baseClass = baseClass.substring(customPrefix.length)
+              }
+              return baseClass === requiredType
+            })
             if (classInfo) {
               matches[requiredType] = classInfo.original
               matchedClassInfos.push(classInfo)
@@ -612,6 +631,7 @@ export function findAllMatchingClasses(
 function findMatchingClasses(
   patterns: string[][],
   classInfos: ClassInfo[],
+  config?: TailwindConfig,
 ): MatchResult | null {
   for (const pattern of patterns) {
     // Check if this is a misc pattern (contains complete class names that don't follow type-value pattern)
@@ -628,7 +648,13 @@ function findMatchingClasses(
       for (const classInfo of classInfos) {
         // For misc patterns, we need to match the original class name without prefix and important
         // because parseGeneric splits "overflow-hidden" into type="overflow", value="hidden"
-        const baseClass = classInfo.baseClass
+        let baseClass = classInfo.baseClass
+
+        // Remove custom prefix from baseClass for pattern matching
+        const customPrefix = config?.prefix || ""
+        if (customPrefix && baseClass.startsWith(customPrefix)) {
+          baseClass = baseClass.substring(customPrefix.length)
+        }
 
         if (pattern.includes(baseClass)) {
           const key = `${classInfo.detail.prefix}|${classInfo.detail.isNegative}|${classInfo.detail.important ?? "null"}`
@@ -652,7 +678,14 @@ function findMatchingClasses(
             : (importantStr as "leading" | "trailing")
 
         // Check if this group has all required types
-        const foundTypes = new Set(groupClasses.map((c) => c.baseClass))
+        const foundTypes = new Set(groupClasses.map((c) => {
+          let baseClass = c.baseClass
+          const customPrefix = config?.prefix || ""
+          if (customPrefix && baseClass.startsWith(customPrefix)) {
+            baseClass = baseClass.substring(customPrefix.length)
+          }
+          return baseClass
+        }))
         const hasAllTypes = pattern.every((requiredType) =>
           foundTypes.has(requiredType),
         )
@@ -668,9 +701,14 @@ function findMatchingClasses(
           const matchedClassInfos: ClassInfo[] = []
 
           for (const requiredType of pattern) {
-            const classInfo = groupClasses.find(
-              (c) => c.baseClass === requiredType,
-            )
+            const classInfo = groupClasses.find((c) => {
+              let baseClass = c.baseClass
+              const customPrefix = config?.prefix || ""
+              if (customPrefix && baseClass.startsWith(customPrefix)) {
+                baseClass = baseClass.substring(customPrefix.length)
+              }
+              return baseClass === requiredType
+            })
             if (classInfo) {
               matches[requiredType] = classInfo.original
               matchedClassInfos.push(classInfo)
@@ -818,7 +856,7 @@ function applyPatternTransformation(
       const prefixedPatterns = patternList.map((pattern) =>
         pattern.map((type) => `${customPrefix}${type}`),
       )
-      result = findMatchingClasses(prefixedPatterns, classInfos)
+      result = findMatchingClasses(prefixedPatterns, classInfos, config)
 
       // If prefixed pattern matches, create shorthand with prefix
       if (result) {
@@ -840,13 +878,36 @@ function applyPatternTransformation(
     }
 
     // Try original patterns (without prefix)
-    result = findMatchingClasses(patternList, classInfos)
+    result = findMatchingClasses(patternList, classInfos, config)
     if (result) {
       const { matchedClasses } = result
 
+      // For misc patterns with custom prefix, check if we need to add the prefix to shorthand
+      let finalShorthand = shorthand
+      if (customPrefix && matchedClasses.length > 0) {
+        // Check if this is a misc pattern by looking at the pattern structure
+        const isMiscPattern = patternList.some(pattern => 
+          pattern.includes("overflow-hidden") || 
+          pattern.includes("text-ellipsis") || 
+          pattern.includes("whitespace-nowrap")
+        )
+        
+        if (isMiscPattern) {
+          // Check if any matched class has the custom prefix in its baseClass
+          const hasCustomPrefixInClasses = matchedClasses.some(className => {
+            const classInfo = classInfos.find(c => c.original === className)
+            return classInfo && classInfo.baseClass.startsWith(customPrefix)
+          })
+          
+          if (hasCustomPrefixInClasses) {
+            finalShorthand = `${customPrefix}${shorthand}`
+          }
+        }
+      }
+
       // Create shorthand class and ClassInfo
       const { shorthandClass, shorthandClassInfo } =
-        createShorthandFromMatchResult(result, shorthand, config)
+        createShorthandFromMatchResult(result, finalShorthand, config)
 
       return {
         applied: true,
@@ -991,6 +1052,7 @@ function handleTransforms(
     const result = findMatchingClasses(
       [[`${transformType}-x`, `${transformType}-y`]],
       classInfos,
+      config,
     )
     if (result) {
       const { matchedClasses, commonValue } = result

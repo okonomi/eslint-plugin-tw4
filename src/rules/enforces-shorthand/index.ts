@@ -4,6 +4,8 @@ import { CallExpressionHandler } from "./handlers/call-expression-handler"
 import { JSXAttributeHandler } from "./handlers/jsx-attribute-handler"
 import { TaggedTemplateHandler } from "./handlers/tagged-template-handler"
 import { parseOptions } from "./options"
+import { processJSXAttribute } from "./processors/jsx-processor"
+import { processClassNames } from "./processors/class-processor"
 
 const createRule = ESLintUtils.RuleCreator(
   (name) => `https://example.com/rule/${name}`,
@@ -71,7 +73,7 @@ export default createRule({
       config,
     )
 
-    return {
+    const visitors: any = {
       TaggedTemplateExpression(node: TSESTree.TaggedTemplateExpression) {
         templateHandler.handle(node)
       },
@@ -87,5 +89,87 @@ export default createRule({
         jsxHandler.handle(node)
       },
     }
+
+    // Add Vue support by handling VAttribute nodes via Program:exit
+    visitors["Program:exit"] = function(node: any) {
+      // Walk the entire AST to find VAttribute nodes
+      function walkForVueAttributes(n: any) {
+        if (!n || typeof n !== "object") return
+        
+        if (n.type === 'VAttribute') {
+          
+          if (options.skipClassAttribute) {
+            return
+          }
+          
+          // Check if this is a class attribute
+          const attributeName = n.key?.name || n.key?.argument?.name
+          if (attributeName === 'class') {
+            // For static class attributes, process directly
+            if (!n.directive && n.value?.type === 'VLiteral') {
+              console.log("Processing Vue static class:", n.value.value)
+              // Process class string directly using class processor
+              processClassNames(
+                n.value.value,
+                n,
+                context,
+                config
+              )
+              console.log("Finished processing Vue class")
+            }
+            // For dynamic class attributes (:class), treat as expressions
+            else if (n.directive && n.value?.expression) {
+              // Handle dynamic expressions similar to call expressions
+              const expression = n.value.expression
+              if (expression.type === 'ArrayExpression') {
+                // Handle array syntax: :class="['class1', 'class2']"
+                for (const element of expression.elements) {
+                  if (element?.type === 'Literal' && typeof element.value === 'string') {
+                    const mockCallNode = {
+                      type: 'CallExpression',
+                      callee: { name: 'class' },
+                      arguments: [element]
+                    }
+                    callHandler.handle(mockCallNode as any)
+                  }
+                }
+              } else if (expression.type === 'ObjectExpression') {
+                // Handle object syntax: :class="{'class1': true, 'class2': false}"
+                for (const property of expression.properties) {
+                  if (property.type === 'Property' && 
+                      property.key?.type === 'Literal' && 
+                      typeof property.key.value === 'string') {
+                    const mockCallNode = {
+                      type: 'CallExpression',
+                      callee: { name: 'class' },
+                      arguments: [property.key]
+                    }
+                    callHandler.handle(mockCallNode as any)
+                  }
+                }
+              } else if (expression.type === 'CallExpression') {
+                // Handle function call syntax: :class="ctl('class1 class2')"
+                callHandler.handle(expression)
+              }
+            }
+          }
+        }
+        
+        // Recursively walk child nodes
+        for (const key in n) {
+          if (key === "parent") continue // Avoid circular references
+          const child = n[key]
+          if (Array.isArray(child)) {
+            child.forEach(item => walkForVueAttributes(item))
+          } else {
+            walkForVueAttributes(child)
+          }
+        }
+      }
+      
+      walkForVueAttributes(node)
+    }
+
+    return visitors
   },
 })
