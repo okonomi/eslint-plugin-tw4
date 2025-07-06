@@ -121,8 +121,10 @@ export default createRule({
                       classnames: transformation.classnames,
                     },
                     fix(fixer) {
-                      // Replace the class value with the transformed result
-                      return fixer.replaceText(n.value, `"${result.value}"`)
+                      // Preserve original quote style
+                      const originalText = context.getSourceCode().getText(n.value)
+                      const quoteChar = originalText.startsWith("'") ? "'" : '"'
+                      return fixer.replaceText(n.value, `${quoteChar}${result.value}${quoteChar}`)
                     },
                   })
                 }
@@ -156,31 +158,52 @@ export default createRule({
                             classnames: transformation.classnames,
                           },
                           fix(fixer) {
-                            // Replace the array element with the transformed result
-                            return fixer.replaceText(element, `"${result.value}"`)
+                            // Preserve original quote style
+                            const originalText = context.getSourceCode().getText(element)
+                            const quoteChar = originalText.startsWith("'") ? "'" : '"'
+                            return fixer.replaceText(element, `${quoteChar}${result.value}${quoteChar}`)
                           },
                         })
                       }
                     }
                   }
                 }
-              } else if (expression.type === "ObjectExpression") {
+              } else if (expression && expression.type === "ObjectExpression") {
                 // Handle object syntax: :class="{'class1': true, 'class2': false}"
-                for (const property of expression.properties) {
-                  if (
-                    property.type === "Property" &&
-                    property.key?.type === "Literal" &&
-                    typeof property.key.value === "string"
-                  ) {
-                    const mockCallNode = {
-                      type: "CallExpression",
-                      callee: { name: "class" },
-                      arguments: [property.key],
+                try {
+                  for (const property of expression.properties || []) {
+                    if (
+                      property.type === "Property" &&
+                      property.key?.type === "Literal" &&
+                      typeof property.key.value === "string"
+                    ) {
+                      // Process each object key directly
+                      const result = processClassNames(property.key.value, config)
+                      if (result.applied) {
+                        // Report transformations for Vue object keys with autofix
+                        for (const transformation of result.transformations) {
+                          context.report({
+                            node: property.key,
+                            messageId: "useShorthand",
+                            data: {
+                              shorthand: transformation.shorthand,
+                              classnames: transformation.classnames,
+                            },
+                            fix(fixer) {
+                              // Preserve original quote style
+                              const originalText = context.getSourceCode().getText(property.key)
+                              const quoteChar = originalText.startsWith("'") ? "'" : '"'
+                              return fixer.replaceText(property.key, `${quoteChar}${result.value}${quoteChar}`)
+                            },
+                          })
+                        }
+                      }
                     }
-                    callHandler.handle(mockCallNode as any)
                   }
+                } catch (error) {
+                  console.log("Error in Vue object processing:", error)
                 }
-              } else if (expression.type === "CallExpression") {
+              } else if (expression && expression.type === "CallExpression") {
                 // Handle function call syntax: :class="ctl('class1 class2')"
                 callHandler.handle(expression)
               }
