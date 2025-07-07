@@ -2,9 +2,9 @@
 
 import type { TSESTree } from "@typescript-eslint/utils"
 import { ESLintUtils } from "@typescript-eslint/utils"
-import { CallExpressionHandler } from "./handlers/call-expression-handler"
-import { JSXAttributeHandler } from "./handlers/jsx-attribute-handler"
-import { TaggedTemplateHandler } from "./handlers/tagged-template-handler"
+import { handleCallExpression } from "./handlers/call-expressions"
+import { handleJSXAttribute } from "./handlers/jsx-attributes"
+import { handleTaggedTemplate } from "./handlers/tagged-templates"
 import { parseOptions } from "./options"
 import { processClassNames } from "./processors/classes"
 
@@ -61,33 +61,22 @@ export default createRule({
     const config =
       typeof options.config === "object" ? options.config : undefined
 
-    // Create handlers with configured options
-    const jsxHandler = new JSXAttributeHandler(context, config)
-    const callHandler = new CallExpressionHandler(
-      context,
-      options.callees,
-      config,
-    )
-    const templateHandler = new TaggedTemplateHandler(
-      context,
-      options.tags,
-      config,
-    )
+    // Define handler functions with configured options
 
     const visitors: Record<string, (node: any) => void> = {
       TaggedTemplateExpression(node: TSESTree.TaggedTemplateExpression) {
-        templateHandler.handle(node)
+        handleTaggedTemplate(node, context, options.tags, config)
       },
 
       CallExpression(node: TSESTree.CallExpression) {
-        callHandler.handle(node)
+        handleCallExpression(node, context, options.callees, config)
       },
 
       JSXAttribute(node: TSESTree.JSXAttribute) {
         if (options.skipClassAttribute) {
           return
         }
-        jsxHandler.handle(node)
+        handleJSXAttribute(node, context, config)
       },
     }
 
@@ -228,7 +217,12 @@ export default createRule({
                 }
               } else if (expression && expression.type === "CallExpression") {
                 // Handle function call syntax: :class="ctl('class1 class2')"
-                callHandler.handle(expression)
+                handleCallExpression(
+                  expression,
+                  context,
+                  options.callees,
+                  config,
+                )
               }
             }
           }

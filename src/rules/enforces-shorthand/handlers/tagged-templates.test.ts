@@ -1,7 +1,7 @@
 import type { TSESTree } from "@typescript-eslint/utils"
 import type { RuleContext } from "@typescript-eslint/utils/ts-eslint"
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { TaggedTemplateHandler } from "./tagged-template-handler"
+import { handleTaggedTemplate } from "./tagged-templates"
 
 // Mock the dependencies
 vi.mock("../processors/templates", () => ({
@@ -15,7 +15,7 @@ vi.mock("../utils/node-matching", () => ({
 const { processTemplateLiteral } = await import("../processors/templates")
 const { isTargetTag } = await import("../utils/node-matching")
 
-describe("tagged-template-handler", () => {
+describe("handleTaggedTemplate", () => {
   const mockContext = {
     report: vi.fn(),
     parserPath: "test",
@@ -26,11 +26,8 @@ describe("tagged-template-handler", () => {
   } as unknown as RuleContext<"useShorthand", readonly unknown[]>
 
   const tags = ["tw", "css", "styled"]
-  let handler: TaggedTemplateHandler
-
   beforeEach(() => {
     vi.clearAllMocks()
-    handler = new TaggedTemplateHandler(mockContext, tags, undefined)
   })
 
   describe("control flow - essential branching logic", () => {
@@ -47,7 +44,7 @@ describe("tagged-template-handler", () => {
         },
       } as unknown as TSESTree.TaggedTemplateExpression
 
-      handler.handle(node)
+      handleTaggedTemplate(node, mockContext, tags, undefined)
 
       expect(isTargetTag).toHaveBeenCalledWith(node, tags)
       expect(processTemplateLiteral).not.toHaveBeenCalled()
@@ -68,7 +65,7 @@ describe("tagged-template-handler", () => {
         quasi: templateLiteral,
       } as unknown as TSESTree.TaggedTemplateExpression
 
-      handler.handle(node)
+      handleTaggedTemplate(node, mockContext, tags, undefined)
 
       expect(isTargetTag).toHaveBeenCalledWith(node, tags)
       expect(processTemplateLiteral).toHaveBeenCalledWith(

@@ -908,7 +908,7 @@ describe("enforces-shorthand", () => {
   })
 
   describe("Handler/Processor Integration Tests", () => {
-    describe("call-expression-handler edge cases", () => {
+    describe("handleCallExpression edge cases", () => {
       it.each([
         {
           code: "cn()", // No arguments
@@ -957,7 +957,7 @@ describe("enforces-shorthand", () => {
       )
     })
 
-    describe("jsx-attribute-handler edge cases", () => {
+    describe("handleJSXAttribute edge cases", () => {
       it.each([
         {
           code: `<div id="mt-4 mr-4 mb-4 ml-4" />`, // Non-class attribute
@@ -1001,7 +1001,7 @@ describe("enforces-shorthand", () => {
       )
     })
 
-    describe("tagged-template-handler edge cases", () => {
+    describe("handleTaggedTemplate edge cases", () => {
       it.each([
         {
           code: "notConfiguredTag\`mt-4 mr-4 mb-4 ml-4\`", // Non-target tag

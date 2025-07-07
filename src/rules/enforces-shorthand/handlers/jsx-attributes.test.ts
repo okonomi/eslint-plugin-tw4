@@ -1,7 +1,7 @@
 import type { TSESTree } from "@typescript-eslint/utils"
 import type { RuleContext } from "@typescript-eslint/utils/ts-eslint"
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { JSXAttributeHandler } from "./jsx-attribute-handler"
+import { handleJSXAttribute } from "./jsx-attributes"
 
 // Mock the dependencies
 vi.mock("../processors/jsx", () => ({
@@ -10,7 +10,7 @@ vi.mock("../processors/jsx", () => ({
 
 const { processJSXAttribute } = await import("../processors/jsx")
 
-describe("jsx-attribute-handler", () => {
+describe("handleJSXAttribute", () => {
   const mockContext = {
     report: vi.fn(),
     parserPath: "test",
@@ -20,11 +20,8 @@ describe("jsx-attribute-handler", () => {
     getSourceCode: vi.fn(),
   } as unknown as RuleContext<"useShorthand", readonly unknown[]>
 
-  let handler: JSXAttributeHandler
-
   beforeEach(() => {
     vi.clearAllMocks()
-    handler = new JSXAttributeHandler(mockContext, undefined)
   })
 
   describe("delegation - essential functionality", () => {
@@ -38,7 +35,7 @@ describe("jsx-attribute-handler", () => {
         },
       } as unknown as TSESTree.JSXAttribute
 
-      handler.handle(node)
+      handleJSXAttribute(node, mockContext, undefined)
 
       expect(processJSXAttribute).toHaveBeenCalledWith(
         node,

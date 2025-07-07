@@ -1,7 +1,7 @@
 import type { TSESTree } from "@typescript-eslint/utils"
 import type { RuleContext } from "@typescript-eslint/utils/ts-eslint"
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { CallExpressionHandler } from "./call-expression-handler"
+import { handleCallExpression } from "./call-expressions"
 
 // Mock the dependencies
 vi.mock("../processors/classes", () => ({
@@ -33,7 +33,7 @@ const { processNestedStructure } = await import("../processors/nested")
 const { processTemplateLiteral } = await import("../processors/templates")
 const { isTargetCallee } = await import("../utils/node-matching")
 
-describe("call-expression-handler", () => {
+describe("handleCallExpression", () => {
   const mockContext = {
     report: vi.fn(),
     parserPath: "test",
@@ -44,11 +44,8 @@ describe("call-expression-handler", () => {
   } as unknown as RuleContext<"useShorthand", readonly unknown[]>
 
   const callees = ["cn", "clsx", "classNames"]
-  let handler: CallExpressionHandler
-
   beforeEach(() => {
     vi.clearAllMocks()
-    handler = new CallExpressionHandler(mockContext, callees, undefined)
   })
 
   describe("control flow - essential branching logic", () => {
@@ -61,7 +58,7 @@ describe("call-expression-handler", () => {
         arguments: [],
       } as unknown as TSESTree.CallExpression
 
-      handler.handle(node)
+      handleCallExpression(node, mockContext, callees, undefined)
 
       expect(isTargetCallee).toHaveBeenCalledWith(node, callees)
       expect(processClassNames).not.toHaveBeenCalled()
@@ -78,7 +75,7 @@ describe("call-expression-handler", () => {
         arguments: [],
       } as unknown as TSESTree.CallExpression
 
-      handler.handle(node)
+      handleCallExpression(node, mockContext, callees, undefined)
 
       expect(processClassNames).not.toHaveBeenCalled()
     })
@@ -97,7 +94,7 @@ describe("call-expression-handler", () => {
         ],
       } as unknown as TSESTree.CallExpression
 
-      handler.handle(node)
+      handleCallExpression(node, mockContext, callees, undefined)
 
       expect(processClassNames).toHaveBeenCalledWith("test-classes", undefined)
     })
@@ -117,7 +114,7 @@ describe("call-expression-handler", () => {
         arguments: [templateLiteral],
       } as unknown as TSESTree.CallExpression
 
-      handler.handle(node)
+      handleCallExpression(node, mockContext, callees, undefined)
 
       expect(processTemplateLiteral).toHaveBeenCalledWith(
         templateLiteral,
@@ -140,7 +137,7 @@ describe("call-expression-handler", () => {
         arguments: [arrayExpression],
       } as unknown as TSESTree.CallExpression
 
-      handler.handle(node)
+      handleCallExpression(node, mockContext, callees, undefined)
 
       expect(processNestedStructure).toHaveBeenCalledWith(
         arrayExpression,
@@ -163,7 +160,7 @@ describe("call-expression-handler", () => {
         arguments: [objectExpression],
       } as unknown as TSESTree.CallExpression
 
-      handler.handle(node)
+      handleCallExpression(node, mockContext, callees, undefined)
 
       expect(processNestedStructure).toHaveBeenCalledWith(
         objectExpression,
