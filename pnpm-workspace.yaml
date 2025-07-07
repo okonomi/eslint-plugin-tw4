@@ -1,6 +1,7 @@
+packages:
+  - example
+
 onlyBuiltDependencies:
   - '@biomejs/biome'
   - esbuild
-
-packages:
-  - example
+  - simple-git-hooks
