@@ -1,5 +1,5 @@
 import type { RuleContext } from "@typescript-eslint/utils/ts-eslint"
-import { processTemplateLiteral } from "../processors/template-processor"
+import { processTemplateLiteral } from "../processors/templates"
 import type { TaggedTemplateNode, TailwindConfig } from "../types"
 import { isTargetTag } from "../utils/node-matching"
 

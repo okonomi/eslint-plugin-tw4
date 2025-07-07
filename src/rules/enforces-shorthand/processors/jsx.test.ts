@@ -1,19 +1,19 @@
 import type { TSESTree } from "@typescript-eslint/utils"
 import type { RuleContext } from "@typescript-eslint/utils/ts-eslint"
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { processJSXAttribute } from "./jsx-processor"
+import { processJSXAttribute } from "./jsx"
 
 // Mock the dependencies
-vi.mock("./class-processor", () => ({
+vi.mock("./classes", () => ({
   processClassNames: vi.fn(),
 }))
 
-vi.mock("./template-processor", () => ({
+vi.mock("./templates", () => ({
   processTemplateLiteral: vi.fn(),
 }))
 
-const { processClassNames } = await import("./class-processor")
-const { processTemplateLiteral } = await import("./template-processor")
+const { processClassNames } = await import("./classes")
+const { processTemplateLiteral } = await import("./templates")
 
 describe("jsx-processor", () => {
   const mockContext = {

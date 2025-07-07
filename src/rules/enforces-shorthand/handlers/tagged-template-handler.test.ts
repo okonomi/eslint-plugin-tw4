@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import { TaggedTemplateHandler } from "./tagged-template-handler"
 
 // Mock the dependencies
-vi.mock("../processors/template-processor", () => ({
+vi.mock("../processors/templates", () => ({
   processTemplateLiteral: vi.fn(),
 }))
 
@@ -12,9 +12,7 @@ vi.mock("../utils/node-matching", () => ({
   isTargetTag: vi.fn(),
 }))
 
-const { processTemplateLiteral } = await import(
-  "../processors/template-processor"
-)
+const { processTemplateLiteral } = await import("../processors/templates")
 const { isTargetTag } = await import("../utils/node-matching")
 
 describe("tagged-template-handler", () => {

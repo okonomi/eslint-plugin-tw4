@@ -4,11 +4,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import { JSXAttributeHandler } from "./jsx-attribute-handler"
 
 // Mock the dependencies
-vi.mock("../processors/jsx-processor", () => ({
+vi.mock("../processors/jsx", () => ({
   processJSXAttribute: vi.fn(),
 }))
 
-const { processJSXAttribute } = await import("../processors/jsx-processor")
+const { processJSXAttribute } = await import("../processors/jsx")
 
 describe("jsx-attribute-handler", () => {
   const mockContext = {

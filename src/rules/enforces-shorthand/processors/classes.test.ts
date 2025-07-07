@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { processClassNames } from "./class-processor"
+import { processClassNames } from "./classes"
 
 describe("class-processor", () => {
   describe("processClassNames", () => {

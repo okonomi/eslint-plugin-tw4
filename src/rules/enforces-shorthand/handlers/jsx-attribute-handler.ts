@@ -1,5 +1,5 @@
 import type { RuleContext } from "@typescript-eslint/utils/ts-eslint"
-import { processJSXAttribute } from "../processors/jsx-processor"
+import { processJSXAttribute } from "../processors/jsx"
 import type { JSXAttributeNode, TailwindConfig } from "../types"
 
 /**

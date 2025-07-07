@@ -1,7 +1,7 @@
 import type { RuleContext } from "@typescript-eslint/utils/ts-eslint"
 import type { ProcessingResult, TailwindConfig, TemplateNode } from "../types"
 import { reportErrors } from "../utils/error-reporter"
-import { processClassNames } from "./class-processor"
+import { processClassNames } from "./classes"
 
 /**
  * Process template literals for shorthand transformations

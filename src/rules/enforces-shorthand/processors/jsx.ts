@@ -1,7 +1,7 @@
 import type { RuleContext } from "@typescript-eslint/utils/ts-eslint"
 import type { JSXAttributeNode, TailwindConfig } from "../types"
-import { processClassNames } from "./class-processor"
-import { processTemplateLiteral } from "./template-processor"
+import { processClassNames } from "./classes"
+import { processTemplateLiteral } from "./templates"
 
 /**
  * Process JSX attributes for shorthand transformations

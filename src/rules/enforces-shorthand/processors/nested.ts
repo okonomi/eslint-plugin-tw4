@@ -1,7 +1,7 @@
 import type { RuleContext } from "@typescript-eslint/utils/ts-eslint"
 import type { TailwindConfig, TargetNode } from "../types"
 import { reportErrors } from "../utils/error-reporter"
-import { processClassNames } from "./class-processor"
+import { processClassNames } from "./classes"
 
 /**
  * Recursively search for class names in nested structures

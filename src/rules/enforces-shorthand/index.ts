@@ -6,7 +6,7 @@ import { CallExpressionHandler } from "./handlers/call-expression-handler"
 import { JSXAttributeHandler } from "./handlers/jsx-attribute-handler"
 import { TaggedTemplateHandler } from "./handlers/tagged-template-handler"
 import { parseOptions } from "./options"
-import { processClassNames } from "./processors/class-processor"
+import { processClassNames } from "./processors/classes"
 
 const createRule = ESLintUtils.RuleCreator(
   (name) => `https://example.com/rule/${name}`,

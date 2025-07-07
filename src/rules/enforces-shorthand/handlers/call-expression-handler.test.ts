@@ -4,15 +4,15 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import { CallExpressionHandler } from "./call-expression-handler"
 
 // Mock the dependencies
-vi.mock("../processors/class-processor", () => ({
+vi.mock("../processors/classes", () => ({
   processClassNames: vi.fn(),
 }))
 
-vi.mock("../processors/nested-structure-processor", () => ({
+vi.mock("../processors/nested", () => ({
   processNestedStructure: vi.fn(),
 }))
 
-vi.mock("../processors/template-processor", () => ({
+vi.mock("../processors/templates", () => ({
   processTemplateLiteral: vi.fn(),
 }))
 
@@ -28,13 +28,9 @@ vi.mock("../utils/quote-utils", () => ({
   wrapWithQuotesFromContext: vi.fn((value: string) => `"${value}"`),
 }))
 
-const { processClassNames } = await import("../processors/class-processor")
-const { processNestedStructure } = await import(
-  "../processors/nested-structure-processor"
-)
-const { processTemplateLiteral } = await import(
-  "../processors/template-processor"
-)
+const { processClassNames } = await import("../processors/classes")
+const { processNestedStructure } = await import("../processors/nested")
+const { processTemplateLiteral } = await import("../processors/templates")
 const { isTargetCallee } = await import("../utils/node-matching")
 
 describe("call-expression-handler", () => {

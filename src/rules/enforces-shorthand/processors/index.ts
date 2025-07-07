@@ -1,5 +1,5 @@
 // Processor factory and coordination
-export { processClassNames } from "./class-processor"
-export { processJSXAttribute } from "./jsx-processor"
-export { processNestedStructure } from "./nested-structure-processor"
-export { processTemplateLiteral } from "./template-processor"
+export { processClassNames } from "./classes"
+export { processJSXAttribute } from "./jsx"
+export { processNestedStructure } from "./nested"
+export { processTemplateLiteral } from "./templates"

@@ -1,10 +1,10 @@
 import type { TSESTree } from "@typescript-eslint/utils"
 import type { RuleContext } from "@typescript-eslint/utils/ts-eslint"
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { processNestedStructure } from "./nested-structure-processor"
+import { processNestedStructure } from "./nested"
 
 // Mock the dependencies
-vi.mock("./class-processor", () => ({
+vi.mock("./classes", () => ({
   processClassNames: vi.fn(),
 }))
 
@@ -12,7 +12,7 @@ vi.mock("../utils/error-reporter", () => ({
   reportErrors: vi.fn(),
 }))
 
-const { processClassNames } = await import("./class-processor")
+const { processClassNames } = await import("./classes")
 
 describe("nested-structure-processor", () => {
   const mockContext = {
