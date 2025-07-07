@@ -1,5 +1,5 @@
-// biome-ignore lint/suspicious/noExplicitAny: Vue AST nodes require any type
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/** biome-ignore-all lint/suspicious/noExplicitAny: node type is complex */
+
 import type { TSESTree } from "@typescript-eslint/utils"
 import { ESLintUtils } from "@typescript-eslint/utils"
 import { CallExpressionHandler } from "./handlers/call-expression-handler"
