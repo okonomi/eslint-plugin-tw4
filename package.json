@@ -41,7 +41,7 @@
     "@typescript-eslint/rule-tester": "^8.34.1",
     "dedent": "^1.6.0",
     "eslint-vitest-rule-tester": "^2.2.0",
-    "npm-run-all2": "^8.0.4",
+    "npm-run-all2": "^9.0.0",
     "simple-git-hooks": "^2.13.0",
     "tsup": "^8.5.0",
     "typescript": "^5.8.3",
